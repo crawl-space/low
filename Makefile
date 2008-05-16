@@ -2,3 +2,6 @@
 
 all:
 	@make -C src $@ || exit 1;
+
+clean:
+	@make -C src $@ || exit 1;

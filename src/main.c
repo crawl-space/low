@@ -2,9 +2,51 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "low-package.h"
+#include "low-package-rpmdb.h"
+#include "low-repo-rpmdb.h"
+
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 static int usage (void);
+
+static int
+command_list (int argc, const char *argv[])
+{
+	LowRepo *rpmdb;
+	LowPackageIter *iter;
+
+	if (!strcmp(argv[0], "installed")) {
+		rpmdb = low_repo_rpmdb_initialize ();
+		iter = low_repo_rpmdb_list_all (rpmdb);
+		while (iter = low_package_iter_next (iter), iter != NULL) {
+			LowPackage *pkg = iter->pkg;
+			printf ("%s.%s  %s-%s\n", pkg->name, pkg->arch,
+					pkg->version, pkg->release);
+		}
+		low_repo_rpmdb_shutdown (rpmdb);
+	}
+
+	return 0;
+}
+
+static int
+command_repolist (int argc, const char *argv[])
+{
+	char * format = "%-20s%-20s%-20s\n";
+	LowRepo *rpmdb;
+
+	printf (format, "repo id", "repo name", "status");
+
+	rpmdb = low_repo_rpmdb_initialize ();
+
+	printf (format, rpmdb->id, rpmdb->name,
+			rpmdb->enabled ? "enabled" : "disabled");
+	
+	low_repo_rpmdb_shutdown (rpmdb);
+
+	return 0;
+}
 
 static int
 command_version (int argc, const char *argv[])
@@ -37,6 +79,9 @@ typedef struct _SubCommand {
 const SubCommand commands[] = {
 	{ "clean", "Remove cached data", NOT_IMPLEMENTED },
 	{ "info", "Display package details", NOT_IMPLEMENTED },
+	{ "list", "Display a group of packages", command_list },
+	{ "repolist", "Display configured software repositories",
+		command_repolist },
 	{ "version", "Display version information", command_version },
 	{ "help", "Display a helpful usage message", command_help }
 };
@@ -65,7 +110,7 @@ main (int argc, const char *argv[])
 
 	for (i = 0; i < ARRAY_SIZE (commands); i++) {
 		if (!strcmp (argv[1], commands[i].name)) {
-			return commands[i].func (argc, argv);
+			return commands[i].func (argc - 2, argv + 2);
 		}
 	}
 	printf ("Unknown command: %s\n", argv[1]);
