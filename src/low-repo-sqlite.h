@@ -4,7 +4,9 @@
 #ifndef _LOW_REPO_SQLITE_H_
 #define _LOW_REPO_SQLITE_H_
 
-LowRepo *           low_repo_sqlite_initialize   (void);
+LowRepo *           low_repo_sqlite_initialize   (const char *id,
+                                                  const char *name,
+                                                  gboolean enabled);
 void                low_repo_sqlite_shutdown     (LowRepo *repo);
 
 LowPackageIter *    low_repo_sqlite_list_all     (LowRepo *repo);

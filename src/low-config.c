@@ -71,7 +71,34 @@ low_config_initialize (void)
 char **
 low_config_get_repo_names (LowConfig *config)
 {
-	return g_key_file_get_groups (config->config, NULL);
+	int i, j;
+	gchar **repo_names = g_key_file_get_groups (config->config, NULL);
+	gchar **new_repo_names = g_malloc (sizeof (gchar *) *
+									   g_strv_length (repo_names) - 1);
+	j = 0;
+	for (i = 0; i < g_strv_length (repo_names); i++) {
+		if (strcmp (repo_names[i], "main")) {
+			new_repo_names[j++] = repo_names[i];
+		} else {
+			free (repo_names[i]);
+		}
+	}
+	new_repo_names[j] = NULL;
+
+	free (repo_names);
+	return new_repo_names;
+}
+
+char *
+low_config_get_string (LowConfig *config, const char *group, const char *key)
+{
+	return g_key_file_get_string (config->config, group, key, NULL);
+}
+
+gboolean
+low_config_get_boolean (LowConfig *config, const char *group, const char *key)
+{
+	return g_key_file_get_boolean (config->config, group, key, NULL);
 }
 
 void

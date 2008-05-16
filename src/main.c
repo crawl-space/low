@@ -6,6 +6,7 @@
 #include "low-package.h"
 #include "low-package-rpmdb.h"
 #include "low-repo-rpmdb.h"
+#include "low-repo-set.h"
 #include "low-package-sqlite.h"
 #include "low-repo-sqlite.h"
 
@@ -42,7 +43,7 @@ command_info (int argc, const char *argv[])
 	}
 	low_repo_rpmdb_shutdown (repo);
 
-	repo = low_repo_sqlite_initialize ();
+	repo = low_repo_sqlite_initialize ("fedora", "fedora", TRUE);
 	iter = low_repo_sqlite_list_by_name (repo, argv[0]);
 	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
@@ -70,7 +71,7 @@ command_list (int argc, const char *argv[])
 		low_repo_rpmdb_shutdown (repo);
 	}
 	if (!strcmp(argv[0], "all")) {
-		repo = low_repo_sqlite_initialize ();
+		repo = low_repo_sqlite_initialize ("fedora", "fedora", TRUE);
 		iter = low_repo_sqlite_list_all (repo);
 		while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
 			LowPackage *pkg = iter->pkg;
@@ -84,30 +85,32 @@ command_list (int argc, const char *argv[])
 	return 0;
 }
 
+#define FORMAT_STRING "%-30.30s  %-35.35s  %s\n"
+
+static void
+print_repo (LowRepo *repo)
+{
+	printf (FORMAT_STRING, repo->id, repo->name,
+			repo->enabled ? "enabled" : "disabled");
+}
+
 static int
 command_repolist (int argc, const char *argv[])
 {
-	char * format = "%-20s%-20s%-20s\n";
 	LowRepo *rpmdb;
+	LowRepoSet *repos;
 	LowConfig *config = low_config_initialize ();
-	char ** repo_names;
-	int i;
 
-	printf (format, "repo id", "repo name", "status");
+	printf (FORMAT_STRING, "repo id", "repo name", "status");
 
 	rpmdb = low_repo_rpmdb_initialize ();
-
-	printf (format, rpmdb->id, rpmdb->name,
-			rpmdb->enabled ? "enabled" : "disabled");
-	
+	print_repo (rpmdb);	
 	low_repo_rpmdb_shutdown (rpmdb);
 
-	repo_names = low_config_get_repo_names (config);
-	for (i = 0; i < g_strv_length (repo_names); i++) {
-		printf ("%s\n", repo_names[i]);
-	}
-
+	repos = low_repo_set_initialize_from_config (config);
+	low_repo_set_for_each (repos, (LowRepoSetFunc) print_repo);
 	low_config_free (config);
+	
 	return 0;
 }
 
