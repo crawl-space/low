@@ -57,3 +57,15 @@ low_repo_rpmdb_list_by_name (LowRepo *repo, const char *name)
 	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_NAME, name, 0);
 	return (LowPackageIter *) iter;
 }
+
+LowPackageIter *
+low_repo_rpmdb_search_provides (LowRepo *repo, const char *provides)
+{
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
+	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
+	iter->super.pkg = NULL;
+
+	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PROVIDENAME,
+										provides, 0);
+	return (LowPackageIter *) iter;
+}

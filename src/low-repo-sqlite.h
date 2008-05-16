@@ -13,4 +13,7 @@ LowPackageIter *    low_repo_sqlite_list_all     (LowRepo *repo);
 LowPackageIter *    low_repo_sqlite_list_by_name (LowRepo *repo,
                                                   const char *name);
 
+LowPackageIter *    low_repo_sqlite_search_provides     (LowRepo *repo,
+                                                         const char *provides);
+
 #endif /* _LOW_REPO_SQLITE_H_ */

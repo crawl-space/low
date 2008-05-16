@@ -64,3 +64,19 @@ low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
 	sqlite3_bind_text (iter->pp_stmt, 1, name, -1, SQLITE_STATIC);
 	return (LowPackageIter *) iter;
 }
+
+LowPackageIter *
+low_repo_sqlite_search_provides (LowRepo *repo, const char *provides)
+{
+	const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
+					   "p.size_package, p.summary, p.description, p.url, "
+					   "p.rpm_license FROM packages p, provides pr "
+					   "WHERE pr.pkgKey = p.pkgKey AND pr.name = :provides";
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+	iter->super.pkg = NULL;
+
+	sqlite3_prepare (repo_sqlite->db, stmt, -1, &iter->pp_stmt, NULL);
+	sqlite3_bind_text (iter->pp_stmt, 1, provides, -1, SQLITE_STATIC);
+	return (LowPackageIter *) iter;
+}

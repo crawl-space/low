@@ -44,15 +44,34 @@ low_repo_set_free (LowRepoSet *repo_set)
 	free (repo_set);
 }
 
+typedef struct _LowRepoSetForEachData {
+	LowRepoSetFilter filter;
+	LowRepoSetFunc func;
+	gpointer data;
+} LowRepoSetForEachData;
+
 static void
 low_repo_set_inner_for_each (gpointer key, gpointer value, gpointer data)
 {
-	LowRepoSetFunc func = (LowRepoSetFunc) data;
-	(func) (value);
+	LowRepo *repo = (LowRepo *) value;
+	LowRepoSetForEachData *for_each_data = (LowRepoSetForEachData *) data;
+
+	if (for_each_data->filter == ALL ||
+		(for_each_data->filter == ENABLED && repo->enabled) ||
+		(for_each_data->filter == DISABLED && !repo->enabled)) {
+		(for_each_data->func) (repo, for_each_data->data);
+	}
 }
 
 void
-low_repo_set_for_each (LowRepoSet *repo_set, LowRepoSetFunc func)
+low_repo_set_for_each (LowRepoSet *repo_set, LowRepoSetFilter filter,
+					   LowRepoSetFunc func, gpointer data)
 {
-	g_hash_table_foreach (repo_set->repos, low_repo_set_inner_for_each, func);
+	LowRepoSetForEachData for_each_data;
+	for_each_data.filter = filter;
+	for_each_data.func = func;
+	for_each_data.data = data;
+
+	g_hash_table_foreach (repo_set->repos, low_repo_set_inner_for_each,
+						  &for_each_data);
 }

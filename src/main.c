@@ -100,6 +100,20 @@ command_repolist (int argc, const char *argv[])
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
 	LowConfig *config = low_config_initialize ();
+	LowRepoSetFilter filter;
+
+	if (argc == 1) {
+		if (!strcmp (argv[0], "all")) {
+			filter = ALL;
+		} else if (!strcmp (argv[0], "enabled")) {
+			filter = ENABLED;
+		} else if (!strcmp (argv[0], "disabled")) {
+			filter = DISABLED;
+		} else {
+			printf ("Unknown repo type: %s\n", argv[0]);
+			exit (1);
+		}
+	}
 
 	printf (FORMAT_STRING, "repo id", "repo name", "status");
 
@@ -108,9 +122,54 @@ command_repolist (int argc, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 
 	repos = low_repo_set_initialize_from_config (config);
-	low_repo_set_for_each (repos, (LowRepoSetFunc) print_repo);
+	low_repo_set_for_each (repos, filter, (LowRepoSetFunc) print_repo, NULL);
+	low_repo_set_free (repos);
 	low_config_free (config);
 	
+	return 0;
+}
+static void
+search_provides (LowRepo *repo, gpointer data)
+{
+	LowPackageIter *iter;
+	char *provides = (char *) data;
+	
+	iter = low_repo_sqlite_search_provides (repo, provides);
+	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+			printf ("%s.%s  %s-%s\n", pkg->name, pkg->arch,
+					pkg->version, pkg->release);
+	}
+
+}
+
+static int
+command_whatprovides (int argc, const char *argv[])
+{
+	LowRepo *rpmdb;
+	LowRepoSet *repos;
+	LowConfig *config = low_config_initialize ();
+	LowPackageIter *iter;
+	gchar *provides = g_strdup (argv[0]);
+
+	rpmdb = low_repo_rpmdb_initialize ();
+	iter = low_repo_rpmdb_search_provides (rpmdb, provides);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+			printf ("%s.%s  %s-%s\n", pkg->name, pkg->arch,
+					pkg->version, pkg->release);
+	}
+	low_repo_rpmdb_shutdown (rpmdb);
+
+	repos = low_repo_set_initialize_from_config (config);
+	low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) search_provides,
+						   provides);
+
+	low_repo_set_free (repos);
+	low_config_free (config);
+	g_free (provides);
+
 	return 0;
 }
 
@@ -148,6 +207,8 @@ const SubCommand commands[] = {
 	{ "list", "Display a group of packages", command_list },
 	{ "repolist", "Display configured software repositories",
 		command_repolist },
+	{ "whatprovides", "Find what package provides the given value",
+		command_whatprovides },
 	{ "version", "Display version information", command_version },
 	{ "help", "Display a helpful usage message", command_help }
 };
