@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "low-config.h"
 #include "low-package.h"
 #include "low-package-rpmdb.h"
 #include "low-repo-rpmdb.h"
@@ -88,6 +89,9 @@ command_repolist (int argc, const char *argv[])
 {
 	char * format = "%-20s%-20s%-20s\n";
 	LowRepo *rpmdb;
+	LowConfig *config = low_config_initialize ();
+	char ** repo_names;
+	int i;
 
 	printf (format, "repo id", "repo name", "status");
 
@@ -98,6 +102,12 @@ command_repolist (int argc, const char *argv[])
 	
 	low_repo_rpmdb_shutdown (rpmdb);
 
+	repo_names = low_config_get_repo_names (config);
+	for (i = 0; i < g_strv_length (repo_names); i++) {
+		printf ("%s\n", repo_names[i]);
+	}
+
+	low_config_free (config);
 	return 0;
 }
 
