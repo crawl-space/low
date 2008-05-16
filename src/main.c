@@ -11,6 +11,32 @@
 static int usage (void);
 
 static int
+command_info (int argc, const char *argv[])
+{
+	LowRepo *rpmdb;
+	LowPackageIter *iter;
+
+	rpmdb = low_repo_rpmdb_initialize ();
+	iter = low_repo_rpmdb_list_by_name (rpmdb, argv[0]);
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		printf ("Name        : %s\n", pkg->name);
+		printf ("Arch        : %s\n", pkg->arch);
+		printf ("Version     : %s\n", pkg->version);
+		printf ("Release     : %s\n", pkg->release);
+		printf ("Size        : %zd bytes\n", pkg->size);
+		printf ("Summary     : %s\n", pkg->summary);
+		printf ("URL         : %s\n", pkg->url);
+		printf ("License     : %s\n", pkg->license);
+		printf ("Description : %s\n", pkg->description);
+				
+	}
+	low_repo_rpmdb_shutdown (rpmdb);
+
+	return 0;
+}
+
+static int
 command_list (int argc, const char *argv[])
 {
 	LowRepo *rpmdb;
@@ -78,7 +104,7 @@ typedef struct _SubCommand {
 
 const SubCommand commands[] = {
 	{ "clean", "Remove cached data", NOT_IMPLEMENTED },
-	{ "info", "Display package details", NOT_IMPLEMENTED },
+	{ "info", "Display package details", command_info },
 	{ "list", "Display a group of packages", command_list },
 	{ "repolist", "Display configured software repositories",
 		command_repolist },

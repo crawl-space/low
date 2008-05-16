@@ -8,6 +8,12 @@ typedef struct _LowPackage {
     const char *release;
     const char *arch;
     const char *epoch;
+
+    size_t size;
+    const char *summary;
+    const char *description;
+    const char *url;
+    const char *license;
 } LowPackage;
 
 typedef struct _LowPackageIter {
