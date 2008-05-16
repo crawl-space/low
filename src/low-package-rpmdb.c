@@ -57,7 +57,9 @@ low_package_iter_next (LowPackageIter *iter)
 		return NULL;
 	}
 
-	free (iter->pkg);
+	if (iter->pkg != NULL) {
+		free (iter->pkg);
+	}
 	iter->pkg = low_package_rpmdb_new_from_header (header);
 
 	return iter;

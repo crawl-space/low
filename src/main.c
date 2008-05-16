@@ -5,33 +5,49 @@
 #include "low-package.h"
 #include "low-package-rpmdb.h"
 #include "low-repo-rpmdb.h"
+#include "low-package-sqlite.h"
+#include "low-repo-sqlite.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 static int usage (void);
 
+static void
+print_package (const LowPackage *pkg)
+{
+	printf ("Name        : %s\n", pkg->name);
+	printf ("Arch        : %s\n", pkg->arch);
+	printf ("Version     : %s\n", pkg->version);
+	printf ("Release     : %s\n", pkg->release);
+	printf ("Size        : %zd bytes\n", pkg->size);
+	printf ("Summary     : %s\n", pkg->summary);
+	printf ("URL         : %s\n", pkg->url);
+	printf ("License     : %s\n", pkg->license);
+	printf ("Description : %s\n", pkg->description);
+	printf ("\n");
+}
+
 static int
 command_info (int argc, const char *argv[])
 {
-	LowRepo *rpmdb;
+	LowRepo *repo;
 	LowPackageIter *iter;
 
-	rpmdb = low_repo_rpmdb_initialize ();
-	iter = low_repo_rpmdb_list_by_name (rpmdb, argv[0]);
+	repo = low_repo_rpmdb_initialize ();
+	iter = low_repo_rpmdb_list_by_name (repo, argv[0]);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
-		printf ("Name        : %s\n", pkg->name);
-		printf ("Arch        : %s\n", pkg->arch);
-		printf ("Version     : %s\n", pkg->version);
-		printf ("Release     : %s\n", pkg->release);
-		printf ("Size        : %zd bytes\n", pkg->size);
-		printf ("Summary     : %s\n", pkg->summary);
-		printf ("URL         : %s\n", pkg->url);
-		printf ("License     : %s\n", pkg->license);
-		printf ("Description : %s\n", pkg->description);
-				
+		print_package (pkg);
 	}
-	low_repo_rpmdb_shutdown (rpmdb);
+	low_repo_rpmdb_shutdown (repo);
+
+	repo = low_repo_sqlite_initialize ();
+	iter = low_repo_sqlite_list_by_name (repo, argv[0]);
+	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package (pkg);
+	}
+	low_repo_sqlite_shutdown (repo);
 
 	return 0;
 }
@@ -39,19 +55,30 @@ command_info (int argc, const char *argv[])
 static int
 command_list (int argc, const char *argv[])
 {
-	LowRepo *rpmdb;
+	LowRepo *repo;
 	LowPackageIter *iter;
 
-	if (!strcmp(argv[0], "installed")) {
-		rpmdb = low_repo_rpmdb_initialize ();
-		iter = low_repo_rpmdb_list_all (rpmdb);
+	if (!strcmp(argv[0], "installed") || !strcmp(argv[0], "all")) {
+		repo = low_repo_rpmdb_initialize ();
+		iter = low_repo_rpmdb_list_all (repo);
 		while (iter = low_package_iter_next (iter), iter != NULL) {
 			LowPackage *pkg = iter->pkg;
 			printf ("%s.%s  %s-%s\n", pkg->name, pkg->arch,
 					pkg->version, pkg->release);
 		}
-		low_repo_rpmdb_shutdown (rpmdb);
+		low_repo_rpmdb_shutdown (repo);
 	}
+	if (!strcmp(argv[0], "all")) {
+		repo = low_repo_sqlite_initialize ();
+		iter = low_repo_sqlite_list_all (repo);
+		while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+			LowPackage *pkg = iter->pkg;
+			printf ("%s.%s  %s-%s\n", pkg->name, pkg->arch,
+					pkg->version, pkg->release);
+		}
+		low_repo_sqlite_shutdown (repo);
+	}
+
 
 	return 0;
 }
