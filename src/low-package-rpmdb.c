@@ -38,6 +38,7 @@ low_package_rpmdb_new_from_header (Header header)
 	pkg->arch = arch.string;
 
 	pkg->size = size.integer;
+	pkg->repo = "installed";
 	pkg->summary = summary.string;
 	pkg->description = description.string;
 	pkg->url = url.string;

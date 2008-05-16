@@ -22,6 +22,7 @@ print_package (const LowPackage *pkg)
 	printf ("Version     : %s\n", pkg->version);
 	printf ("Release     : %s\n", pkg->release);
 	printf ("Size        : %zd bytes\n", pkg->size);
+	printf ("Repo        : %s\n", pkg->repo);
 	printf ("Summary     : %s\n", pkg->summary);
 	printf ("URL         : %s\n", pkg->url);
 	printf ("License     : %s\n", pkg->license);
@@ -29,28 +30,43 @@ print_package (const LowPackage *pkg)
 	printf ("\n");
 }
 
+static void
+info (LowRepo *repo, gpointer data)
+{
+	LowPackageIter *iter;
+	char *name = (char *) data;
+	
+	iter = low_repo_sqlite_list_by_name (repo, name);
+	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package (pkg);
+	}
+}
+
 static int
 command_info (int argc, const char *argv[])
 {
 	LowRepo *repo;
+	LowRepoSet *repos;
 	LowPackageIter *iter;
+	LowConfig *config = low_config_initialize ();
+	gchar *name = g_strdup (argv[0]);
 
 	repo = low_repo_rpmdb_initialize ();
-	iter = low_repo_rpmdb_list_by_name (repo, argv[0]);
+	iter = low_repo_rpmdb_list_by_name (repo, name);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package (pkg);
 	}
 	low_repo_rpmdb_shutdown (repo);
 
-	repo = low_repo_sqlite_initialize ("fedora", "fedora", TRUE);
-	iter = low_repo_sqlite_list_by_name (repo, argv[0]);
-	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
-		LowPackage *pkg = iter->pkg;
-		print_package (pkg);
-	}
-	low_repo_sqlite_shutdown (repo);
-
+	repos = low_repo_set_initialize_from_config (config);
+	low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) info,
+						   name);
+	low_repo_set_free (repos);
+	low_config_free (config);
+	free (name);
+	
 	return 0;
 }
 
@@ -128,6 +144,7 @@ command_repolist (int argc, const char *argv[])
 	
 	return 0;
 }
+
 static void
 search_provides (LowRepo *repo, gpointer data)
 {
