@@ -1,0 +1,2 @@
+remember to turn on your pre-commit hook:
+chmod +x .git/hooks/pre-commit
