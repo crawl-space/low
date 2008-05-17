@@ -1,2 +1,4 @@
 low
 *.o
+
+.deps
