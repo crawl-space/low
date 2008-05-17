@@ -38,4 +38,9 @@ trailinglint:
 
 whitespacelint: tablint trailinglint
 
+# XXX watch for pointers and custom typedefs with this
+indent:
+	@! find \( -name \*.c -o -name '*.h' -o -name 'Makefile.am' \) \
+		| xargs indent -linux -pcs -psl
+
 .PHONY: doxygen

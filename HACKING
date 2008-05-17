@@ -1,2 +1,12 @@
 remember to turn on your pre-commit hook:
-chmod +x .git/hooks/pre-commit
+
+	chmod +x .git/hooks/pre-commit
+
+
+= Coding Style =
+
+Style is identical to that used in the Linux kernel, except with function names
+on a newline, and a space between the function name and first parenthesis in a
+function call, ie:
+
+	indent -linux -pcs -psl
