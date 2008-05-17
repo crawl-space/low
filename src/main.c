@@ -70,6 +70,13 @@ command_info (int argc, const char *argv[])
 	return 0;
 }
 
+static void
+print_package_short (LowPackage *pkg)
+{
+	printf ("%s.%s  %s-%s  %s\n", pkg->name, pkg->arch,
+			pkg->version, pkg->release, pkg->repo);
+}
+
 static int
 command_list (int argc, const char *argv[])
 {
@@ -81,8 +88,7 @@ command_list (int argc, const char *argv[])
 		iter = low_repo_rpmdb_list_all (repo);
 		while (iter = low_package_iter_next (iter), iter != NULL) {
 			LowPackage *pkg = iter->pkg;
-			printf ("%s.%s  %s-%s\n", pkg->name, pkg->arch,
-					pkg->version, pkg->release);
+			print_package_short (pkg);
 		}
 		low_repo_rpmdb_shutdown (repo);
 	}
@@ -91,8 +97,7 @@ command_list (int argc, const char *argv[])
 		iter = low_repo_sqlite_list_all (repo);
 		while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
 			LowPackage *pkg = iter->pkg;
-			printf ("%s.%s  %s-%s\n", pkg->name, pkg->arch,
-					pkg->version, pkg->release);
+			print_package_short (pkg);
 		}
 		low_repo_sqlite_shutdown (repo);
 	}
@@ -154,8 +159,7 @@ search_provides (LowRepo *repo, gpointer data)
 	iter = low_repo_sqlite_search_provides (repo, provides);
 	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
-			printf ("%s.%s  %s-%s\n", pkg->name, pkg->arch,
-					pkg->version, pkg->release);
+		print_package_short (pkg);
 	}
 
 }
@@ -174,8 +178,7 @@ command_whatprovides (int argc, const char *argv[])
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
-			printf ("%s.%s  %s-%s\n", pkg->name, pkg->arch,
-					pkg->version, pkg->release);
+		print_package_short (pkg);
 	}
 	low_repo_rpmdb_shutdown (rpmdb);
 
