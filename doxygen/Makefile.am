@@ -17,4 +17,10 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #  02110-1301  USA
 
-SUBDIRS = doxygen src
+doxygen: doxygen.conf
+	doxygen $<
+
+clean-local:
+	-rm -rf html
+
+.PHONY: all doxygen

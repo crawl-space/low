@@ -90,5 +90,7 @@ dnl - Makefiles, etc.
 dnl ---------------------------------------------------------------------------
 AC_OUTPUT([
 Makefile
+doxygen/Makefile
+doxygen/doxygen.conf
 src/Makefile
 ])
