@@ -3,3 +3,5 @@
 - Implement obsoletes.
 - Implements conflicts.
 - info description word wrapping.
+- macro substitution in config files
+- doxygen code documentation
