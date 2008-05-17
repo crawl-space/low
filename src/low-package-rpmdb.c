@@ -51,7 +51,7 @@ low_package_rpmdb_new_from_header (Header header)
 	headerGetEntry(header, RPMTAG_LICENSE, &type, &license.p, &count);
 
 	LowPackage *pkg = malloc (sizeof (LowPackage));
-	
+
 	pkg->name = name.string;
 	pkg->epoch = epoch.string;
 	pkg->version = version.string;

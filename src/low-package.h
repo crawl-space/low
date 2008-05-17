@@ -40,7 +40,7 @@ typedef struct _LowPackage {
 } LowPackage;
 
 typedef struct _LowPackageIter {
-	LowRepo *repo; 
+	LowRepo *repo;
 	LowPackage *pkg;
 } LowPackageIter;
 

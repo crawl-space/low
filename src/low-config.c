@@ -38,7 +38,7 @@ low_config_load_repo_configs (void)
 	const gchar *config_dir_path = "/etc/yum.repos.d";
 	GDir *config_dir = g_dir_open (config_dir_path, 0, NULL);
 	const char *file_name;
-	
+
 	/* set this up for the free() below */
 	joined_config = malloc (1);
 	joined_config[0] = '\0';
@@ -53,7 +53,7 @@ low_config_load_repo_configs (void)
 			g_free (config);
 		}
 	}
-	
+
 	return joined_config;
 }
 

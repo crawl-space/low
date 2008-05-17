@@ -58,7 +58,7 @@ info (LowRepo *repo, gpointer data)
 {
 	LowPackageIter *iter;
 	char *name = (char *) data;
-	
+
 	iter = low_repo_sqlite_list_by_name (repo, name);
 	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
@@ -89,7 +89,7 @@ command_info (int argc, const char *argv[])
 	low_repo_set_free (repos);
 	low_config_free (config);
 	free (name);
-	
+
 	return 0;
 }
 
@@ -162,14 +162,14 @@ command_repolist (int argc, const char *argv[])
 	printf (FORMAT_STRING, "repo id", "repo name", "status");
 
 	rpmdb = low_repo_rpmdb_initialize ();
-	print_repo (rpmdb);	
+	print_repo (rpmdb);
 	low_repo_rpmdb_shutdown (rpmdb);
 
 	repos = low_repo_set_initialize_from_config (config);
 	low_repo_set_for_each (repos, filter, (LowRepoSetFunc) print_repo, NULL);
 	low_repo_set_free (repos);
 	low_config_free (config);
-	
+
 	return 0;
 }
 
@@ -178,7 +178,7 @@ search_provides (LowRepo *repo, gpointer data)
 {
 	LowPackageIter *iter;
 	char *provides = (char *) data;
-	
+
 	iter = low_repo_sqlite_search_provides (repo, provides);
 	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
@@ -192,7 +192,7 @@ search_requires (LowRepo *repo, gpointer data)
 {
    LowPackageIter *iter;
    char *requires = (char *) data;
-   
+
    iter = low_repo_sqlite_search_requires (repo, requires);
    while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;

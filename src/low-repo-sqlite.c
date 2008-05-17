@@ -62,7 +62,7 @@ LowPackageIter *
 low_repo_sqlite_list_all (LowRepo *repo)
 {
 	const char *stmt = "SELECT name, arch, version, release, size_package,"
-		  			   "summary, description, url, rpm_license  FROM packages";
+					   "summary, description, url, rpm_license  FROM packages";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
@@ -76,7 +76,7 @@ LowPackageIter *
 low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
 {
 	const char *stmt = "SELECT name, arch, version, release, size_package, "
-		  			   "summary, description, url, rpm_license  FROM packages "
+					   "summary, description, url, rpm_license  FROM packages "
 					   "WHERE name = :name";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));

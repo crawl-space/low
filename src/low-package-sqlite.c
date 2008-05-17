@@ -32,7 +32,7 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	pkg->arch = (const char *) sqlite3_column_text (pp_stmt, i++);
 	pkg->version = (const char *) sqlite3_column_text (pp_stmt, i++);
 	pkg->release = (const char *) sqlite3_column_text (pp_stmt, i++);
-	
+
 	pkg->size = sqlite3_column_int (pp_stmt, i++);
 	pkg->repo = repo->id;
 	pkg->summary = (const char *) sqlite3_column_text (pp_stmt, i++);
