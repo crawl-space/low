@@ -128,3 +128,5 @@ low_config_free (LowConfig *config)
 	g_key_file_free (config->config);
 	free (config);
 }
+
+/* vim: set ts=8 sw=8 noet: */

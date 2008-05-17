@@ -86,3 +86,5 @@ low_package_iter_next (LowPackageIter *iter)
 
 	return iter;
 }
+
+/* vim: set ts=8 sw=8 noet: */

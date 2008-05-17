@@ -41,3 +41,5 @@ gboolean        low_config_get_boolean      (LowConfig *config,
 											 const char *key);
 
 #endif /* _LOW_CONFIG_H_ */
+
+/* vim: set ts=8 sw=8 noet: */

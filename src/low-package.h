@@ -45,3 +45,5 @@ typedef struct _LowPackageIter {
 } LowPackageIter;
 
 #endif /* _LOW_PACKAGE_H_ */
+
+/* vim: set ts=8 sw=8 noet: */

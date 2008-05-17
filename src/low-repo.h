@@ -31,3 +31,5 @@ typedef struct _LowRepo {
 } LowRepo;
 
 #endif /* _LOW_REPO_H__ */
+
+/* vim: set ts=8 sw=8 noet: */

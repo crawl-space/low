@@ -37,3 +37,5 @@ typedef struct _LowPackageIterSqlite {
 LowPackageIter * low_sqlite_package_iter_next (LowPackageIter *iter);
 
 #endif /* _LOW_PACKAGE_SQLITE_H_ */
+
+/* vim: set ts=8 sw=8 noet: */

@@ -96,3 +96,5 @@ low_repo_set_for_each (LowRepoSet *repo_set, LowRepoSetFilter filter,
 	g_hash_table_foreach (repo_set->repos, low_repo_set_inner_for_each,
 						  &for_each_data);
 }
+
+/* vim: set ts=8 sw=8 noet: */

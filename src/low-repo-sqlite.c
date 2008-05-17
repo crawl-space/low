@@ -124,3 +124,5 @@ low_repo_sqlite_search_requires (LowRepo *repo, const char *requires)
 	return (LowPackageIter *) iter;
 }
 
+
+/* vim: set ts=8 sw=8 noet: */

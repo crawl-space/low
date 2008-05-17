@@ -51,3 +51,5 @@ LowPackageIter * 	low_repo_set_search_provides      	(LowRepoSet *repo_set,
 														 const char *provides);
 
 #endif /* _LOW_REPO_SET_H_ */
+
+/* vim: set ts=8 sw=8 noet: */

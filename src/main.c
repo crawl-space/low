@@ -333,3 +333,5 @@ main (int argc, const char *argv[])
 
 	return usage ();
 }
+
+/* vim: set ts=8 sw=8 noet: */

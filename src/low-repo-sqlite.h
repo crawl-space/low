@@ -40,3 +40,5 @@ LowPackageIter *    low_repo_sqlite_search_requires     (LowRepo *repo,
 							 const char *requires);
 
 #endif /* _LOW_REPO_SQLITE_H_ */
+
+/* vim: set ts=8 sw=8 noet: */
