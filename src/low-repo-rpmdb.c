@@ -93,3 +93,16 @@ low_repo_rpmdb_search_provides (LowRepo *repo, const char *provides)
 										provides, 0);
 	return (LowPackageIter *) iter;
 }
+
+LowPackageIter *
+low_repo_rpmdb_search_requires (LowRepo *repo, const char *requires)
+{
+   LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
+   LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
+   iter->super.pkg = NULL;
+
+   iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_REQUIRENAME,
+                                       requires, 0);
+   return (LowPackageIter *) iter;
+}
+
