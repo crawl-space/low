@@ -123,7 +123,9 @@ command_repolist (int argc, const char *argv[])
 	LowConfig *config = low_config_initialize ();
 	LowRepoSetFilter filter;
 
-	if (argc == 1) {
+	if (argc == 0) {
+		filter = ALL;
+	} else if (argc == 1) {
 		if (!strcmp (argv[0], "all")) {
 			filter = ALL;
 		} else if (!strcmp (argv[0], "enabled")) {
