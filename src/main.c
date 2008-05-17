@@ -185,6 +185,20 @@ search_provides (LowRepo *repo, gpointer data)
 
 }
 
+static void
+search_requires (LowRepo *repo, gpointer data)
+{
+   LowPackageIter *iter;
+   char *requires = (char *) data;
+   
+   iter = low_repo_sqlite_search_requires (repo, requires);
+   while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package_short (pkg);
+   }
+
+}
+
 static int
 command_whatprovides (int argc, const char *argv[])
 {
@@ -212,6 +226,35 @@ command_whatprovides (int argc, const char *argv[])
 	g_free (provides);
 
 	return 0;
+}
+
+static int
+command_whatrequires (int argc, const char *argv[])
+{
+   LowRepo *rpmdb;
+   LowRepoSet *repos;
+   LowConfig *config = low_config_initialize ();
+   LowPackageIter *iter;
+   gchar *requires = g_strdup (argv[0]);
+
+   rpmdb = low_repo_rpmdb_initialize ();
+   iter = low_repo_rpmdb_search_requires (rpmdb, requires);
+
+   while (iter = low_package_iter_next (iter), iter != NULL) {
+       LowPackage *pkg = iter->pkg;
+	   print_package_short (pkg);
+   }
+   low_repo_rpmdb_shutdown (rpmdb);
+
+   repos = low_repo_set_initialize_from_config (config);
+   low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) search_requires,
+                          requires);
+
+   low_repo_set_free (repos);
+   low_config_free (config);
+   g_free (requires);
+
+   return 0;
 }
 
 static int
@@ -250,6 +293,8 @@ const SubCommand commands[] = {
 		command_repolist },
 	{ "whatprovides", "Find what package provides the given value",
 		command_whatprovides },
+   { "whatrequires", "Find what package requires the given value",
+       command_whatrequires },
 	{ "version", "Display version information", command_version },
 	{ "help", "Display a helpful usage message", command_help }
 };
