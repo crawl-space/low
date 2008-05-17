@@ -1,3 +1,4 @@
+#include "low-repo.h"
 
 #ifndef _LOW_PACKAGE_H_
 #define _LOW_PACKAGE_H_
@@ -10,6 +11,7 @@ typedef struct _LowPackage {
     const char *epoch;
 
     size_t size;
+    const char *repo;
     const char *summary;
     const char *description;
     const char *url;
@@ -17,7 +19,8 @@ typedef struct _LowPackage {
 } LowPackage;
 
 typedef struct _LowPackageIter {
-       LowPackage *pkg;
+	LowRepo *repo; 
+	LowPackage *pkg;
 } LowPackageIter;
 
 #endif /* _LOW_PACKAGE_H_ */

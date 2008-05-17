@@ -2,7 +2,7 @@
 #include "low-package-sqlite.h"
 
 static LowPackage *
-low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt)
+low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 {
 	int i = 0;
 	LowPackage *pkg = malloc (sizeof (LowPackage));
@@ -13,6 +13,7 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt)
 	pkg->release = (const char *) sqlite3_column_text (pp_stmt, i++);
 	
 	pkg->size = sqlite3_column_int (pp_stmt, i++);
+	pkg->repo = repo->id;
 	pkg->summary = (const char *) sqlite3_column_text (pp_stmt, i++);
 	pkg->description = (const char *) sqlite3_column_text (pp_stmt, i++);
 	pkg->url = (const char *) sqlite3_column_text (pp_stmt, i++);
@@ -34,7 +35,8 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 	if (iter->pkg != NULL) {
 		free (iter->pkg);
 	}
-	iter->pkg = low_package_sqlite_new_from_row (iter_sqlite->pp_stmt);
+	iter->pkg = low_package_sqlite_new_from_row (iter_sqlite->pp_stmt,
+												 iter->repo);
 
 	return iter;
 }

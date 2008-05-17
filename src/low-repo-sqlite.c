@@ -44,6 +44,7 @@ low_repo_sqlite_list_all (LowRepo *repo)
 		  			   "summary, description, url, rpm_license  FROM packages";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+	iter->super.repo = repo;
 	iter->super.pkg = NULL;
 
 	sqlite3_prepare (repo_sqlite->db, stmt, -1, &iter->pp_stmt, NULL);
@@ -58,6 +59,7 @@ low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
 					   "WHERE name = :name";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+	iter->super.repo = repo;
 	iter->super.pkg = NULL;
 
 	sqlite3_prepare (repo_sqlite->db, stmt, -1, &iter->pp_stmt, NULL);
@@ -74,6 +76,7 @@ low_repo_sqlite_search_provides (LowRepo *repo, const char *provides)
 					   "WHERE pr.pkgKey = p.pkgKey AND pr.name = :provides";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+	iter->super.repo = repo;
 	iter->super.pkg = NULL;
 
 	sqlite3_prepare (repo_sqlite->db, stmt, -1, &iter->pp_stmt, NULL);
