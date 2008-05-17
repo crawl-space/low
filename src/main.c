@@ -23,6 +23,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "config.h"
+
 #include "low-config.h"
 #include "low-package.h"
 #include "low-package-rpmdb.h"
@@ -260,7 +262,7 @@ command_whatrequires (int argc, const char *argv[])
 static int
 command_version (int argc, const char *argv[])
 {
-	printf  ("low 0.0.1\n");
+	printf  (PACKAGE_STRING"\n");
 	return 0;
 }
 
