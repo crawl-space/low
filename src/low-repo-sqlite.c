@@ -76,8 +76,9 @@ LowPackageIter *
 low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
 {
 	const char *stmt = "SELECT name, arch, version, release, size_package, "
-					   "summary, description, url, rpm_license  FROM packages "
-					   "WHERE name = :name";
+			   "summary, description, url, rpm_license "
+			   "FROM packages "
+			   "WHERE name = :name";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
@@ -92,9 +93,9 @@ LowPackageIter *
 low_repo_sqlite_search_provides (LowRepo *repo, const char *provides)
 {
 	const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
-					   "p.size_package, p.summary, p.description, p.url, "
-					   "p.rpm_license FROM packages p, provides pr "
-					   "WHERE pr.pkgKey = p.pkgKey AND pr.name = :provides";
+			   "p.size_package, p.summary, p.description, p.url, "
+			   "p.rpm_license FROM packages p, provides pr "
+			   "WHERE pr.pkgKey = p.pkgKey AND pr.name = :provides";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
@@ -108,17 +109,18 @@ low_repo_sqlite_search_provides (LowRepo *repo, const char *provides)
 LowPackageIter *
 low_repo_sqlite_search_requires (LowRepo *repo, const char *requires)
 {
-   const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
-                      "p.size_package, p.summary, p.description, p.url, "
-                      "p.rpm_license FROM packages p, requires req "
-                      "WHERE req.pkgKey = p.pkgKey AND req.name = :requires";
-   LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-   LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+	const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
+			   "p.size_package, p.summary, p.description, p.url, "
+			   "p.rpm_license FROM packages p, requires req "
+			   "WHERE req.pkgKey = p.pkgKey "
+			   "AND req.name = :requires";
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
-   iter->super.pkg = NULL;
+	iter->super.pkg = NULL;
 
-   sqlite3_prepare (repo_sqlite->db, stmt, -1, &iter->pp_stmt, NULL);
-   sqlite3_bind_text (iter->pp_stmt, 1, requires, -1, SQLITE_STATIC);
-   return (LowPackageIter *) iter;
+	sqlite3_prepare (repo_sqlite->db, stmt, -1, &iter->pp_stmt, NULL);
+	sqlite3_bind_text (iter->pp_stmt, 1, requires, -1, SQLITE_STATIC);
+	return (LowPackageIter *) iter;
 }
 

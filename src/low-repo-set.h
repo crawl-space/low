@@ -27,7 +27,7 @@
 #define _LOW_REPO_SET_H_
 
 typedef struct _LowRepoSet {
-    GHashTable *repos;
+	GHashTable *repos;
 } LowRepoSet;
 
 typedef enum {

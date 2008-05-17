@@ -34,8 +34,8 @@ union rpm_entry {
 static LowPackage *
 low_package_rpmdb_new_from_header (Header header)
 {
-    union rpm_entry name, epoch, version, release, arch;
-    union rpm_entry size, summary, description, url, license;
+	union rpm_entry name, epoch, version, release, arch;
+	union rpm_entry size, summary, description, url, license;
 	int_32 type, count;
 
 	headerGetEntry(header, RPMTAG_NAME, &type, &name.p, &count);

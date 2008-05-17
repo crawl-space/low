@@ -27,12 +27,12 @@
 #define _LOW_PACKAGE_RPMDB_H_
 
 typedef struct _LowPackageRpmdb {
-    LowPackage pkg;
+	LowPackage pkg;
 } LowPackageRpmdb;
 
 typedef struct _LowPackageIterRpmdb {
-    LowPackageIter super;
-    rpmdbMatchIterator rpm_iter;
+	LowPackageIter super;
+	rpmdbMatchIterator rpm_iter;
 } LowPackageIterRpmdb;
 
 LowPackageIter * low_package_iter_next (LowPackageIter *iter);

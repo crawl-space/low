@@ -25,18 +25,18 @@
 #define _LOW_PACKAGE_H_
 
 typedef struct _LowPackage {
-    const char *name;
-    const char *version;
-    const char *release;
-    const char *arch;
-    const char *epoch;
+	const char *name;
+	const char *version;
+	const char *release;
+	const char *arch;
+	const char *epoch;
 
-    size_t size;
-    const char *repo;
-    const char *summary;
-    const char *description;
-    const char *url;
-    const char *license;
+	size_t size;
+	const char *repo;
+	const char *summary;
+	const char *description;
+	const char *url;
+	const char *license;
 } LowPackage;
 
 typedef struct _LowPackageIter {

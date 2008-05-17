@@ -26,17 +26,17 @@
 #define _LOW_REPO_SQLITE_H_
 
 LowRepo *           low_repo_sqlite_initialize   (const char *id,
-                                                  const char *name,
-                                                  gboolean enabled);
+						  const char *name,
+						  gboolean enabled);
 void                low_repo_sqlite_shutdown     (LowRepo *repo);
 
 LowPackageIter *    low_repo_sqlite_list_all     (LowRepo *repo);
 LowPackageIter *    low_repo_sqlite_list_by_name (LowRepo *repo,
-                                                  const char *name);
+						  const char *name);
 
 LowPackageIter *    low_repo_sqlite_search_provides     (LowRepo *repo,
-                                                         const char *provides);
+							 const char *provides);
 LowPackageIter *    low_repo_sqlite_search_requires     (LowRepo *repo,
-                                                         const char *requires);
+							 const char *requires);
 
 #endif /* _LOW_REPO_SQLITE_H_ */

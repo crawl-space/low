@@ -31,16 +31,21 @@ tablint:
 	@! find \( -name \*.c -o -name '*.h' -o -name 'Makefile.am' \) \
 		| xargs grep -nP "^\s* \t"
 
+# Check for all spaces before characters
+leadingspacelint:
+	@! find \( -name \*.c -o -name '*.h' -o -name 'Makefile.am' \) \
+		| xargs grep -nP "^  *\w"
+
 # Check for trailing whitespace
 trailinglint:
 	@! find \( -name \*.c -o -name '*.h' -o -name 'Makefile.am' \) \
 		| xargs grep -nP "[ \t]$$"
 
-whitespacelint: tablint trailinglint
+whitespacelint: tablint trailinglint leadingspacelint
 
 # XXX watch for pointers and custom typedefs with this
 indent:
-	@! find \( -name \*.c -o -name '*.h' -o -name 'Makefile.am' \) \
+	@! find \( -name \*.c -o -name '*.h' \) \
 		| xargs indent -linux -pcs -psl
 
 .PHONY: doxygen

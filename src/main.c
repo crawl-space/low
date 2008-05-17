@@ -84,8 +84,7 @@ command_info (int argc, const char *argv[])
 	low_repo_rpmdb_shutdown (repo);
 
 	repos = low_repo_set_initialize_from_config (config);
-	low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) info,
-						   name);
+	low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) info, name);
 	low_repo_set_free (repos);
 	low_config_free (config);
 	free (name);
@@ -97,7 +96,7 @@ static void
 print_package_short (LowPackage *pkg)
 {
 	printf ("%s.%s  %s-%s  %s\n", pkg->name, pkg->arch,
-			pkg->version, pkg->release, pkg->repo);
+		pkg->version, pkg->release, pkg->repo);
 }
 
 static int
@@ -118,7 +117,8 @@ command_list (int argc, const char *argv[])
 	if (!strcmp(argv[0], "all")) {
 		repo = low_repo_sqlite_initialize ("fedora", "fedora", TRUE);
 		iter = low_repo_sqlite_list_all (repo);
-		while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+		while (iter = low_sqlite_package_iter_next (iter),
+		       iter != NULL) {
 			LowPackage *pkg = iter->pkg;
 			print_package_short (pkg);
 		}
@@ -135,7 +135,7 @@ static void
 print_repo (LowRepo *repo)
 {
 	printf (FORMAT_STRING, repo->id, repo->name,
-			repo->enabled ? "enabled" : "disabled");
+		repo->enabled ? "enabled" : "disabled");
 }
 
 static int
@@ -166,7 +166,8 @@ command_repolist (int argc, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 
 	repos = low_repo_set_initialize_from_config (config);
-	low_repo_set_for_each (repos, filter, (LowRepoSetFunc) print_repo, NULL);
+	low_repo_set_for_each (repos, filter, (LowRepoSetFunc) print_repo,
+			       NULL);
 	low_repo_set_free (repos);
 	low_config_free (config);
 
@@ -190,14 +191,14 @@ search_provides (LowRepo *repo, gpointer data)
 static void
 search_requires (LowRepo *repo, gpointer data)
 {
-   LowPackageIter *iter;
-   char *requires = (char *) data;
+	LowPackageIter *iter;
+	char *requires = (char *) data;
 
-   iter = low_repo_sqlite_search_requires (repo, requires);
-   while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+	iter = low_repo_sqlite_search_requires (repo, requires);
+	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
-   }
+	}
 
 }
 
@@ -233,30 +234,30 @@ command_whatprovides (int argc, const char *argv[])
 static int
 command_whatrequires (int argc, const char *argv[])
 {
-   LowRepo *rpmdb;
-   LowRepoSet *repos;
-   LowConfig *config = low_config_initialize ();
-   LowPackageIter *iter;
-   gchar *requires = g_strdup (argv[0]);
+	LowRepo *rpmdb;
+	LowRepoSet *repos;
+	LowConfig *config = low_config_initialize ();
+	LowPackageIter *iter;
+	gchar *requires = g_strdup (argv[0]);
 
-   rpmdb = low_repo_rpmdb_initialize ();
-   iter = low_repo_rpmdb_search_requires (rpmdb, requires);
+	rpmdb = low_repo_rpmdb_initialize ();
+	iter = low_repo_rpmdb_search_requires (rpmdb, requires);
 
-   while (iter = low_package_iter_next (iter), iter != NULL) {
-       LowPackage *pkg = iter->pkg;
-	   print_package_short (pkg);
-   }
-   low_repo_rpmdb_shutdown (rpmdb);
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package_short (pkg);
+	}
+	low_repo_rpmdb_shutdown (rpmdb);
 
-   repos = low_repo_set_initialize_from_config (config);
-   low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) search_requires,
-                          requires);
+	repos = low_repo_set_initialize_from_config (config);
+	low_repo_set_for_each (repos, ENABLED,
+			       (LowRepoSetFunc) search_requires, requires);
 
-   low_repo_set_free (repos);
-   low_config_free (config);
-   g_free (requires);
+	low_repo_set_free (repos);
+	low_config_free (config);
+	g_free (requires);
 
-   return 0;
+	return 0;
 }
 
 static int
@@ -295,8 +296,8 @@ const SubCommand commands[] = {
 		command_repolist },
 	{ "whatprovides", "Find what package provides the given value",
 		command_whatprovides },
-   { "whatrequires", "Find what package requires the given value",
-       command_whatrequires },
+	{ "whatrequires", "Find what package requires the given value",
+		command_whatrequires },
 	{ "version", "Display version information", command_version },
 	{ "help", "Display a helpful usage message", command_help }
 };
