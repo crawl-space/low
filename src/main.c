@@ -215,14 +215,14 @@ search_requires (LowRepo *repo, gpointer data)
 static void
 search_obsoletes (LowRepo *repo, gpointer data)
 {
-   LowPackageIter *iter;
-   char *obsoletes = (char *) data;
+	LowPackageIter *iter;
+	char *obsoletes = (char *) data;
 
-   iter = low_repo_sqlite_search_obsoletes (repo, obsoletes);
-   while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
-       LowPackage *pkg = iter->pkg;
-       print_package_short (pkg);
-   }
+	iter = low_repo_sqlite_search_obsoletes (repo, obsoletes);
+	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package_short (pkg);
+	}
 }
 
 
@@ -295,30 +295,30 @@ command_whatrequires (int argc, const char *argv[])
 static int
 command_whatobsoletes (int argc, const char *argv[])
 {
-   LowRepo *rpmdb;
-   LowRepoSet *repos;
-   LowConfig *config = low_config_initialize ();
-   LowPackageIter *iter;
-   gchar *obsoletes = g_strdup (argv[0]);
+	LowRepo *rpmdb;
+	LowRepoSet *repos;
+	LowConfig *config = low_config_initialize ();
+	LowPackageIter *iter;
+	gchar *obsoletes = g_strdup (argv[0]);
 
-   rpmdb = low_repo_rpmdb_initialize ();
-   iter = low_repo_rpmdb_search_obsoletes (rpmdb, obsoletes);
+	rpmdb = low_repo_rpmdb_initialize ();
+	iter = low_repo_rpmdb_search_obsoletes (rpmdb, obsoletes);
 
-   while (iter = low_package_iter_next (iter), iter != NULL) {
-       LowPackage *pkg = iter->pkg;
-       print_package_short (pkg);
-   }
-   low_repo_rpmdb_shutdown (rpmdb);
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package_short (pkg);
+	}
+	low_repo_rpmdb_shutdown (rpmdb);
 
-   repos = low_repo_set_initialize_from_config (config);
-   low_repo_set_for_each (repos, ENABLED,
-                  (LowRepoSetFunc) search_obsoletes, obsoletes);
+	repos = low_repo_set_initialize_from_config (config);
+	low_repo_set_for_each (repos, ENABLED,
+			       (LowRepoSetFunc) search_obsoletes, obsoletes);
 
-   low_repo_set_free (repos);
-   low_config_free (config);
-   g_free (obsoletes);
+	low_repo_set_free (repos);
+	low_config_free (config);
+	g_free (obsoletes);
 
-   return 0;
+	return 0;
 }
 
 /**
@@ -357,13 +357,13 @@ const SubCommand commands[] = {
 	{ "info", "Display package details", command_info },
 	{ "list", "Display a group of packages", command_list },
 	{ "repolist", "Display configured software repositories",
-		command_repolist },
+	  command_repolist },
 	{ "whatprovides", "Find what package provides the given value",
-		command_whatprovides },
+	  command_whatprovides },
 	{ "whatrequires", "Find what package requires the given value",
-		command_whatrequires },
-   { "whatobsoletes", "Find what package obsoletes the given value",
-       command_whatobsoletes },
+	  command_whatrequires },
+	{ "whatobsoletes", "Find what package obsoletes the given value",
+	  command_whatobsoletes },
 	{ "version", "Display version information", command_version },
 	{ "help", "Display a helpful usage message", command_help }
 };
