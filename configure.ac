@@ -28,7 +28,6 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_ISC_POSIX
 AC_HEADER_STDC
-AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 
 dnl ---------------------------------------------------------------------------
