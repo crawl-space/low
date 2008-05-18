@@ -58,53 +58,39 @@ low_repo_rpmdb_shutdown (LowRepo *repo)
 }
 
 LowPackageIter *
-low_repo_rpmdb_list_all (LowRepo *repo)
+low_repo_rpmdb_search (LowRepo *repo, int_32 tag, const char *querystr)
 {
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
 	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
 	iter->super.repo = repo;
 	iter->super.pkg = NULL;
 
-	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, 0, NULL, 0);
+	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, tag, querystr, 0);
 	return (LowPackageIter *) iter;
+}
+
+LowPackageIter *
+low_repo_rpmdb_list_all (LowRepo *repo)
+{
+	return low_repo_rpmdb_search (repo, 0, NULL);
 }
 
 LowPackageIter *
 low_repo_rpmdb_list_by_name (LowRepo *repo, const char *name)
 {
-	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
-	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
-	iter->super.repo = repo;
-	iter->super.pkg = NULL;
-
-	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_NAME, name,
-					    0);
-	return (LowPackageIter *) iter;
+	return low_repo_rpmdb_search (repo, RPMTAG_NAME, name);
 }
 
 LowPackageIter *
 low_repo_rpmdb_search_provides (LowRepo *repo, const char *provides)
 {
-	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
-	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
-	iter->super.repo = repo;
-	iter->super.pkg = NULL;
-
-	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PROVIDENAME,
-					    provides, 0);
-	return (LowPackageIter *) iter;
+	return low_repo_rpmdb_search (repo, RPMTAG_PROVIDENAME, provides);
 }
 
 LowPackageIter *
 low_repo_rpmdb_search_requires (LowRepo *repo, const char *requires)
 {
-	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
-	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
-	iter->super.pkg = NULL;
-
-	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_REQUIRENAME,
-					    requires, 0);
-	return (LowPackageIter *) iter;
+	return low_repo_rpmdb_search (repo, RPMTAG_REQUIRENAME, requires);
 }
 
 
