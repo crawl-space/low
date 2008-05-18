@@ -95,8 +95,14 @@ command_info (int argc, const char *argv[])
 static void
 print_package_short (LowPackage *pkg)
 {
-	printf ("%s.%s  %s-%s  %s\n", pkg->name, pkg->arch,
-		pkg->version, pkg->release, pkg->repo);
+	gchar *name_arch = g_strdup_printf ("%s.%s", pkg->name, pkg->arch);
+	gchar *version_release = g_strdup_printf ("%s-%s", pkg->version,
+						  pkg->release);
+
+	printf ("%-41.41s%-23.23s%s\n", name_arch, version_release, pkg->repo);
+
+	free (name_arch);
+	free (version_release);
 }
 
 static int
@@ -260,6 +266,9 @@ command_whatrequires (int argc, const char *argv[])
 	return 0;
 }
 
+/**
+ * Display the program version as specified in configure.ac
+ */
 static int
 command_version (int argc, const char *argv[])
 {
