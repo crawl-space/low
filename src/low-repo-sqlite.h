@@ -38,6 +38,8 @@ LowPackageIter *    low_repo_sqlite_search_provides     (LowRepo *repo,
 							 const char *provides);
 LowPackageIter *    low_repo_sqlite_search_requires     (LowRepo *repo,
 							 const char *requires);
+LowPackageIter *    low_repo_sqlite_search_files 	(LowRepo *repo,
+							 const char *file);
 
 #endif /* _LOW_REPO_SQLITE_H_ */
 

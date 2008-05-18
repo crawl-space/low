@@ -93,5 +93,10 @@ low_repo_rpmdb_search_requires (LowRepo *repo, const char *requires)
 	return low_repo_rpmdb_search (repo, RPMTAG_REQUIRENAME, requires);
 }
 
+LowPackageIter *
+low_repo_rpmdb_search_files (LowRepo *repo, const char *file)
+{
+	return low_repo_rpmdb_search (repo, RPMTAG_BASENAMES, file);
+}
 
 /* vim: set ts=8 sw=8 noet: */

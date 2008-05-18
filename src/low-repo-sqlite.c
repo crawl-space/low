@@ -27,25 +27,39 @@
 
 typedef struct _LowRepoSqlite {
 	LowRepo super;
-	sqlite3 *db;
+	sqlite3 *primary_db;
+	sqlite3 *filelists_db;
 } LowRepoSqlite;
+
+void
+low_repo_sqlite_open_db (const char *db_file, sqlite3 **db)
+{
+	if (sqlite3_open (db_file, db)) {
+//		fprintf (stderr, "Can't open database '%s': %s\n",
+//				 primary_db, sqlite3_errmsg (repo->primary_db));
+		sqlite3_close (*db);
+//		exit(1);
+	}
+}
 
 LowRepo *
 low_repo_sqlite_initialize (const char *id, const char *name, gboolean enabled)
 {
 	LowRepoSqlite *repo = malloc (sizeof (LowRepoSqlite));
-	char *primary_db = g_strdup_printf ("/var/cache/yum/%s/primary.sqlite", id);
+	char *primary_db =
+		g_strdup_printf ("/var/cache/yum/%s/primary.sqlite", id);
+	char *filelists_db =
+		g_strdup_printf ("/var/cache/yum/%s/primary.sqlite", id);
 
-	if (sqlite3_open (primary_db, &repo->db)) {
-//		fprintf (stderr, "Can't open database '%s': %s\n",
-//				 primary_db, sqlite3_errmsg (repo->db));
-		sqlite3_close (repo->db);
-//		exit(1);
-	}
+	low_repo_sqlite_open_db (primary_db, &repo->primary_db);
+	low_repo_sqlite_open_db (filelists_db, &repo->filelists_db);
 
 	repo->super.id = g_strdup (id);
 	repo->super.name = g_strdup (name);
 	repo->super.enabled = enabled;
+
+	free (primary_db);
+	free (filelists_db);
 
 	return (LowRepo *) repo;
 }
@@ -54,7 +68,7 @@ void
 low_repo_sqlite_shutdown (LowRepo *repo)
 {
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-	sqlite3_close (repo_sqlite->db);
+	sqlite3_close (repo_sqlite->primary_db);
 	free (repo);
 }
 
@@ -68,7 +82,8 @@ low_repo_sqlite_list_all (LowRepo *repo)
 	iter->super.repo = repo;
 	iter->super.pkg = NULL;
 
-	sqlite3_prepare (repo_sqlite->db, stmt, -1, &iter->pp_stmt, NULL);
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
+			 NULL);
 	return (LowPackageIter *) iter;
 }
 
@@ -84,7 +99,8 @@ low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
 	iter->super.repo = repo;
 	iter->super.pkg = NULL;
 
-	sqlite3_prepare (repo_sqlite->db, stmt, -1, &iter->pp_stmt, NULL);
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
+			 NULL);
 	sqlite3_bind_text (iter->pp_stmt, 1, name, -1, SQLITE_STATIC);
 	return (LowPackageIter *) iter;
 }
@@ -101,7 +117,8 @@ low_repo_sqlite_search_provides (LowRepo *repo, const char *provides)
 	iter->super.repo = repo;
 	iter->super.pkg = NULL;
 
-	sqlite3_prepare (repo_sqlite->db, stmt, -1, &iter->pp_stmt, NULL);
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
+			 NULL);
 	sqlite3_bind_text (iter->pp_stmt, 1, provides, -1, SQLITE_STATIC);
 	return (LowPackageIter *) iter;
 }
@@ -119,10 +136,30 @@ low_repo_sqlite_search_requires (LowRepo *repo, const char *requires)
 	iter->super.repo = repo;
 	iter->super.pkg = NULL;
 
-	sqlite3_prepare (repo_sqlite->db, stmt, -1, &iter->pp_stmt, NULL);
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
+			 NULL);
 	sqlite3_bind_text (iter->pp_stmt, 1, requires, -1, SQLITE_STATIC);
 	return (LowPackageIter *) iter;
 }
 
+LowPackageIter *
+low_repo_sqlite_search_files (LowRepo *repo, const char *file)
+{
+	/* XXX Search the full filelists db too */
+	const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
+			   "p.size_package, p.summary, p.description, p.url, "
+			   "p.rpm_license FROM packages p, files f "
+			   "WHERE f.pkgKey = p.pkgKey "
+			   "AND f.name = :file";
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+	iter->super.repo = repo;
+	iter->super.pkg = NULL;
+
+	sqlite3_prepare (repo_sqlite->filelists_db, stmt, -1, &iter->pp_stmt,
+			 NULL);
+	sqlite3_bind_text (iter->pp_stmt, 1, file, -1, SQLITE_STATIC);
+	return (LowPackageIter *) iter;
+}
 
 /* vim: set ts=8 sw=8 noet: */
