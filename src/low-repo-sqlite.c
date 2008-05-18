@@ -143,6 +143,25 @@ low_repo_sqlite_search_requires (LowRepo *repo, const char *requires)
 }
 
 LowPackageIter *
+low_repo_sqlite_search_conflicts (LowRepo *repo, const char *conflicts)
+{
+	const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
+			   "p.size_package, p.summary, p.description, p.url, "
+			   "p.rpm_license FROM packages p, conflicts conf "
+			   "WHERE conf.pkgKey = p.pkgKey "
+			   "AND conf.name = :conflicts";
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+	iter->super.repo = repo;
+	iter->super.pkg = NULL;
+
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
+			 NULL);
+	sqlite3_bind_text (iter->pp_stmt, 1, conflicts, -1, SQLITE_STATIC);
+	return (LowPackageIter *) iter;
+}
+
+LowPackageIter *
 low_repo_sqlite_search_obsoletes (LowRepo *repo, const char *obsoletes)
 {
 	const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "

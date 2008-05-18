@@ -36,6 +36,8 @@ LowPackageIter *	low_repo_rpmdb_search_provides 	(LowRepo *repo,
 							 const char *provides);
 LowPackageIter * 	low_repo_rpmdb_search_requires  (LowRepo *repo,
 							 const char *requires);
+LowPackageIter * 	low_repo_rpmdb_search_conflicts (LowRepo *repo,
+							 const char *conflicts);
 LowPackageIter *	low_repo_rpmdb_search_obsoletes (LowRepo *repo,
 							 const char *obsoletes);
 LowPackageIter *	low_repo_rpmdb_search_files 	(LowRepo *repo,

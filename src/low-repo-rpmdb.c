@@ -94,6 +94,12 @@ low_repo_rpmdb_search_requires (LowRepo *repo, const char *requires)
 }
 
 LowPackageIter *
+low_repo_rpmdb_search_conflicts (LowRepo *repo, const char *conflicts)
+{
+	return low_repo_rpmdb_search (repo, RPMTAG_CONFLICTNAME, conflicts);
+}
+
+LowPackageIter *
 low_repo_rpmdb_search_obsoletes (LowRepo *repo, const char *obsoletes)
 {
 	/* XXX This seems to be broken in RPM itself. */
