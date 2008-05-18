@@ -210,8 +210,21 @@ search_requires (LowRepo *repo, gpointer data)
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}
-
 }
+
+static void
+search_obsoletes (LowRepo *repo, gpointer data)
+{
+   LowPackageIter *iter;
+   char *obsoletes = (char *) data;
+
+   iter = low_repo_sqlite_search_obsoletes (repo, obsoletes);
+   while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+       LowPackage *pkg = iter->pkg;
+       print_package_short (pkg);
+   }
+}
+
 
 static int
 command_whatprovides (int argc, const char *argv[])
@@ -279,6 +292,35 @@ command_whatrequires (int argc, const char *argv[])
 	return 0;
 }
 
+static int
+command_whatobsoletes (int argc, const char *argv[])
+{
+   LowRepo *rpmdb;
+   LowRepoSet *repos;
+   LowConfig *config = low_config_initialize ();
+   LowPackageIter *iter;
+   gchar *obsoletes = g_strdup (argv[0]);
+
+   rpmdb = low_repo_rpmdb_initialize ();
+   iter = low_repo_rpmdb_search_obsoletes (rpmdb, obsoletes);
+
+   while (iter = low_package_iter_next (iter), iter != NULL) {
+       LowPackage *pkg = iter->pkg;
+       print_package_short (pkg);
+   }
+   low_repo_rpmdb_shutdown (rpmdb);
+
+   repos = low_repo_set_initialize_from_config (config);
+   low_repo_set_for_each (repos, ENABLED,
+                  (LowRepoSetFunc) search_obsoletes, obsoletes);
+
+   low_repo_set_free (repos);
+   low_config_free (config);
+   g_free (obsoletes);
+
+   return 0;
+}
+
 /**
  * Display the program version as specified in configure.ac
  */
@@ -320,6 +362,8 @@ const SubCommand commands[] = {
 		command_whatprovides },
 	{ "whatrequires", "Find what package requires the given value",
 		command_whatrequires },
+   { "whatobsoletes", "Find what package obsoletes the given value",
+       command_whatobsoletes },
 	{ "version", "Display version information", command_version },
 	{ "help", "Display a helpful usage message", command_help }
 };

@@ -6,3 +6,4 @@
 - info description word wrapping.
 - macro substitution in config files
 - doxygen code documentation
+- low download pkg: Download but don't install.

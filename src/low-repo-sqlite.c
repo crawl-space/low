@@ -143,6 +143,25 @@ low_repo_sqlite_search_requires (LowRepo *repo, const char *requires)
 }
 
 LowPackageIter *
+low_repo_sqlite_search_obsoletes (LowRepo *repo, const char *obsoletes)
+{
+   const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
+              "p.size_package, p.summary, p.description, p.url, "
+              "p.rpm_license FROM packages p, obsoletes obs "
+              "WHERE obs.pkgKey = p.pkgKey "
+              "AND obs.name = :obsoletes";
+   LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+   LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+   iter->super.repo = repo;
+   iter->super.pkg = NULL;
+
+   sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt, NULL);
+   sqlite3_bind_text (iter->pp_stmt, 1, obsoletes, -1, SQLITE_STATIC);
+   return (LowPackageIter *) iter;
+}
+
+
+LowPackageIter *
 low_repo_sqlite_search_files (LowRepo *repo, const char *file)
 {
 	/* XXX Search the full filelists db too */
