@@ -1,8 +1,6 @@
 - Anything from the output of 'make todo'
 - Find another ini parser.
 - make targets for code style.
-- Implement obsoletes.
-- Implements conflicts.
 - info description word wrapping.
 - macro substitution in config files
 - doxygen code documentation
@@ -12,3 +10,4 @@
 - calculate list of updating packages
 - depsolving
 - gpg key checking
+- globbing search for command line 'low search'
