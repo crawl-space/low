@@ -96,7 +96,8 @@ low_repo_rpmdb_search_requires (LowRepo *repo, const char *requires)
 LowPackageIter *
 low_repo_rpmdb_search_obsoletes (LowRepo *repo, const char *obsoletes)
 {
-   return low_repo_rpmdb_search (repo, RPMTAG_OBSOLETENAME, obsoletes);
+	/* XXX This seems to be broken in RPM itself. */
+	return low_repo_rpmdb_search (repo, RPMTAG_OBSOLETENAME, obsoletes);
 }
 
 LowPackageIter *
