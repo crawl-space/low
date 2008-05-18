@@ -26,6 +26,9 @@
 #ifndef _LOW_REPO_SET_H_
 #define _LOW_REPO_SET_H_
 
+/**
+ * A set of multiple repositories.
+ */
 typedef struct _LowRepoSet {
 	GHashTable *repos;
 } LowRepoSet;
