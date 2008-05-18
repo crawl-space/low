@@ -45,7 +45,11 @@ whitespacelint: tablint trailinglint leadingspacelint
 
 # XXX watch for pointers and custom typedefs with this
 indent:
-	@! find \( -name \*.c -o -name '*.h' \) \
+	@find \( -name \*.c -o -name '*.h' \) \
 		| xargs indent -linux -pcs -psl
+
+todo:
+	@find \( -name \*.c -o -name '*.h' \) \
+		| xargs grep -nP "(XXX)|(TODO)|(FIXME)"
 
 .PHONY: doxygen
