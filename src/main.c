@@ -368,6 +368,11 @@ const SubCommand commands[] = {
 	{ "help", "Display a helpful usage message", command_help }
 };
 
+/**
+ * Display the default help message.
+ *
+ * @return A return code to exit the program with.
+ */
 static int
 usage (void)
 {
