@@ -47,11 +47,7 @@ print_package (const LowPackage *pkg)
 	printf ("Size        : %zd bytes\n", pkg->size);
 	printf ("Repo        : %s\n", pkg->repo);
 	printf ("Summary     : %s\n", pkg->summary);
-
-	if (pkg->url) {
-		printf ("URL         : %s\n", pkg->url);
-	}
-
+	printf ("URL         : %s\n", pkg->url ? pkg->url : "");
 	printf ("License     : %s\n", pkg->license);
 	printf ("Description : %s\n", pkg->description);
 	printf ("\n");
