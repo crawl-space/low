@@ -32,6 +32,7 @@
 #include "low-repo-set.h"
 #include "low-package-sqlite.h"
 #include "low-repo-sqlite.h"
+#include "low-download.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -438,6 +439,15 @@ NOT_IMPLEMENTED (int argc, const char *argv[])
 	return 1;
 }
 
+static int
+command_download (int argc, const char *argv[])
+{
+	char *url = "http://dgoodwin.dangerouslyinc.com/files/fedora8.png";
+	char *file = "/tmp/fedora8.png";
+	download_if_missing(url, file);
+	return 0;
+}
+
 typedef struct _SubCommand {
 	char *name;
 	char *summary;
@@ -448,6 +458,8 @@ const SubCommand commands[] = {
 	{ "clean", "Remove cached data", NOT_IMPLEMENTED },
 	{ "info", "Display package details", command_info },
 	{ "list", "Display a group of packages", command_list },
+	{ "download", "Download (but don't install) a list of packages", 
+		command_download},
 	{ "search", "Search package information for the given string",
 	  command_search },
 	{ "repolist", "Display configured software repositories",

@@ -11,3 +11,4 @@
 - depsolving
 - gpg key checking
 - globbing search for command line 'low search'
+- remove -lcurl from src/Makefile.am and add proper autotools macro

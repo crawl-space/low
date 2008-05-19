@@ -42,6 +42,8 @@ low_SOURCES = \
 	low-repo-sqlite.h \
 	low-transaction.c \
 	low-transaction.h \
+	low-download.h \
+	low-download.c \
 	main.c \
 	$(NULL)
 
@@ -49,4 +51,5 @@ low_LDADD = \
 	$(GLIB_LIBS) \
 	$(SQLITE_LIBS) \
 	$(RPM_LIBS) \
+	-lcurl \
 	$(NULL)
