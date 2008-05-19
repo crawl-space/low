@@ -24,6 +24,26 @@
 #ifndef _LOW_PACKAGE_H_
 #define _LOW_PACKAGE_H_
 
+typedef enum {
+	DEPENDENCY_SENSE_EQ,
+	DEPENDENCY_SENSE_GT,
+	DEPENDENCY_SENSE_GE,
+	DEPENDENCY_SENSE_LT,
+	DEPENDENCY_SENSE_LE,
+	DEPENDENCY_SENSE_NONE
+} LowPackageDependencySense;
+
+/**
+ * A struct representing a package dependency.
+ *
+ * For instance: "foobar >= 1.2-3"
+ */
+typedef struct _LowPackageDependency {
+	char *name;
+	LowPackageDependencySense sense;
+	char *evr;
+} LowPackageDependency;
+
 typedef struct _LowPackage {
 	const char *name;
 	const char *version;
