@@ -88,6 +88,7 @@ dnl ---------------------------------------------------------------------------
 dnl - Makefiles, etc.
 dnl ---------------------------------------------------------------------------
 AC_OUTPUT([
+low.spec
 Makefile
 doxygen/Makefile
 doxygen/doxygen.conf

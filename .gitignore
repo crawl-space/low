@@ -3,6 +3,8 @@
 *.swo
 *.tar.gz
 
+low.spec
+
 INSTALL
 
 aclocal.m4

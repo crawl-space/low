@@ -1,0 +1,47 @@
+Name:           low
+Version:        @VERSION@
+Release:        1%{?dist}
+Summary:        A yum-like package manager in C
+
+Group:          System Environment/Base
+License:        GPLv2+
+URL:            http://dangerouslyinc.com
+Source0:        %{name}-%{version}-%{release}.tar.gz
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+BuildRequires:  rpm-devel
+BuildRequires:  glib2-devel
+BuildRequires:  sqlite-devel
+
+%description
+Low is a yum-like package manager, implemented in C, and with the goal
+of being a drop-in replacement for yum.
+
+%prep
+%setup -q
+
+
+%build
+%configure
+make %{?_smp_mflags}
+
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT
+
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+
+%files
+%defattr(-,root,root,-)
+%doc COPYING README HACKING INSTALL TODO
+%{_bindir}low
+
+
+
+%changelog
+* Sun May 18 2008 James Bowes <jbowes@dangerouslyinc.com>
+- Initial spec file
