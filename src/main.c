@@ -105,11 +105,24 @@ print_package_short (LowPackage *pkg)
 	free (version_release);
 }
 
+static void
+list (LowRepo *repo, gpointer data)
+{
+	LowPackageIter *iter;
+
+	iter = low_repo_sqlite_list_all (repo);
+	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package_short (pkg);
+	}
+}
+
 static int
 command_list (int argc, const char *argv[])
 {
 	LowRepo *repo;
 	LowPackageIter *iter;
+	LowConfig *config = low_config_initialize ();
 
 	if (!strcmp(argv[0], "installed") || !strcmp(argv[0], "all")) {
 		repo = low_repo_rpmdb_initialize ();
@@ -121,17 +134,14 @@ command_list (int argc, const char *argv[])
 		low_repo_rpmdb_shutdown (repo);
 	}
 	if (!strcmp(argv[0], "all")) {
-		/* XXX do this for all repos. */
-		repo = low_repo_sqlite_initialize ("fedora", "fedora", TRUE);
-		iter = low_repo_sqlite_list_all (repo);
-		while (iter = low_sqlite_package_iter_next (iter),
-		       iter != NULL) {
-			LowPackage *pkg = iter->pkg;
-			print_package_short (pkg);
-		}
-		low_repo_sqlite_shutdown (repo);
+		LowRepoSet *repos =
+			low_repo_set_initialize_from_config (config);
+		low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) list,
+				       NULL);
+		low_repo_set_free (repos);
 	}
 
+	low_config_free (config);
 
 	return 0;
 }
