@@ -51,14 +51,18 @@ AC_SUBST(GLIB_REQUIRED)
 dnl ---------------------------------------------------------------------------
 dnl - Check library dependencies
 dnl ---------------------------------------------------------------------------
+
+dnl Check for glib (required)
 PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_REQUIRED)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
+dnl Check for sqlite3 (required)
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 AC_SUBST(SQLITE_CFLAGS)
 AC_SUBST(SQLITE_LIBS)
 
+dnl Check for rpm (required)
 AC_CHECK_HEADER(rpm/rpmlib.h,
             AC_CHECK_LIB(rpm, rpmdbOpen,
                  [have_rpm=yes
@@ -72,6 +76,12 @@ if test "$have_rpm" != yes; then
     *** rpm was not found)
 fi
 AC_SUBST(RPM_LIBS)
+
+dnl Check for check (unit testing library, optional)
+PKG_CHECK_MODULES(CHECK, check >= 0.9.5, HAVE_CHECK=yes, HAVE_CHECK=no)
+AC_SUBST(HAVE_CHECK)
+AC_SUBST(CHECK_CFLAGS)
+AC_SUBST(CHECK_LIBS)
 
 dnl ---------------------------------------------------------------------------
 dnl - Make paths available for source files
@@ -93,4 +103,20 @@ Makefile
 doxygen/Makefile
 doxygen/doxygen.conf
 src/Makefile
+test/Makefile
+test/unit/Makefile
 ])
+
+dnl ---------------------------------------------------------------------------
+dnl - Configure summary
+dnl ---------------------------------------------------------------------------
+
+echo "
+                        Low $VERSION
+                  ====================
+
+        prefix:                         ${prefix}
+        compiler:                       ${CC}
+        cflags:                         ${CFLAGS}
+        Building 'check' unit tests:    ${HAVE_CHECK}
+"
