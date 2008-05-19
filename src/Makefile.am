@@ -40,6 +40,8 @@ low_SOURCES = \
 	low-repo-set.h \
 	low-repo-sqlite.c \
 	low-repo-sqlite.h \
+	low-transaction.c \
+	low-transaction.h \
 	main.c \
 	$(NULL)
 

@@ -19,40 +19,22 @@
  *  02110-1301  USA
  */
 
-#include <glib.h>
-#include "low-config.h"
-#include "low-repo.h"
-#include "low-package.h"
+#include <stdlib.h>
+#include "low-transaction.h"
 
-#ifndef _LOW_REPO_SET_H_
-#define _LOW_REPO_SET_H_
+LowTransaction *
+low_transaction_new (LowRepo *rpmdb, LowRepoSet *repos) {
+	LowTransaction *trans = malloc (sizeof (LowTransaction));
 
-/**
- * A set of multiple repositories.
- */
-typedef struct _LowRepoSet {
-	GHashTable *repos;
-} LowRepoSet;
+	trans->rpmdb = rpmdb;
+	trans->repos = repos;
 
-typedef enum {
-	ENABLED,
-	DISABLED,
-	ALL
-} LowRepoSetFilter;
+	return trans;
+}
 
-typedef gboolean (*LowRepoSetFunc) (LowRepo *repo, gpointer data);
-
-LowRepoSet *    low_repo_set_initialize_from_config 	(LowConfig *config);
-void            low_repo_set_free                      	(LowRepoSet *repo_set);
-
-void            low_repo_set_for_each                  	(LowRepoSet *repo_set,
-														 LowRepoSetFilter filter,
-														 LowRepoSetFunc func,
-														 gpointer data);
-
-LowPackageIter * 	low_repo_set_search_provides      	(LowRepoSet *repo_set,
-														 const char *provides);
-
-#endif /* _LOW_REPO_SET_H_ */
+void
+low_transaction_free (LowTransaction *trans) {
+	free (trans);
+}
 
 /* vim: set ts=8 sw=8 noet: */
