@@ -47,7 +47,11 @@ print_package (const LowPackage *pkg)
 	printf ("Size        : %zd bytes\n", pkg->size);
 	printf ("Repo        : %s\n", pkg->repo);
 	printf ("Summary     : %s\n", pkg->summary);
-	printf ("URL         : %s\n", pkg->url);
+
+	if (pkg->url) {
+		printf ("URL         : %s\n", pkg->url);
+	}
+
 	printf ("License     : %s\n", pkg->license);
 	printf ("Description : %s\n", pkg->description);
 	printf ("\n");
@@ -121,6 +125,7 @@ command_list (int argc, const char *argv[])
 		low_repo_rpmdb_shutdown (repo);
 	}
 	if (!strcmp(argv[0], "all")) {
+		/* XXX do this for all repos. */
 		repo = low_repo_sqlite_initialize ("fedora", "fedora", TRUE);
 		iter = low_repo_sqlite_list_all (repo);
 		while (iter = low_sqlite_package_iter_next (iter),
@@ -135,6 +140,45 @@ command_list (int argc, const char *argv[])
 	return 0;
 }
 
+static void
+search (LowRepo *repo, gpointer data)
+{
+	LowPackageIter *iter;
+	const char *querystr = (const char *) data;
+
+	iter = low_repo_sqlite_generic_search (repo, querystr);
+	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package_short (pkg);
+	}
+}
+
+static int
+command_search (int argc, const char *argv[])
+{
+	LowRepo *repo;
+	LowRepoSet *repos;
+	LowPackageIter *iter;
+	LowConfig *config = low_config_initialize ();
+	gchar *querystr = g_strdup (argv[0]);
+
+	repo = low_repo_rpmdb_initialize ();
+	iter = low_repo_rpmdb_generic_search (repo, querystr);
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package_short (pkg);
+	}
+	low_repo_rpmdb_shutdown (repo);
+
+	repos = low_repo_set_initialize_from_config (config);
+	low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) search,
+			       querystr);
+	low_repo_set_free (repos);
+	low_config_free (config);
+	free (querystr);
+
+	return 0;
+}
 #define FORMAT_STRING "%-30.30s  %-35.35s  %s\n"
 
 static void
@@ -398,6 +442,8 @@ const SubCommand commands[] = {
 	{ "clean", "Remove cached data", NOT_IMPLEMENTED },
 	{ "info", "Display package details", command_info },
 	{ "list", "Display a group of packages", command_list },
+	{ "search", "Search package information for the given string",
+	  command_search },
 	{ "repolist", "Display configured software repositories",
 	  command_repolist },
 	{ "whatprovides", "Find what package provides the given value",

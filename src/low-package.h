@@ -35,7 +35,7 @@ typedef struct _LowPackage {
 	const char *repo;
 	const char *summary;
 	const char *description;
-	const char *url;
+	const char *url; /** Optional URL for the package */
 	const char *license;
 } LowPackage;
 

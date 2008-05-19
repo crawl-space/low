@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <fcntl.h>
+#include <string.h>
 #include <rpm/rpmlib.h>
 #include <rpm/rpmdb.h>
 #include "low-repo-rpmdb.h"
@@ -64,6 +65,8 @@ low_repo_rpmdb_search (LowRepo *repo, int_32 tag, const char *querystr)
 	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
 	iter->super.repo = repo;
 	iter->super.pkg = NULL;
+
+	iter->func = NULL;
 
 	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, tag, querystr, 0);
 	return (LowPackageIter *) iter;
@@ -110,6 +113,37 @@ LowPackageIter *
 low_repo_rpmdb_search_files (LowRepo *repo, const char *file)
 {
 	return low_repo_rpmdb_search (repo, RPMTAG_BASENAMES, file);
+}
+
+static gboolean
+low_repo_rpmdb_generic_search_filter_fn (LowPackage *pkg, gpointer data)
+{
+	gchar *querystr = (gchar *) data;
+
+	/* url can be NULL, so check first. */
+	if (strstr (pkg->name, querystr) ||
+	    strstr (pkg->summary, querystr) ||
+	    strstr (pkg->description, querystr) ||
+	    (pkg->url != NULL && strstr (pkg->url, querystr))) {
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+}
+
+LowPackageIter *
+low_repo_rpmdb_generic_search (LowRepo *repo, const char *querystr)
+{
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
+	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
+	iter->super.repo = repo;
+	iter->super.pkg = NULL;
+
+	iter->func = low_repo_rpmdb_generic_search_filter_fn;
+	iter->filter_data = (gpointer) querystr;
+
+	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, 0, NULL, 0);
+	return (LowPackageIter *) iter;
 }
 
 /* vim: set ts=8 sw=8 noet: */

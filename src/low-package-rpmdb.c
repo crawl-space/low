@@ -84,6 +84,13 @@ low_package_iter_next (LowPackageIter *iter)
 	}
 	iter->pkg = low_package_rpmdb_new_from_header (header);
 
+	if (iter_rpmdb->func != NULL) {
+		/* move on to the next rpm if this one fails the filter */
+		if (!(iter_rpmdb->func) (iter->pkg, iter_rpmdb->filter_data)) {
+			return low_package_iter_next (iter);
+		}
+	}
+
 	return iter;
 }
 

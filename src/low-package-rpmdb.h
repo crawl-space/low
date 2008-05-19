@@ -30,9 +30,13 @@ typedef struct _LowPackageRpmdb {
 	LowPackage pkg;
 } LowPackageRpmdb;
 
+typedef gboolean (*LowPackageIterFilterFn) (LowPackage *pkg, gpointer data);
+
 typedef struct _LowPackageIterRpmdb {
 	LowPackageIter super;
 	rpmdbMatchIterator rpm_iter;
+	LowPackageIterFilterFn func;
+	gpointer filter_data;
 } LowPackageIterRpmdb;
 
 LowPackageIter * low_package_iter_next (LowPackageIter *iter);

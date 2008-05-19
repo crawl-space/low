@@ -180,7 +180,6 @@ low_repo_sqlite_search_obsoletes (LowRepo *repo, const char *obsoletes)
 	return (LowPackageIter *) iter;
 }
 
-
 LowPackageIter *
 low_repo_sqlite_search_files (LowRepo *repo, const char *file)
 {
@@ -195,9 +194,38 @@ low_repo_sqlite_search_files (LowRepo *repo, const char *file)
 	iter->super.repo = repo;
 	iter->super.pkg = NULL;
 
-	sqlite3_prepare (repo_sqlite->filelists_db, stmt, -1, &iter->pp_stmt,
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
 			 NULL);
 	sqlite3_bind_text (iter->pp_stmt, 1, file, -1, SQLITE_STATIC);
+	return (LowPackageIter *) iter;
+}
+
+/**
+ * Search name, summary, description and & url for the provided string.
+ *
+ * XXX this function needs a better name
+ */
+LowPackageIter *
+low_repo_sqlite_generic_search (LowRepo *repo, const char *querystr)
+{
+	const char *stmt = "SELECT name, arch, version, release, "
+			   "size_package, summary, description, url, "
+			   "rpm_license FROM packages  "
+			   "WHERE name LIKE :query OR "
+			   "summary LIKE :query OR "
+			   "description LIKE :query OR "
+			   "url LIKE :query";
+	char *like_querystr = g_strdup_printf ("%%%s%%", querystr);
+
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+	iter->super.repo = repo;
+	iter->super.pkg = NULL;
+
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
+			 NULL);
+	sqlite3_bind_text (iter->pp_stmt, 1, like_querystr, -1, free);
+
 	return (LowPackageIter *) iter;
 }
 
