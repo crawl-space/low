@@ -1,0 +1,5 @@
+.deps
+*.o
+
+check_low
+check_low.log

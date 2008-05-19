@@ -79,7 +79,7 @@ AC_SUBST(RPM_LIBS)
 
 dnl Check for check (unit testing library, optional)
 PKG_CHECK_MODULES(CHECK, check >= 0.9.5, HAVE_CHECK=yes, HAVE_CHECK=no)
-AC_SUBST(HAVE_CHECK)
+AM_CONDITIONAL(HAVE_CHECK, test x$HAVE_CHECK = xyes)
 AC_SUBST(CHECK_CFLAGS)
 AC_SUBST(CHECK_LIBS)
 

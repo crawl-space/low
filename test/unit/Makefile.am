@@ -16,3 +16,13 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #  02110-1301  USA
+
+INCLUDES = @CHECK_CFLAGS@
+
+TESTS = check_low
+
+noinst_PROGRAMS = check_low
+
+check_low_SOURCES = check_low.c
+check_low_LDADD = @CHECK_LIBS@
+CLEANFILES = check_low.log
