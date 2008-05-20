@@ -232,19 +232,6 @@ command_repolist (int argc, const char *argv[])
 }
 
 static void
-search_requires (LowRepo *repo, gpointer data)
-{
-	LowPackageIter *iter;
-	char *requires = (char *) data;
-
-	iter = low_repo_sqlite_search_requires (repo, requires);
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		LowPackage *pkg = iter->pkg;
-		print_package_short (pkg);
-	}
-}
-
-static void
 search_conflicts (LowRepo *repo, gpointer data)
 {
 	LowPackageIter *iter;
@@ -339,8 +326,13 @@ command_whatrequires (int argc, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 
 	repos = low_repo_set_initialize_from_config (config);
-	low_repo_set_for_each (repos, ENABLED,
-			       (LowRepoSetFunc) search_requires, requires);
+
+	iter = low_repo_set_search_requires (repos, requires);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package_short (pkg);
+	}
 
 	low_repo_set_free (repos);
 	low_config_free (config);
