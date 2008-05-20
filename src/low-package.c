@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <glib.h>
 #include "low-package.h"
 
 LowPackageDependency *
@@ -36,17 +37,51 @@ low_package_dependency_new (const char *name, LowPackageDependencySense sense,
 	return dep;
 }
 
+static LowPackageDependencySense
+low_package_dependency_sense_from_string (const char *sensestr)
+{
+	if (!strcmp ("=", sensestr)) {
+		return DEPENDENCY_SENSE_EQ;
+	} else if (!strcmp (">", sensestr)) {
+		return DEPENDENCY_SENSE_GT;
+	} else if (!strcmp (">=", sensestr)) {
+		return DEPENDENCY_SENSE_GE;
+	} else if (!strcmp ("<", sensestr)) {
+		return DEPENDENCY_SENSE_LT;
+	} else if (!strcmp ("<=", sensestr)) {
+		return DEPENDENCY_SENSE_LE;
+	} else {
+		/* XXX be smarter here */
+		exit (1);
+	}
+}
+
 LowPackageDependency *
 low_package_dependency_new_from_string (const char *depstr)
 {
-//	char *name;
-//	char *evr;
-//	LowPackageDependencySense sense;
-	LowPackageDependency *dep;
+	int length;
+	gchar **split;
+	LowPackageDependency *dep = malloc (sizeof (LowPackageDependency));
 
-	/* XXX Fill me in */
-	dep = NULL;
+	split = g_strsplit (depstr, " ", 3);
 
+	for (length = 0; split[length] != NULL; length++) ;
+
+	if (length == 3) {
+		dep->name = g_strdup (split[0]);
+		dep->sense =
+			low_package_dependency_sense_from_string (split[1]);
+		dep->evr = g_strdup (split[2]);
+	} else if (length == 1) {
+		dep->name = g_strdup (split[0]);
+		dep->sense = DEPENDENCY_SENSE_NONE;
+		dep->evr = NULL;
+	} else {
+		/* XXX do better here */
+		exit (1);
+	}
+
+	g_strfreev (split);
 	return dep;
 }
 

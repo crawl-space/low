@@ -35,7 +35,7 @@ START_TEST (test_core)
 }
 END_TEST
 
-START_TEST (test_low_package_new)
+START_TEST (test_low_package_dependency_new)
 {
 	LowPackageDependency *dep =
 		low_package_dependency_new ("foo", DEPENDENCY_SENSE_EQ,
@@ -44,6 +44,33 @@ START_TEST (test_low_package_new)
 	fail_unless (!strcmp ("foo", dep->name), "dep name incorrect");
 	fail_unless (DEPENDENCY_SENSE_EQ == dep->sense, "dep sense incorrect");
 	fail_unless (!strcmp ("0.1.3-3", dep->evr), "dep evr incorrect");
+
+	low_package_dependency_free (dep);
+}
+END_TEST
+
+START_TEST (test_low_package_dependency_new_from_string)
+{
+	LowPackageDependency *dep =
+		low_package_dependency_new_from_string ("foo = 0.1.3-3");
+
+	fail_unless (!strcmp ("foo", dep->name), "dep name incorrect");
+	fail_unless (DEPENDENCY_SENSE_EQ == dep->sense, "dep sense incorrect");
+	fail_unless (!strcmp ("0.1.3-3", dep->evr), "dep evr incorrect");
+
+	low_package_dependency_free (dep);
+}
+END_TEST
+
+START_TEST (test_low_package_dependency_new_from_string_unversioned)
+{
+	LowPackageDependency *dep =
+		low_package_dependency_new_from_string ("foo");
+
+	fail_unless (!strcmp ("foo", dep->name), "dep name incorrect");
+	fail_unless (DEPENDENCY_SENSE_NONE == dep->sense,
+		     "dep sense incorrect");
+	fail_unless (dep->evr == NULL, "dep evr incorrect");
 
 	low_package_dependency_free (dep);
 }
@@ -59,7 +86,9 @@ low_suite(void)
 	suite_add_tcase (s, tc);
 
 	tc = tcase_create ("low-package");
-	tcase_add_test (tc, test_low_package_new);
+	tcase_add_test (tc, test_low_package_dependency_new);
+	tcase_add_test (tc, test_low_package_dependency_new_from_string);
+	tcase_add_test (tc, test_low_package_dependency_new_from_string_unversioned);
 	suite_add_tcase (s, tc);
 
 	return s;

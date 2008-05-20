@@ -28,5 +28,10 @@ TESTS = check_low
 noinst_PROGRAMS = check_low
 
 check_low_SOURCES = check_low.c
-check_low_LDADD = @CHECK_LIBS@ ${top_builddir}/src/low-package.o
+check_low_LDADD = \
+		@CHECK_LIBS@ \
+		$(GLIB_LIBS) \
+		${top_builddir}/src/low-package.o \
+		$(NULL)
+
 CLEANFILES = check_low.log
