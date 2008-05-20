@@ -30,6 +30,7 @@ __low_commandlist="
     clean
     info
     list
+    download
     search
     repolist
     whatprovides
