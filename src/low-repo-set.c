@@ -99,4 +99,70 @@ low_repo_set_for_each (LowRepoSet *repo_set, LowRepoSetFilter filter,
 						  &for_each_data);
 }
 
+typedef struct _LowRepoSetPackageIter {
+	LowPackageIter super;
+	GHashTableIter *repo_iter;
+	LowPackageIter *current_repo_iter;
+	LowRepo *current_repo;
+	const gchar *search_data;
+} LowRepoSetPackageIter;
+
+LowPackageIter *
+low_repo_set_package_iter_next (LowPackageIter *iter)
+{
+	LowRepoSetPackageIter *iter_set = (LowRepoSetPackageIter *) iter;
+	LowRepo *current_repo = iter_set->current_repo;
+	LowPackageIter *current_repo_iter = iter_set->current_repo_iter;
+
+	current_repo_iter = low_package_iter_next (current_repo_iter);
+
+	/* This should cover repos that return 0 packages from the iter */
+	while (current_repo_iter == NULL && current_repo != NULL) {
+		do {
+			current_repo = NULL;
+			g_hash_table_iter_next (iter_set->repo_iter, NULL,
+						(gpointer) &current_repo);
+		} while (current_repo != NULL && !current_repo->enabled);
+		if (current_repo == NULL) {
+			current_repo_iter = NULL;
+			break;
+		}
+		current_repo_iter =
+			low_repo_sqlite_search_provides (current_repo,
+							 iter_set->search_data);
+		current_repo_iter = low_package_iter_next (current_repo_iter);
+	}
+
+	if (current_repo_iter == NULL) {
+		free (iter);
+		return NULL;
+	}
+
+	iter->pkg = iter_set->current_repo_iter->pkg;
+
+	return iter;
+}
+
+LowPackageIter *
+low_repo_set_search_provides (LowRepoSet *repo_set, const char *provides)
+{
+	LowRepoSetPackageIter *iter = malloc (sizeof (LowRepoSetPackageIter));
+	iter->super.next_func = low_repo_set_package_iter_next;
+	iter->super.pkg = NULL;
+	iter->repo_iter = malloc (sizeof (GHashTableIter));
+	g_hash_table_iter_init(iter->repo_iter, repo_set->repos);
+
+	/* XXX deal with an empty hashtable. */
+	do {
+		g_hash_table_iter_next (iter->repo_iter, NULL,
+					(gpointer) &(iter->current_repo));
+	} while (!iter->current_repo->enabled);
+
+	iter->current_repo_iter =
+		low_repo_sqlite_search_provides (iter->current_repo, provides);
+	iter->search_data = provides;
+
+	return (LowPackageIter *) iter;
+}
+
 /* vim: set ts=8 sw=8 noet: */

@@ -31,6 +31,7 @@
  * A set of multiple repositories.
  */
 typedef struct _LowRepoSet {
+	LowRepo super;
 	GHashTable *repos;
 } LowRepoSet;
 

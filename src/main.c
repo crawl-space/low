@@ -317,6 +317,14 @@ command_whatprovides (int argc, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 
 	repos = low_repo_set_initialize_from_config (config);
+
+	iter = low_repo_set_search_provides (repos, provides);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package_short (pkg);
+	}
+
 	low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) search_provides,
 						   provides);
 
