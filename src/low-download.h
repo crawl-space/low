@@ -2,6 +2,7 @@
  *  Low: a yum-like package manager
  *
  *  Copyright (C) 2008 James Bowes <jbowes@dangerouslyinc.com>
+ *  Copyright (C) 2008 Devan Goodwin <dgoodwin@dangerouslyinc.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,12 +24,12 @@
 #ifndef _LOW_DOWNLOAD_H_
 #define _LOW_DOWNLOAD_H_
 
-int      download_if_missing         (const char *url, 
+int      download_if_missing         (const char *url,
 				      const char *file);
-int      show_progress               (void *clientp, 
-				      double dltotal, 
-				      double dlnow, 
-				      double ultotal, 
+int      show_progress               (void *clientp,
+				      double dltotal,
+				      double dlnow,
+				      double ultotal,
 				      double ulnow);
 
 #endif /* _LOW_DOWNLOAD_H_ */

@@ -1,7 +1,7 @@
 /*
  *  Low: a yum-like package manager
  *
- *  Download code adopted from razor: 
+ *  Download code adopted from razor:
  *  http://github.com/krh/razor/wikis
  *
  *  Copyright (C) 2008 James Bowes <jbowes@dangerouslyinc.com>
@@ -30,7 +30,7 @@
 #include "low-download.h"
 
 int
-show_progress(void *clientp, double dltotal, double dlnow, double ultotal, 
+show_progress(void *clientp, double dltotal, double dlnow, double ultotal,
 	      double ulnow)
 {
 	const char *file = clientp;
@@ -84,13 +84,13 @@ download_if_missing(const char *url, const char *file)
 					CURLINFO_RESPONSE_CODE, &response);
 		if (res != CURLE_OK) {
 			fprintf(stderr, "curl error: %s\n", error);
-                        unlink(file);
-                        return -1;
+			unlink(file);
+			return -1;
 		}
 		if (response != 200) {
 			fprintf(stderr, " - failed %ld\n", response);
-                        unlink(file);
-                        return -1;
+			unlink(file);
+			return -1;
 		}
 		fprintf(stderr, "\n");
 	}

@@ -458,7 +458,7 @@ const SubCommand commands[] = {
 	{ "clean", "Remove cached data", NOT_IMPLEMENTED },
 	{ "info", "Display package details", command_info },
 	{ "list", "Display a group of packages", command_list },
-	{ "download", "Download (but don't install) a list of packages", 
+	{ "download", "Download (but don't install) a list of packages",
 		command_download},
 	{ "search", "Search package information for the given string",
 	  command_search },
