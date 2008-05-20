@@ -55,6 +55,8 @@ LowPackageIter * low_repo_set_search_provides      	(LowRepoSet *repo_set,
 							 const char *provides);
 LowPackageIter * low_repo_set_search_requires      	(LowRepoSet *repo_set,
 							 const char *requires);
+LowPackageIter * low_repo_set_search_conflicts 		(LowRepoSet *repo_set,
+							 const char *conflicts);
 
 LowPackageIter * low_repo_set_search_files      	(LowRepoSet *repo_set,
 							 const char *file);

@@ -232,19 +232,6 @@ command_repolist (int argc, const char *argv[])
 }
 
 static void
-search_conflicts (LowRepo *repo, gpointer data)
-{
-	LowPackageIter *iter;
-	char *requires = (char *) data;
-
-	iter = low_repo_sqlite_search_conflicts (repo, requires);
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		LowPackage *pkg = iter->pkg;
-		print_package_short (pkg);
-	}
-}
-
-static void
 search_obsoletes (LowRepo *repo, gpointer data)
 {
 	LowPackageIter *iter;
@@ -348,10 +335,10 @@ command_whatconflicts (int argc, const char *argv[])
 	LowRepoSet *repos;
 	LowConfig *config = low_config_initialize ();
 	LowPackageIter *iter;
-	gchar *requires = g_strdup (argv[0]);
+	gchar *conflicts = g_strdup (argv[0]);
 
 	rpmdb = low_repo_rpmdb_initialize ();
-	iter = low_repo_rpmdb_search_conflicts (rpmdb, requires);
+	iter = low_repo_rpmdb_search_conflicts (rpmdb, conflicts);
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
@@ -360,12 +347,18 @@ command_whatconflicts (int argc, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 
 	repos = low_repo_set_initialize_from_config (config);
-	low_repo_set_for_each (repos, ENABLED,
-			       (LowRepoSetFunc) search_conflicts, requires);
+
+	iter = low_repo_set_search_conflicts (repos, conflicts);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package_short (pkg);
+	}
+
 
 	low_repo_set_free (repos);
 	low_config_free (config);
-	g_free (requires);
+	g_free (conflicts);
 
 	return 0;
 }
