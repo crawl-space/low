@@ -147,8 +147,10 @@ low_repo_set_package_iter_next (LowPackageIter *iter)
 	return iter;
 }
 
-LowPackageIter *
-low_repo_set_search_provides (LowRepoSet *repo_set, const char *provides)
+static LowPackageIter *
+low_repo_set_package_iter_new (LowRepoSet *repo_set,
+			       LowRepoSetIterSearchFunc search_func,
+			       const char *searchstr)
 {
 	LowRepoSetPackageIter *iter = malloc (sizeof (LowRepoSetPackageIter));
 	iter->super.next_func = low_repo_set_package_iter_next;
@@ -162,104 +164,52 @@ low_repo_set_search_provides (LowRepoSet *repo_set, const char *provides)
 					(gpointer) &(iter->current_repo));
 	} while (!iter->current_repo->enabled);
 
-	iter->search_func = low_repo_sqlite_search_provides;
+	iter->search_func = search_func;
 	iter->current_repo_iter =
-		(iter->search_func) (iter->current_repo, provides);
-	iter->search_data = provides;
+		(iter->search_func) (iter->current_repo, searchstr);
+	iter->search_data = searchstr;
 
 	return (LowPackageIter *) iter;
+}
+
+LowPackageIter *
+low_repo_set_search_provides (LowRepoSet *repo_set, const char *provides)
+{
+	return low_repo_set_package_iter_new (repo_set,
+					      low_repo_sqlite_search_provides,
+					      provides);
 }
 
 LowPackageIter *
 low_repo_set_search_requires (LowRepoSet *repo_set, const char *requires)
 {
-	LowRepoSetPackageIter *iter = malloc (sizeof (LowRepoSetPackageIter));
-	iter->super.next_func = low_repo_set_package_iter_next;
-	iter->super.pkg = NULL;
-	iter->repo_iter = malloc (sizeof (GHashTableIter));
-	g_hash_table_iter_init(iter->repo_iter, repo_set->repos);
-
-	/* XXX deal with an empty hashtable. */
-	do {
-		g_hash_table_iter_next (iter->repo_iter, NULL,
-					(gpointer) &(iter->current_repo));
-	} while (!iter->current_repo->enabled);
-
-	iter->search_func = low_repo_sqlite_search_requires;
-	iter->current_repo_iter =
-		(iter->search_func) (iter->current_repo, requires);
-	iter->search_data = requires;
-
-	return (LowPackageIter *) iter;
+	return low_repo_set_package_iter_new (repo_set,
+					      low_repo_sqlite_search_requires,
+					      requires);
 }
 
 LowPackageIter *
 low_repo_set_search_conflicts (LowRepoSet *repo_set, const char *conflicts)
 {
-	LowRepoSetPackageIter *iter = malloc (sizeof (LowRepoSetPackageIter));
-	iter->super.next_func = low_repo_set_package_iter_next;
-	iter->super.pkg = NULL;
-	iter->repo_iter = malloc (sizeof (GHashTableIter));
-	g_hash_table_iter_init(iter->repo_iter, repo_set->repos);
-
-	/* XXX deal with an empty hashtable. */
-	do {
-		g_hash_table_iter_next (iter->repo_iter, NULL,
-					(gpointer) &(iter->current_repo));
-	} while (!iter->current_repo->enabled);
-
-	iter->search_func = low_repo_sqlite_search_conflicts;
-	iter->current_repo_iter =
-		(iter->search_func) (iter->current_repo, conflicts);
-	iter->search_data = conflicts;
-
-	return (LowPackageIter *) iter;
+	return low_repo_set_package_iter_new (repo_set,
+					      low_repo_sqlite_search_conflicts,
+					      conflicts);
 }
 
 LowPackageIter *
 low_repo_set_search_obsoletes (LowRepoSet *repo_set, const char *obsoletes)
 {
-	LowRepoSetPackageIter *iter = malloc (sizeof (LowRepoSetPackageIter));
-	iter->super.next_func = low_repo_set_package_iter_next;
-	iter->super.pkg = NULL;
-	iter->repo_iter = malloc (sizeof (GHashTableIter));
-	g_hash_table_iter_init(iter->repo_iter, repo_set->repos);
-
-	/* XXX deal with an empty hashtable. */
-	do {
-		g_hash_table_iter_next (iter->repo_iter, NULL,
-					(gpointer) &(iter->current_repo));
-	} while (!iter->current_repo->enabled);
-
-	iter->search_func = low_repo_sqlite_search_obsoletes;
-	iter->current_repo_iter =
-		(iter->search_func) (iter->current_repo, obsoletes);
-	iter->search_data = obsoletes;
-
-	return (LowPackageIter *) iter;
+	return low_repo_set_package_iter_new (repo_set,
+					      low_repo_sqlite_search_obsoletes,
+					      obsoletes);
 }
 
 LowPackageIter *
 low_repo_set_search_files (LowRepoSet *repo_set, const char *file)
 {
-	LowRepoSetPackageIter *iter = malloc (sizeof (LowRepoSetPackageIter));
-	iter->super.next_func = low_repo_set_package_iter_next;
-	iter->super.pkg = NULL;
-	iter->repo_iter = malloc (sizeof (GHashTableIter));
-	g_hash_table_iter_init(iter->repo_iter, repo_set->repos);
-
-	/* XXX deal with an empty hashtable. */
-	do {
-		g_hash_table_iter_next (iter->repo_iter, NULL,
-					(gpointer) &(iter->current_repo));
-	} while (!iter->current_repo->enabled);
-
-	iter->search_func = low_repo_sqlite_search_files;
-	iter->current_repo_iter =
-		(iter->search_func) (iter->current_repo, file);
-	iter->search_data = file;
-
-	return (LowPackageIter *) iter;
+	return low_repo_set_package_iter_new (repo_set,
+					      low_repo_sqlite_search_files,
+					      file);
 }
 
 /* vim: set ts=8 sw=8 noet: */
