@@ -69,7 +69,7 @@ low_package_rpmdb_new_from_header (Header header)
 }
 
 LowPackageIter *
-low_package_iter_next (LowPackageIter *iter)
+low_package_iter_rpmdb_next (LowPackageIter *iter)
 {
 	LowPackageIterRpmdb *iter_rpmdb = (LowPackageIterRpmdb *) iter;
 	Header header = rpmdbNextIterator(iter_rpmdb->rpm_iter);

@@ -39,7 +39,7 @@ typedef struct _LowPackageIterRpmdb {
 	gpointer filter_data;
 } LowPackageIterRpmdb;
 
-LowPackageIter * low_package_iter_next (LowPackageIter *iter);
+LowPackageIter * low_package_iter_rpmdb_next (LowPackageIter *iter);
 
 #endif /* _LOW_PACKAGE_RPMDB_H_ */
 

@@ -61,7 +61,7 @@ info (LowRepo *repo, gpointer data)
 	char *name = (char *) data;
 
 	iter = low_repo_sqlite_list_by_name (repo, name);
-	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package (pkg);
 	}
@@ -112,7 +112,7 @@ list (LowRepo *repo, gpointer data)
 	LowPackageIter *iter;
 
 	iter = low_repo_sqlite_list_all (repo);
-	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}
@@ -154,7 +154,7 @@ search (LowRepo *repo, gpointer data)
 	const char *querystr = (const char *) data;
 
 	iter = low_repo_sqlite_generic_search (repo, querystr);
-	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}
@@ -238,13 +238,13 @@ search_provides (LowRepo *repo, gpointer data)
 	char *provides = (char *) data;
 
 	iter = low_repo_sqlite_search_provides (repo, provides);
-	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}
 
 	iter = low_repo_sqlite_search_files (repo, provides);
-	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}
@@ -257,7 +257,7 @@ search_requires (LowRepo *repo, gpointer data)
 	char *requires = (char *) data;
 
 	iter = low_repo_sqlite_search_requires (repo, requires);
-	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}
@@ -270,7 +270,7 @@ search_conflicts (LowRepo *repo, gpointer data)
 	char *requires = (char *) data;
 
 	iter = low_repo_sqlite_search_conflicts (repo, requires);
-	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}
@@ -283,7 +283,7 @@ search_obsoletes (LowRepo *repo, gpointer data)
 	char *obsoletes = (char *) data;
 
 	iter = low_repo_sqlite_search_obsoletes (repo, obsoletes);
-	while (iter = low_sqlite_package_iter_next (iter), iter != NULL) {
+	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}

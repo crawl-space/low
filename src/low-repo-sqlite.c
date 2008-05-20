@@ -80,6 +80,7 @@ low_repo_sqlite_list_all (LowRepo *repo)
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
+	iter->super.next_func = low_sqlite_package_iter_next;
 	iter->super.pkg = NULL;
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
@@ -97,6 +98,7 @@ low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
+	iter->super.next_func = low_sqlite_package_iter_next;
 	iter->super.pkg = NULL;
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
@@ -115,6 +117,7 @@ low_repo_sqlite_search_provides (LowRepo *repo, const char *provides)
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
+	iter->super.next_func = low_sqlite_package_iter_next;
 	iter->super.pkg = NULL;
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
@@ -134,6 +137,7 @@ low_repo_sqlite_search_requires (LowRepo *repo, const char *requires)
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
+	iter->super.next_func = low_sqlite_package_iter_next;
 	iter->super.pkg = NULL;
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
@@ -153,6 +157,7 @@ low_repo_sqlite_search_conflicts (LowRepo *repo, const char *conflicts)
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
+	iter->super.next_func = low_sqlite_package_iter_next;
 	iter->super.pkg = NULL;
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
@@ -172,6 +177,7 @@ low_repo_sqlite_search_obsoletes (LowRepo *repo, const char *obsoletes)
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
+	iter->super.next_func = low_sqlite_package_iter_next;
 	iter->super.pkg = NULL;
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
@@ -192,6 +198,7 @@ low_repo_sqlite_search_files (LowRepo *repo, const char *file)
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
+	iter->super.next_func = low_sqlite_package_iter_next;
 	iter->super.pkg = NULL;
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
@@ -220,6 +227,7 @@ low_repo_sqlite_generic_search (LowRepo *repo, const char *querystr)
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
+	iter->super.next_func = low_sqlite_package_iter_next;
 	iter->super.pkg = NULL;
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,

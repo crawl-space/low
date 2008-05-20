@@ -64,6 +64,7 @@ low_repo_rpmdb_search (LowRepo *repo, int_32 tag, const char *querystr)
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
 	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
 	iter->super.repo = repo;
+	iter->super.next_func = low_package_iter_rpmdb_next;
 	iter->super.pkg = NULL;
 
 	iter->func = NULL;
@@ -137,6 +138,7 @@ low_repo_rpmdb_generic_search (LowRepo *repo, const char *querystr)
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
 	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
 	iter->super.repo = repo;
+	iter->super.next_func = low_package_iter_rpmdb_next;
 	iter->super.pkg = NULL;
 
 	iter->func = low_repo_rpmdb_generic_search_filter_fn;

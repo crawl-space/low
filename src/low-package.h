@@ -59,10 +59,17 @@ typedef struct _LowPackage {
 	const char *license;
 } LowPackage;
 
-typedef struct _LowPackageIter {
+typedef struct _LowPackageIter LowPackageIter;
+
+typedef LowPackageIter * (*LowPackageIterNextFunc) (LowPackageIter *iter);
+
+struct _LowPackageIter {
 	LowRepo *repo;
 	LowPackage *pkg;
-} LowPackageIter;
+	LowPackageIterNextFunc next_func;
+};
+
+LowPackageIter * 	low_package_iter_next 	(LowPackageIter *iter);
 
 LowPackageDependency *	low_package_dependency_new 		(const char *name,
 								 LowPackageDependencySense sense,
