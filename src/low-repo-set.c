@@ -215,6 +215,30 @@ low_repo_set_search_conflicts (LowRepoSet *repo_set, const char *conflicts)
 
 	return (LowPackageIter *) iter;
 }
+
+LowPackageIter *
+low_repo_set_search_obsoletes (LowRepoSet *repo_set, const char *obsoletes)
+{
+	LowRepoSetPackageIter *iter = malloc (sizeof (LowRepoSetPackageIter));
+	iter->super.next_func = low_repo_set_package_iter_next;
+	iter->super.pkg = NULL;
+	iter->repo_iter = malloc (sizeof (GHashTableIter));
+	g_hash_table_iter_init(iter->repo_iter, repo_set->repos);
+
+	/* XXX deal with an empty hashtable. */
+	do {
+		g_hash_table_iter_next (iter->repo_iter, NULL,
+					(gpointer) &(iter->current_repo));
+	} while (!iter->current_repo->enabled);
+
+	iter->search_func = low_repo_sqlite_search_obsoletes;
+	iter->current_repo_iter =
+		(iter->search_func) (iter->current_repo, obsoletes);
+	iter->search_data = obsoletes;
+
+	return (LowPackageIter *) iter;
+}
+
 LowPackageIter *
 low_repo_set_search_files (LowRepoSet *repo_set, const char *file)
 {
