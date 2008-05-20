@@ -110,10 +110,47 @@ low_config_get_repo_names (LowConfig *config)
 	return new_repo_names;
 }
 
+static char *
+low_config_replace_single_macro (const char *rawstr, const char *key,
+				 const char *value)
+{
+	char **parts;
+	char *replaced;
+
+	if (strstr (rawstr, key)) {
+		parts = g_strsplit (rawstr, key, -1);
+		replaced = g_strjoinv (value, parts);
+		g_strfreev (parts);
+	} else {
+		replaced = g_strdup (rawstr);
+	}
+
+	return replaced;
+}
+
+static char *
+low_config_replace_macros (const char *value)
+{
+	char *replaced;
+	char *old_replaced;
+
+	replaced = low_config_replace_single_macro (value, "$releasever", "9");
+	old_replaced = replaced;
+	replaced = low_config_replace_single_macro (old_replaced, "$basearch",
+						    "x86_64");
+	free (old_replaced);
+
+	return replaced;
+}
+
 char *
 low_config_get_string (LowConfig *config, const char *group, const char *key)
 {
-	return g_key_file_get_string (config->config, group, key, NULL);
+	char *value = g_key_file_get_string (config->config, group, key, NULL);
+	char *value_subbed = low_config_replace_macros (value);
+
+	free (value);
+	return value_subbed;
 }
 
 gboolean
