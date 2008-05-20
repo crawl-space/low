@@ -64,6 +64,12 @@ typedef struct _LowPackageIter {
 	LowPackage *pkg;
 } LowPackageIter;
 
+LowPackageDependency *	low_package_dependency_new 		(const char *name,
+								 LowPackageDependencySense sense,
+								 const char *evr);
+LowPackageDependency * 	low_package_dependency_new_from_string 	(const char *depstr);
+void 			low_package_dependency_free 		(LowPackageDependency *dependency);
+
 #endif /* _LOW_PACKAGE_H_ */
 
 /* vim: set ts=8 sw=8 noet: */

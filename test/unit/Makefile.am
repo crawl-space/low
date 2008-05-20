@@ -17,12 +17,16 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #  02110-1301  USA
 
-INCLUDES = @CHECK_CFLAGS@
+INCLUDES = \
+	@CHECK_CFLAGS@ \
+	-I${top_builddir}/src/ \
+	$(GLIB_CFLAGS) \
+	$(NULL)
 
 TESTS = check_low
 
 noinst_PROGRAMS = check_low
 
 check_low_SOURCES = check_low.c
-check_low_LDADD = @CHECK_LIBS@
+check_low_LDADD = @CHECK_LIBS@ ${top_builddir}/src/low-package.o
 CLEANFILES = check_low.log

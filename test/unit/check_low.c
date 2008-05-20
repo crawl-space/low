@@ -19,15 +19,33 @@
  *  02110-1301  USA
  */
 
+#include <string.h>
+
 #include "config.h"
 #include <check.h>
+
+#include "low-package.h"
 
 /*
  * Core test suite
  */
-START_TEST(test_core)
+START_TEST (test_core)
 {
-	fail_unless(1==1, "core test suite");
+	fail_unless (1 == 1, "core test suite");
+}
+END_TEST
+
+START_TEST (test_low_package_new)
+{
+	LowPackageDependency *dep =
+		low_package_dependency_new ("foo", DEPENDENCY_SENSE_EQ,
+					    "0.1.3-3");
+
+	fail_unless (!strcmp ("foo", dep->name), "dep name incorrect");
+	fail_unless (DEPENDENCY_SENSE_EQ == dep->sense, "dep sense incorrect");
+	fail_unless (!strcmp ("0.1.3-3", dep->evr), "dep evr incorrect");
+
+	low_package_dependency_free (dep);
 }
 END_TEST
 
@@ -35,9 +53,15 @@ Suite *
 low_suite(void)
 {
 	Suite *s = suite_create ("low");
+
 	TCase *tc = tcase_create ("core");
-	tcase_add_test(tc, test_core);
-	suite_add_tcase(s, tc);
+	tcase_add_test (tc, test_core);
+	suite_add_tcase (s, tc);
+
+	tc = tcase_create ("low-package");
+	tcase_add_test (tc, test_low_package_new);
+	suite_add_tcase (s, tc);
+
 	return s;
 }
 

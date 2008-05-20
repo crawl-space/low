@@ -28,6 +28,7 @@ low_SOURCES = \
 	low.c \
 	low-config.c \
 	low-config.h \
+	low-package.c \
 	low-package.h \
 	low-package-rpmdb.c \
 	low-package-rpmdb.h \
