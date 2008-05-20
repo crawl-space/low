@@ -232,25 +232,6 @@ command_repolist (int argc, const char *argv[])
 }
 
 static void
-search_provides (LowRepo *repo, gpointer data)
-{
-	LowPackageIter *iter;
-	char *provides = (char *) data;
-
-	iter = low_repo_sqlite_search_provides (repo, provides);
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		LowPackage *pkg = iter->pkg;
-		print_package_short (pkg);
-	}
-
-	iter = low_repo_sqlite_search_files (repo, provides);
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		LowPackage *pkg = iter->pkg;
-		print_package_short (pkg);
-	}
-}
-
-static void
 search_requires (LowRepo *repo, gpointer data)
 {
 	LowPackageIter *iter;
@@ -325,8 +306,12 @@ command_whatprovides (int argc, const char *argv[])
 		print_package_short (pkg);
 	}
 
-	low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) search_provides,
-						   provides);
+	iter = low_repo_set_search_files (repos, provides);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package_short (pkg);
+	}
 
 	low_repo_set_free (repos);
 	low_config_free (config);

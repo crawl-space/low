@@ -53,6 +53,8 @@ void            low_repo_set_for_each                  	(LowRepoSet *repo_set,
 
 LowPackageIter * low_repo_set_search_provides      	(LowRepoSet *repo_set,
 							 const char *provides);
+LowPackageIter * low_repo_set_search_files      	(LowRepoSet *repo_set,
+							 const char *file);
 
 #endif /* _LOW_REPO_SET_H_ */
 
