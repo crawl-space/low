@@ -27,6 +27,9 @@
 
 
 __low_commandlist="
+    install
+    update
+    remove
     clean
     info
     list

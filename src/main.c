@@ -455,6 +455,9 @@ typedef struct _SubCommand {
 } SubCommand;
 
 const SubCommand commands[] = {
+	{ "install", "Install a package", NOT_IMPLEMENTED },
+	{ "update", "Update or install a package", NOT_IMPLEMENTED },
+	{ "remove", "Remove a package", NOT_IMPLEMENTED },
 	{ "clean", "Remove cached data", NOT_IMPLEMENTED },
 	{ "info", "Display package details", command_info },
 	{ "list", "Display a group of packages", command_list },
