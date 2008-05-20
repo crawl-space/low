@@ -36,9 +36,11 @@ low_repo_set_initialize_from_config (LowConfig *config)
 	repo_names = low_config_get_repo_names (config);
 	for (i = 0; i < g_strv_length (repo_names); i++) {
 		char *id = repo_names[i];
-		char *name = low_config_get_string (config, repo_names[i], "name");
-		gboolean enabled = low_config_get_boolean (config, repo_names[i],
-												   "enabled");
+		char *name =
+			low_config_get_string (config, repo_names[i], "name");
+		gboolean enabled = low_config_get_boolean (config,
+							   repo_names[i],
+							   "enabled");
 		LowRepo *repo = low_repo_sqlite_initialize (id, name, enabled);
 
 		g_free (name);
@@ -86,7 +88,7 @@ low_repo_set_inner_for_each (gpointer key, gpointer value, gpointer data)
 
 void
 low_repo_set_for_each (LowRepoSet *repo_set, LowRepoSetFilter filter,
-					   LowRepoSetFunc func, gpointer data)
+		       LowRepoSetFunc func, gpointer data)
 {
 	LowRepoSetForEachData for_each_data;
 	for_each_data.filter = filter;
