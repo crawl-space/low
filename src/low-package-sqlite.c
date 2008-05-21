@@ -39,6 +39,8 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	pkg->description = (const char *) sqlite3_column_text (pp_stmt, i++);
 	pkg->url = (const char *) sqlite3_column_text (pp_stmt, i++);
 	pkg->license = (const char *) sqlite3_column_text (pp_stmt, i++);
+	pkg->location_href = (const char *) sqlite3_column_text(pp_stmt, i++);
+
 	return pkg;
 }
 

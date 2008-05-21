@@ -38,17 +38,18 @@ low_package_rpmdb_new_from_header (Header header)
 	union rpm_entry size, summary, description, url, license;
 	int_32 type, count;
 
-	headerGetEntry(header, RPMTAG_NAME, &type, &name.p, &count);
-	headerGetEntry(header, RPMTAG_EPOCH, &type, &epoch.p, &count);
-	headerGetEntry(header, RPMTAG_VERSION, &type, &version.p, &count);
-	headerGetEntry(header, RPMTAG_RELEASE, &type, &release.p, &count);
-	headerGetEntry(header, RPMTAG_ARCH, &type, &arch.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_NAME, &type, &name.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_EPOCH, &type, &epoch.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_VERSION, &type, &version.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_RELEASE, &type, &release.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_ARCH, &type, &arch.p, &count);
 
-	headerGetEntry(header, RPMTAG_SIZE, &type, &size.p, &count);
-	headerGetEntry(header, RPMTAG_SUMMARY, &type, &summary.p, &count);
-	headerGetEntry(header, RPMTAG_DESCRIPTION, &type, &description.p, &count);
-	headerGetEntry(header, RPMTAG_URL, &type, &url.p, &count);
-	headerGetEntry(header, RPMTAG_LICENSE, &type, &license.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_SIZE, &type, &size.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_SUMMARY, &type, &summary.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_DESCRIPTION, &type, &description.p,
+		       &count);
+	rpmHeaderGetEntry(header, RPMTAG_URL, &type, &url.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_LICENSE, &type, &license.p, &count);
 
 	LowPackage *pkg = malloc (sizeof (LowPackage));
 

@@ -30,8 +30,8 @@
 #include "low-download.h"
 
 int
-show_progress(void *clientp, double dltotal, double dlnow, double ultotal,
-	      double ulnow)
+low_download_show_progress(void *clientp, double dltotal, double dlnow,
+			   double ultotal, double ulnow)
 {
 	const char *file = clientp;
 
@@ -43,10 +43,10 @@ show_progress(void *clientp, double dltotal, double dlnow, double ultotal,
 }
 
 int
-download_if_missing(const char *url, const char *file)
+low_download_if_missing(const char *url, const char *file)
 {
-	printf("Attempting to download: %s", url);
-	printf("File: %s", file);
+	printf("Attempting to download: %s\n", url);
+	printf("File: %s\n", file);
 
 	CURL *curl;
 	struct stat buf;
@@ -61,7 +61,8 @@ download_if_missing(const char *url, const char *file)
 
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error);
 	curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
-	curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, show_progress);
+	curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION,
+			 low_download_show_progress);
 	curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, file);
 
 	if (stat(file, &buf) < 0) {

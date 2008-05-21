@@ -24,9 +24,9 @@
 #ifndef _LOW_DOWNLOAD_H_
 #define _LOW_DOWNLOAD_H_
 
-int      download_if_missing         (const char *url,
+int      low_download_if_missing         (const char *url,
 				      const char *file);
-int      show_progress               (void *clientp,
+int      low_download_show_progress  (void *clientp,
 				      double dltotal,
 				      double dlnow,
 				      double ultotal,

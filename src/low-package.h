@@ -57,6 +57,7 @@ typedef struct _LowPackage {
 	const char *description;
 	const char *url; /** Optional URL for the package */
 	const char *license;
+	const char *location_href;
 } LowPackage;
 
 typedef struct _LowPackageIter LowPackageIter;

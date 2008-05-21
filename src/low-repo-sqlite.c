@@ -49,7 +49,7 @@ low_repo_sqlite_initialize (const char *id, const char *name, gboolean enabled)
 	char *primary_db =
 		g_strdup_printf ("/var/cache/yum/%s/primary.sqlite", id);
 	char *filelists_db =
-		g_strdup_printf ("/var/cache/yum/%s/primary.sqlite", id);
+		g_strdup_printf ("/var/cache/yum/%s/filelists.sqlite", id);
 
 	low_repo_sqlite_open_db (primary_db, &repo->primary_db);
 	low_repo_sqlite_open_db (filelists_db, &repo->filelists_db);
@@ -75,8 +75,9 @@ low_repo_sqlite_shutdown (LowRepo *repo)
 LowPackageIter *
 low_repo_sqlite_list_all (LowRepo *repo)
 {
-	const char *stmt = "SELECT name, arch, version, release, size_package,"
-					   "summary, description, url, rpm_license  FROM packages";
+	const char *stmt = "SELECT name, arch, version, release, size_package, "
+			   "summary, description, url, rpm_license, "
+			   "location_href FROM packages";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
@@ -92,8 +93,8 @@ LowPackageIter *
 low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
 {
 	const char *stmt = "SELECT name, arch, version, release, size_package, "
-			   "summary, description, url, rpm_license "
-			   "FROM packages "
+			   "summary, description, url, rpm_license, "
+			   "location_href FROM packages "
 			   "WHERE name = :name";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
@@ -112,7 +113,8 @@ low_repo_sqlite_search_provides (LowRepo *repo, const char *provides)
 {
 	const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
 			   "p.size_package, p.summary, p.description, p.url, "
-			   "p.rpm_license FROM packages p, provides pr "
+			   "p.rpm_license p.location_href FROM packages p, "
+			   "provides pr "
 			   "WHERE pr.pkgKey = p.pkgKey AND pr.name = :provides";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
@@ -131,7 +133,8 @@ low_repo_sqlite_search_requires (LowRepo *repo, const char *requires)
 {
 	const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
 			   "p.size_package, p.summary, p.description, p.url, "
-			   "p.rpm_license FROM packages p, requires req "
+			   "p.rpm_license, p.location_href "
+			   "FROM packages p, requires req "
 			   "WHERE req.pkgKey = p.pkgKey "
 			   "AND req.name = :requires";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
@@ -151,7 +154,8 @@ low_repo_sqlite_search_conflicts (LowRepo *repo, const char *conflicts)
 {
 	const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
 			   "p.size_package, p.summary, p.description, p.url, "
-			   "p.rpm_license FROM packages p, conflicts conf "
+			   "p.rpm_license, p.location_href "
+			   "FROM packages p, conflicts conf "
 			   "WHERE conf.pkgKey = p.pkgKey "
 			   "AND conf.name = :conflicts";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
@@ -171,7 +175,8 @@ low_repo_sqlite_search_obsoletes (LowRepo *repo, const char *obsoletes)
 {
 	const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
 			   "p.size_package, p.summary, p.description, p.url, "
-			   "p.rpm_license FROM packages p, obsoletes obs "
+			   "p.rpm_license, p.location_href "
+			   "FROM packages p, obsoletes obs "
 			   "WHERE obs.pkgKey = p.pkgKey "
 			   "AND obs.name = :obsoletes";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
@@ -192,7 +197,8 @@ low_repo_sqlite_search_files (LowRepo *repo, const char *file)
 	/* XXX Search the full filelists db too */
 	const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
 			   "p.size_package, p.summary, p.description, p.url, "
-			   "p.rpm_license FROM packages p, files f "
+			   "p.rpm_license, p.location_href "
+			   "FROM packages p, files f "
 			   "WHERE f.pkgKey = p.pkgKey "
 			   "AND f.name = :file";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
@@ -217,7 +223,7 @@ low_repo_sqlite_generic_search (LowRepo *repo, const char *querystr)
 {
 	const char *stmt = "SELECT name, arch, version, release, "
 			   "size_package, summary, description, url, "
-			   "rpm_license FROM packages  "
+			   "rpm_license, location_href FROM packages  "
 			   "WHERE name LIKE :query OR "
 			   "summary LIKE :query OR "
 			   "description LIKE :query OR "

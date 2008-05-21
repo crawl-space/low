@@ -36,6 +36,10 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
+#define YUM_REPO "http://download.fedora.redhat.com/pub/fedora/linux/releases" \
+                 "/9/Everything/x86_64/os/"
+#define LOCAL_CACHE "/var/cache/yum/fedora"
+
 static int usage (void);
 
 static void
@@ -421,9 +425,9 @@ NOT_IMPLEMENTED (int argc, const char *argv[])
 static int
 command_download (int argc, const char *argv[])
 {
-	char *url = "http://dgoodwin.dangerouslyinc.com/files/fedora8.png";
+	char *url = YUM_REPO "fedora8.png";
 	char *file = "/tmp/fedora8.png";
-	download_if_missing(url, file);
+	low_download_if_missing(url, file);
 	return 0;
 }
 
