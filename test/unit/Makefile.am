@@ -32,6 +32,7 @@ check_low_LDADD = \
 		@CHECK_LIBS@ \
 		$(GLIB_LIBS) \
 		${top_builddir}/src/low-package.o \
+		${top_builddir}/src/low-util.o \
 		$(NULL)
 
 CLEANFILES = check_low.log

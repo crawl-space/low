@@ -43,6 +43,8 @@ low_SOURCES = \
 	low-repo-sqlite.h \
 	low-transaction.c \
 	low-transaction.h \
+	low-util.c \
+	low-util.h \
 	low-download.h \
 	low-download.c \
 	main.c \

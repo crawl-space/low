@@ -25,6 +25,7 @@
 #include <check.h>
 
 #include "low-package.h"
+#include "low-util.h"
 
 /*
  * Core test suite
@@ -76,6 +77,23 @@ START_TEST (test_low_package_dependency_new_from_string_unversioned)
 }
 END_TEST
 
+START_TEST (test_low_util_word_wrap_no_wrap_needed)
+{
+	const char *input = "A small string";
+	char **output = low_util_word_wrap (input, 79);
+	fail_unless (!strcmp (input, output[0]), "unexpected wrapping");
+}
+END_TEST
+
+START_TEST (test_low_util_word_wrap_wrap_one_line_to_two)
+{
+	const char *input = "A small string";
+	char **output = low_util_word_wrap (input, 7);
+	fail_unless (!strcmp ("A small", output[0]), "unexpected wrapping");
+	fail_unless (!strcmp ("string", output[1]), "unexpected wrapping");
+}
+END_TEST
+
 Suite *
 low_suite(void)
 {
@@ -89,6 +107,11 @@ low_suite(void)
 	tcase_add_test (tc, test_low_package_dependency_new);
 	tcase_add_test (tc, test_low_package_dependency_new_from_string);
 	tcase_add_test (tc, test_low_package_dependency_new_from_string_unversioned);
+	suite_add_tcase (s, tc);
+
+	tc = tcase_create ("low-util");
+	tcase_add_test (tc, test_low_util_word_wrap_no_wrap_needed);
+	tcase_add_test (tc, test_low_util_word_wrap_wrap_one_line_to_two);
 	suite_add_tcase (s, tc);
 
 	return s;

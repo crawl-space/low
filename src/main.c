@@ -32,6 +32,7 @@
 #include "low-repo-set.h"
 #include "low-package-sqlite.h"
 #include "low-repo-sqlite.h"
+#include "low-util.h"
 #include "low-download.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
@@ -43,6 +44,23 @@
 static int usage (void);
 
 static void
+wrap_and_print (const char *text)
+{
+	int i;
+	char **wrapped = low_util_word_wrap (text, 79 - 14);
+
+	if (wrapped[0] != NULL) {
+		puts (wrapped[0]);
+	}
+
+	for (i = 1; wrapped[i] != NULL; i++) {
+		printf ("              %s\n", wrapped[i]);
+	}
+
+	g_strfreev (wrapped);
+}
+
+static void
 print_package (const LowPackage *pkg)
 {
 	printf ("Name        : %s\n", pkg->name);
@@ -51,10 +69,15 @@ print_package (const LowPackage *pkg)
 	printf ("Release     : %s\n", pkg->release);
 	printf ("Size        : %zd bytes\n", pkg->size);
 	printf ("Repo        : %s\n", pkg->repo);
-	printf ("Summary     : %s\n", pkg->summary);
+
+	printf ("Summary     : ");
+	wrap_and_print (pkg->summary);
+
 	printf ("URL         : %s\n", pkg->url ? pkg->url : "");
 	printf ("License     : %s\n", pkg->license);
-	printf ("Description : %s\n", pkg->description);
+
+	printf ("Description : ");
+	wrap_and_print (pkg->description);
 	printf ("\n");
 }
 

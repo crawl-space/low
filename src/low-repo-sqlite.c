@@ -113,7 +113,7 @@ low_repo_sqlite_search_provides (LowRepo *repo, const char *provides)
 {
 	const char *stmt = "SELECT p.name, p.arch, p.version, p.release, "
 			   "p.size_package, p.summary, p.description, p.url, "
-			   "p.rpm_license p.location_href FROM packages p, "
+			   "p.rpm_license, p.location_href FROM packages p, "
 			   "provides pr "
 			   "WHERE pr.pkgKey = p.pkgKey AND pr.name = :provides";
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
