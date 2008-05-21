@@ -77,6 +77,11 @@ if test "$have_rpm" != yes; then
 fi
 AC_SUBST(RPM_LIBS)
 
+dnl Check for libcurl (required)
+LIBCURL_CHECK_CONFIG(yes,7.18.1,,AC_MSG_ERROR(*** curl was not found))
+CURL_LIBS=$LIBCURL
+AC_SUBST(CURL_LIBS)
+
 dnl Check for check (unit testing library, optional)
 PKG_CHECK_MODULES(CHECK, check >= 0.9.5, HAVE_CHECK=yes, HAVE_CHECK=no)
 AM_CONDITIONAL(HAVE_CHECK, test x$HAVE_CHECK = xyes)

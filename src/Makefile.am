@@ -54,5 +54,5 @@ low_LDADD = \
 	$(GLIB_LIBS) \
 	$(SQLITE_LIBS) \
 	$(RPM_LIBS) \
-	-lcurl \
+	$(CURL_LIBS) \
 	$(NULL)
