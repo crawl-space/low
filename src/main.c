@@ -41,6 +41,7 @@
                  "/9/Everything/x86_64/os/"
 #define LOCAL_CACHE "/var/cache/yum/fedora"
 
+static void show_help (const char *command);
 static int usage (void);
 
 static void
@@ -430,10 +431,19 @@ command_version (int argc, const char *argv[])
 	return 0;
 }
 
+
+
 static int
 command_help (int argc, const char *argv[])
 {
-	usage ();
+	if (argc == 0) {
+		usage ();
+	} else if (argc == 1) {
+		show_help (argv[0]);
+	} else {
+		show_help ("help");
+	}
+
 	return 0;
 }
 
@@ -456,34 +466,53 @@ command_download (int argc, const char *argv[])
 
 typedef struct _SubCommand {
 	char *name;
+	char *usage;
 	char *summary;
 	int (*func) (int argc, const char *argv[]);
 } SubCommand;
 
 const SubCommand commands[] = {
-	{ "install", "Install a package", NOT_IMPLEMENTED },
-	{ "update", "Update or install a package", NOT_IMPLEMENTED },
-	{ "remove", "Remove a package", NOT_IMPLEMENTED },
-	{ "clean", "Remove cached data", NOT_IMPLEMENTED },
-	{ "info", "Display package details", command_info },
-	{ "list", "Display a group of packages", command_list },
-	{ "download", "Download (but don't install) a list of packages",
-		command_download},
-	{ "search", "Search package information for the given string",
-	  command_search },
-	{ "repolist", "Display configured software repositories",
-	  command_repolist },
-	{ "whatprovides", "Find what package provides the given value",
-	  command_whatprovides },
-	{ "whatrequires", "Find what package requires the given value",
-	  command_whatrequires },
-	{ "whatconflicts", "Find what package conflicts the given value",
+	{ "install", "PACKAGE", "Install a package", NOT_IMPLEMENTED },
+	{ "update", "[PACKAGE]", "Update or install a package",
+	  NOT_IMPLEMENTED },
+	{ "remove", "PACKAGE", "Remove a package", NOT_IMPLEMENTED },
+	{ "clean", NULL, "Remove cached data", NOT_IMPLEMENTED },
+	{ "info", "PACKAGE", "Display package details", command_info },
+	{ "list", "[all|installed]", "Display a group of packages",
+	  command_list },
+	{ "download", NULL, "Download (but don't install) a list of packages",
+	  command_download},
+	{ "search", "PATTERN",
+	  "Search package information for the given string", command_search },
+	{ "repolist", "[all|enabled|disabled]",
+	  "Display configured software repositories", command_repolist },
+	{ "whatprovides", "PATTERN",
+	  "Find what package provides the given value", command_whatprovides },
+	{ "whatrequires", "PATTERN",
+	  "Find what package requires the given value", command_whatrequires },
+	{ "whatconflicts", "PATTERN",
+	  "Find what package conflicts the given value",
 	  command_whatconflicts },
-	{ "whatobsoletes", "Find what package obsoletes the given value",
+	{ "whatobsoletes", "PATTERN",
+	  "Find what package obsoletes the given value",
 	  command_whatobsoletes },
-	{ "version", "Display version information", command_version },
-	{ "help", "Display a helpful usage message", command_help }
+	{ "version", NULL, "Display version information", command_version },
+	{ "help", "COMMAND", "Display a helpful usage message", command_help }
 };
+
+static void
+show_help (const char *command)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE (commands); i++) {
+		if (!strcmp (command, commands[i].name)) {
+			printf ("Usage: %s %s\n", commands[i].name,
+				commands[i].usage ? commands[i].usage : "");
+			printf("\n%s\n", commands[i].summary);
+		}
+	}
+}
 
 /**
  * Display the default help message.
