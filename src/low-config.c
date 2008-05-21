@@ -19,13 +19,18 @@
  *  02110-1301  USA
  */
 
+#include <sys/utsname.h>
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
 #include "low-config.h"
+#include "low-package.h"
+#include "low-repo-rpmdb.h"
 
 #define ARRAY_LENGTH 100
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+
+#define RELEASE_PKG "redhat-release"
 
 static gchar *
 low_config_load_repo_configs (void)
@@ -58,7 +63,7 @@ low_config_load_repo_configs (void)
 }
 
 LowConfig *
-low_config_initialize (void)
+low_config_initialize (LowRepo *rpmdb)
 {
 	LowConfig *config = malloc (sizeof (LowConfig));
 	gchar *main_config;
@@ -66,6 +71,7 @@ low_config_initialize (void)
 	gchar *joined_config;
 	GError *error = NULL;
 
+	config->rpmdb = rpmdb;
 	config->config = g_key_file_new ();
 
 	g_file_get_contents ("/etc/yum.conf", &main_config, NULL, NULL);
@@ -129,15 +135,25 @@ low_config_replace_single_macro (const char *rawstr, const char *key,
 }
 
 static char *
-low_config_replace_macros (const char *value)
+low_config_replace_macros (LowConfig *config, const char *value)
 {
 	char *replaced;
 	char *old_replaced;
 
-	replaced = low_config_replace_single_macro (value, "$releasever", "9");
+	struct utsname uts;
+	LowPackageIter *iter;
+
+	uname(&uts);
+
+	/* XXX deal with no providing package, or more than one */
+	iter = low_repo_rpmdb_search_provides (config->rpmdb, RELEASE_PKG);
+	iter = low_package_iter_next (iter);
+
+	replaced = low_config_replace_single_macro (value, "$releasever",
+						    iter->pkg->version);
 	old_replaced = replaced;
 	replaced = low_config_replace_single_macro (old_replaced, "$basearch",
-						    "x86_64");
+						    uts.machine);
 	free (old_replaced);
 
 	return replaced;
@@ -147,7 +163,7 @@ char *
 low_config_get_string (LowConfig *config, const char *group, const char *key)
 {
 	char *value = g_key_file_get_string (config->config, group, key, NULL);
-	char *value_subbed = low_config_replace_macros (value);
+	char *value_subbed = low_config_replace_macros (config, value);
 
 	free (value);
 	return value_subbed;

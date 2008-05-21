@@ -70,24 +70,26 @@ info (LowRepo *repo, gpointer data)
 static int
 command_info (int argc, const char *argv[])
 {
-	LowRepo *repo;
+	LowRepo *rpmdb;
 	LowRepoSet *repos;
 	LowPackageIter *iter;
-	LowConfig *config = low_config_initialize ();
+	LowConfig *config;
 	gchar *name = g_strdup (argv[0]);
 
-	repo = low_repo_rpmdb_initialize ();
-	iter = low_repo_rpmdb_list_by_name (repo, name);
+	rpmdb = low_repo_rpmdb_initialize ();
+	config = low_config_initialize (rpmdb);
+
+	iter = low_repo_rpmdb_list_by_name (rpmdb, name);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package (pkg);
 	}
-	low_repo_rpmdb_shutdown (repo);
 
 	repos = low_repo_set_initialize_from_config (config);
 	low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) info, name);
 	low_repo_set_free (repos);
 	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
 	free (name);
 
 	return 0;
@@ -121,18 +123,19 @@ list (LowRepo *repo, gpointer data)
 static int
 command_list (int argc, const char *argv[])
 {
-	LowRepo *repo;
+	LowRepo *rpmdb;
 	LowPackageIter *iter;
-	LowConfig *config = low_config_initialize ();
+	LowConfig *config;
+
+	rpmdb = low_repo_rpmdb_initialize ();
+	config = low_config_initialize (rpmdb);
 
 	if (!strcmp(argv[0], "installed") || !strcmp(argv[0], "all")) {
-		repo = low_repo_rpmdb_initialize ();
-		iter = low_repo_rpmdb_list_all (repo);
+		iter = low_repo_rpmdb_list_all (rpmdb);
 		while (iter = low_package_iter_next (iter), iter != NULL) {
 			LowPackage *pkg = iter->pkg;
 			print_package_short (pkg);
 		}
-		low_repo_rpmdb_shutdown (repo);
 	}
 	if (!strcmp(argv[0], "all")) {
 		LowRepoSet *repos =
@@ -143,6 +146,7 @@ command_list (int argc, const char *argv[])
 	}
 
 	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
 
 	return 0;
 }
@@ -163,25 +167,27 @@ search (LowRepo *repo, gpointer data)
 static int
 command_search (int argc, const char *argv[])
 {
-	LowRepo *repo;
+	LowRepo *rpmdb;
 	LowRepoSet *repos;
 	LowPackageIter *iter;
-	LowConfig *config = low_config_initialize ();
+	LowConfig *config;
 	gchar *querystr = g_strdup (argv[0]);
 
-	repo = low_repo_rpmdb_initialize ();
-	iter = low_repo_rpmdb_generic_search (repo, querystr);
+	rpmdb = low_repo_rpmdb_initialize ();
+	config = low_config_initialize (rpmdb);
+
+	iter = low_repo_rpmdb_generic_search (rpmdb, querystr);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}
-	low_repo_rpmdb_shutdown (repo);
 
 	repos = low_repo_set_initialize_from_config (config);
 	low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) search,
 			       querystr);
 	low_repo_set_free (repos);
 	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
 	free (querystr);
 
 	return 0;
@@ -200,8 +206,11 @@ command_repolist (int argc, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
-	LowConfig *config = low_config_initialize ();
+	LowConfig *config;
 	LowRepoSetFilter filter = ALL;
+
+	rpmdb = low_repo_rpmdb_initialize ();
+	config = low_config_initialize (rpmdb);
 
 	if (argc == 1) {
 		if (!strcmp (argv[0], "all")) {
@@ -218,15 +227,14 @@ command_repolist (int argc, const char *argv[])
 
 	printf (FORMAT_STRING, "repo id", "repo name", "status");
 
-	rpmdb = low_repo_rpmdb_initialize ();
 	print_repo (rpmdb);
-	low_repo_rpmdb_shutdown (rpmdb);
 
 	repos = low_repo_set_initialize_from_config (config);
 	low_repo_set_for_each (repos, filter, (LowRepoSetFunc) print_repo,
 			       NULL);
 	low_repo_set_free (repos);
 	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
 
 	return 0;
 }
@@ -236,11 +244,12 @@ command_whatprovides (int argc, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
-	LowConfig *config = low_config_initialize ();
+	LowConfig *config;
 	LowPackageIter *iter;
 	gchar *provides = g_strdup (argv[0]);
 
 	rpmdb = low_repo_rpmdb_initialize ();
+	config = low_config_initialize (rpmdb);
 	iter = low_repo_rpmdb_search_provides (rpmdb, provides);
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
@@ -255,19 +264,15 @@ command_whatprovides (int argc, const char *argv[])
 		print_package_short (pkg);
 	}
 
-	low_repo_rpmdb_shutdown (rpmdb);
-
 	repos = low_repo_set_initialize_from_config (config);
 
 	iter = low_repo_set_search_provides (repos, provides);
-
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}
 
 	iter = low_repo_set_search_files (repos, provides);
-
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
@@ -275,6 +280,7 @@ command_whatprovides (int argc, const char *argv[])
 
 	low_repo_set_free (repos);
 	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
 	g_free (provides);
 
 	return 0;
@@ -285,18 +291,19 @@ command_whatrequires (int argc, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
-	LowConfig *config = low_config_initialize ();
+	LowConfig *config;
 	LowPackageIter *iter;
 	gchar *requires = g_strdup (argv[0]);
 
 	rpmdb = low_repo_rpmdb_initialize ();
+	config = low_config_initialize (rpmdb);
+
 	iter = low_repo_rpmdb_search_requires (rpmdb, requires);
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}
-	low_repo_rpmdb_shutdown (rpmdb);
 
 	repos = low_repo_set_initialize_from_config (config);
 
@@ -309,6 +316,7 @@ command_whatrequires (int argc, const char *argv[])
 
 	low_repo_set_free (repos);
 	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
 	g_free (requires);
 
 	return 0;
@@ -319,23 +327,23 @@ command_whatconflicts (int argc, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
-	LowConfig *config = low_config_initialize ();
+	LowConfig *config;
 	LowPackageIter *iter;
 	gchar *conflicts = g_strdup (argv[0]);
 
 	rpmdb = low_repo_rpmdb_initialize ();
+	config = low_config_initialize (rpmdb);
+
 	iter = low_repo_rpmdb_search_conflicts (rpmdb, conflicts);
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}
-	low_repo_rpmdb_shutdown (rpmdb);
 
 	repos = low_repo_set_initialize_from_config (config);
 
 	iter = low_repo_set_search_conflicts (repos, conflicts);
-
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
@@ -344,6 +352,7 @@ command_whatconflicts (int argc, const char *argv[])
 
 	low_repo_set_free (repos);
 	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
 	g_free (conflicts);
 
 	return 0;
@@ -354,23 +363,23 @@ command_whatobsoletes (int argc, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
-	LowConfig *config = low_config_initialize ();
+	LowConfig *config;
 	LowPackageIter *iter;
 	gchar *obsoletes = g_strdup (argv[0]);
 
 	rpmdb = low_repo_rpmdb_initialize ();
+	config = low_config_initialize (rpmdb);
+
 	iter = low_repo_rpmdb_search_obsoletes (rpmdb, obsoletes);
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 	}
-	low_repo_rpmdb_shutdown (rpmdb);
 
 	repos = low_repo_set_initialize_from_config (config);
 
 	iter = low_repo_set_search_obsoletes (repos, obsoletes);
-
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
@@ -378,6 +387,7 @@ command_whatobsoletes (int argc, const char *argv[])
 
 	low_repo_set_free (repos);
 	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
 	g_free (obsoletes);
 
 	return 0;
