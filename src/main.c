@@ -45,6 +45,32 @@ static void show_help (const char *command);
 static int usage (void);
 
 static void
+print_size (size_t size)
+{
+	float tmp_size = size;
+	if (tmp_size < 1023) {
+		printf ("%.0f bytes\n", tmp_size);
+		return;
+	}
+
+	tmp_size = tmp_size / 1024;
+	if (tmp_size < 1023) {
+		printf ("%.1f KB\n", tmp_size);
+		return;
+	}
+
+	tmp_size = tmp_size / 1024;
+	if (tmp_size < 1023) {
+		printf ("%.1f MB\n", tmp_size);
+		return;
+	}
+
+	tmp_size = tmp_size / 1024;
+	printf ("%.1f GB\n", tmp_size);
+	return;
+}
+
+static void
 wrap_and_print (const char *text)
 {
 	int i;
@@ -68,7 +94,10 @@ print_package (const LowPackage *pkg)
 	printf ("Arch        : %s\n", pkg->arch);
 	printf ("Version     : %s\n", pkg->version);
 	printf ("Release     : %s\n", pkg->release);
-	printf ("Size        : %zd bytes\n", pkg->size);
+
+	printf ("Size        : ");
+	print_size (pkg->size);
+
 	printf ("Repo        : %s\n", pkg->repo);
 
 	printf ("Summary     : ");

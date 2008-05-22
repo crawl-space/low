@@ -28,7 +28,7 @@ union rpm_entry {
 	char *string;
 	char **list;
 	uint_32 *flags;
-	uint_32 integer;
+	uint_32 *integer;
 };
 
 static LowPackage *
@@ -47,7 +47,7 @@ low_package_rpmdb_new_from_header (Header header)
 	rpmHeaderGetEntry(header, RPMTAG_SIZE, &type, &size.p, &count);
 	rpmHeaderGetEntry(header, RPMTAG_SUMMARY, &type, &summary.p, &count);
 	rpmHeaderGetEntry(header, RPMTAG_DESCRIPTION, &type, &description.p,
-		       &count);
+			  &count);
 	rpmHeaderGetEntry(header, RPMTAG_URL, &type, &url.p, &count);
 	rpmHeaderGetEntry(header, RPMTAG_LICENSE, &type, &license.p, &count);
 
@@ -59,7 +59,7 @@ low_package_rpmdb_new_from_header (Header header)
 	pkg->release = release.string;
 	pkg->arch = arch.string;
 
-	pkg->size = size.integer;
+	pkg->size = *size.integer;
 	pkg->repo = "installed";
 	pkg->summary = summary.string;
 	pkg->description = description.string;
