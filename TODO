@@ -1,8 +1,8 @@
 - Anything from the output of 'make todo'
 - Find another ini parser.
 - make targets for code style.
-- info description word wrapping.
-- macro substitution in config files
+- test info description word wrapping.
+- all of yum's macro substitution for config files
 - doxygen code documentation
 - low download pkg: Download but don't install.
 - LowPackageDependency struct (name, sense, evr).
@@ -12,3 +12,6 @@
 - gpg key checking
 - globbing search for command line 'low search'
 - remove -lcurl from src/Makefile.am and add proper autotools macro
+- low dump [repo|all|PACKAGE] - output full package details in a format
+  we can parse
+- unit tests for low-repo-set (using fake sqlite repos)
