@@ -30,11 +30,6 @@
  * Stub in-memory replacement for the sqlite repo type.
  */
 
-typedef struct _LowRepoSqliteFake {
-	LowRepo super;
-	LowPackage **packages;
-} LowRepoSqliteFake;
-
 LowRepo *
 low_repo_sqlite_initialize (const char *id, const char *name, gboolean enabled)
 {
@@ -63,7 +58,7 @@ typedef struct _LowFakePackageIter {
 
 LowPackageIter *
 low_repo_sqlite_fake_iter_next (LowPackageIter *iter) {
-	LowFakePackageIter *iter_fake = (LowFakePackageIter *) iter_fake;
+	LowFakePackageIter *iter_fake = (LowFakePackageIter *) iter;
 	LowRepoSqliteFake *repo_fake = (LowRepoSqliteFake *) iter->repo;
 
 	if (repo_fake->packages[iter_fake->position] == NULL) {

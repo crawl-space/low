@@ -19,29 +19,11 @@
  *  02110-1301  USA
  */
 
-#ifndef _LOW_CONFIG_H_
-#define _LOW_CONFIG_H_
+#ifndef _LOW_CONFIG_FAKE_H_
+#define _LOW_CONFIG_FAKE_H_
 
-#include <glib.h>
-#include "low-repo.h"
+#include "low-config.h"
 
-typedef struct _LowConfig {
-	GKeyFile *config;
-	LowRepo *rpmdb; /** The rpmdb; needed for macro substitution */
-} LowConfig;
-
-LowConfig *     low_config_initialize       (LowRepo *rpmdb);
-void            low_config_free             (LowConfig *config);
-
-char **         low_config_get_repo_names   (LowConfig *config);
-
-char *          low_config_get_string       (LowConfig *config,
-					     const char *group,
-					     const char *key);
-gboolean        low_config_get_boolean      (LowConfig *config,
-					     const char *group,
-					     const char *key);
-
-#endif /* _LOW_CONFIG_H_ */
+#endif /* _LOW_CONFIG_FAKE_H_ */
 
 /* vim: set ts=8 sw=8 noet: */

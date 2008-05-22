@@ -118,6 +118,12 @@ low_repo_set_package_iter_next (LowPackageIter *iter)
 	LowRepo *current_repo = iter_set->current_repo;
 	LowPackageIter *current_repo_iter = iter_set->current_repo_iter;
 
+	/* XXX When we have no repos. this is ugly. */
+	if (current_repo == NULL) {
+		free (iter);
+		return NULL;
+	}
+
 	current_repo_iter = low_package_iter_next (current_repo_iter);
 
 	/* This should cover repos that return 0 packages from the iter */
@@ -158,16 +164,20 @@ low_repo_set_package_iter_new (LowRepoSet *repo_set,
 	iter->repo_iter = malloc (sizeof (GHashTableIter));
 	g_hash_table_iter_init(iter->repo_iter, repo_set->repos);
 
-	/* XXX deal with an empty hashtable. */
 	do {
+		iter->current_repo = NULL;
 		g_hash_table_iter_next (iter->repo_iter, NULL,
 					(gpointer) &(iter->current_repo));
-	} while (!iter->current_repo->enabled);
+	} while (iter->current_repo != NULL && !iter->current_repo->enabled);
 
 	iter->search_func = search_func;
-	iter->current_repo_iter =
-		(iter->search_func) (iter->current_repo, searchstr);
 	iter->search_data = searchstr;
+
+	/* XXX For an empty hashtable. kind of ugly. */
+	if (iter->current_repo != NULL) {
+		iter->current_repo_iter =
+			(iter->search_func) (iter->current_repo, searchstr);
+	}
 
 	return (LowPackageIter *) iter;
 }

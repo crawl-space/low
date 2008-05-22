@@ -19,12 +19,17 @@
  *  02110-1301  USA
  */
 
-#include "low-repo.h"
 
 #ifndef _LOW_REPO_SQLITE_FAKE_H_
 #define _LOW_REPO_SQLITE_FAKE_H_
 
 #include "low-package.h"
+#include "low-repo-sqlite.h"
+
+typedef struct _LowRepoSqliteFake {
+	LowRepo super;
+	LowPackage **packages;
+} LowRepoSqliteFake;
 
 #endif /* _LOW_REPO_SQLITE_FAKE_H_ */
 

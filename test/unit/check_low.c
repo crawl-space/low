@@ -25,7 +25,10 @@
 #include <check.h>
 
 #include "low-package.h"
+#include "low-repo-set.h"
 #include "low-util.h"
+
+#include "low-repo-sqlite-fake.h"
 
 /*
  * Core test suite
@@ -94,6 +97,53 @@ START_TEST (test_low_util_word_wrap_wrap_one_line_to_two)
 }
 END_TEST
 
+START_TEST (test_low_repo_set_search_no_repos)
+{
+	int i = 0;
+	LowPackageIter *iter;
+
+	/* Should this be part of low_repo_set's interface? */
+	LowRepoSet *repo_set = malloc (sizeof (LowRepoSet));
+	repo_set->repos = g_hash_table_new (NULL, NULL);
+
+	iter = low_repo_set_search_provides (repo_set, "test_prov");
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		i++;
+	}
+
+	fail_unless (i == 0, "results found for an empty repo");
+	low_repo_set_free (repo_set);
+}
+END_TEST
+
+START_TEST (test_low_repo_set_search_single_repo_no_packages)
+{
+	int i = 0;
+	LowPackage **packages = malloc (sizeof (LowPackage *));
+	LowRepoSqliteFake *repo;
+	LowPackageIter *iter;
+
+	/* Should this be part of low_repo_set's interface? */
+	LowRepoSet *repo_set = malloc (sizeof (LowRepoSet));
+	repo_set->repos = g_hash_table_new (NULL, NULL);
+
+	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test",
+								 "test repo",
+								 TRUE);
+	packages[0] = NULL;
+	repo->packages = packages;
+	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
+
+	iter = low_repo_set_search_provides (repo_set, "test_prov");
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		i++;
+	}
+
+	fail_unless (i == 0, "results found for an empty repo");
+	low_repo_set_free (repo_set);
+}
+END_TEST
+
 Suite *
 low_suite(void)
 {
@@ -112,6 +162,11 @@ low_suite(void)
 	tc = tcase_create ("low-util");
 	tcase_add_test (tc, test_low_util_word_wrap_no_wrap_needed);
 	tcase_add_test (tc, test_low_util_word_wrap_wrap_one_line_to_two);
+	suite_add_tcase (s, tc);
+
+	tc = tcase_create ("low-repo-set");
+	tcase_add_test (tc, test_low_repo_set_search_no_repos);
+	tcase_add_test (tc, test_low_repo_set_search_single_repo_no_packages);
 	suite_add_tcase (s, tc);
 
 	return s;

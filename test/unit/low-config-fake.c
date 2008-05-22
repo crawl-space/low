@@ -19,29 +19,49 @@
  *  02110-1301  USA
  */
 
-#ifndef _LOW_CONFIG_H_
-#define _LOW_CONFIG_H_
+#include <stdlib.h>
+#include "low-config-fake.h"
 
-#include <glib.h>
-#include "low-repo.h"
+/**
+ * Stub in-memory replacement for the config
+ */
 
-typedef struct _LowConfig {
-	GKeyFile *config;
-	LowRepo *rpmdb; /** The rpmdb; needed for macro substitution */
-} LowConfig;
+LowConfig *
+low_config_initialize (LowRepo *rpmdb)
+{
+	LowConfig *config = malloc (sizeof (LowConfig));
 
-LowConfig *     low_config_initialize       (LowRepo *rpmdb);
-void            low_config_free             (LowConfig *config);
+	config->rpmdb = rpmdb;
+	config->config = g_key_file_new ();
 
-char **         low_config_get_repo_names   (LowConfig *config);
+	return config;
+}
 
-char *          low_config_get_string       (LowConfig *config,
-					     const char *group,
-					     const char *key);
-gboolean        low_config_get_boolean      (LowConfig *config,
-					     const char *group,
-					     const char *key);
+char **
+low_config_get_repo_names (LowConfig *config)
+{
+	static char *names[] = {"test1", "test2", NULL};
 
-#endif /* _LOW_CONFIG_H_ */
+	return names;
+}
+
+char *
+low_config_get_string (LowConfig *config, const char *group, const char *key)
+{
+	return "test string";
+}
+
+gboolean
+low_config_get_boolean (LowConfig *config, const char *group, const char *key)
+{
+	return TRUE;
+}
+
+void
+low_config_free (LowConfig *config)
+{
+	g_key_file_free (config->config);
+	free (config);
+}
 
 /* vim: set ts=8 sw=8 noet: */
