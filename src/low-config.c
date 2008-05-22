@@ -58,6 +58,7 @@ low_config_load_repo_configs (void)
 			g_free (config);
 		}
 	}
+	g_dir_close (config_dir);
 
 	return joined_config;
 }
@@ -149,8 +150,13 @@ low_config_replace_macros (LowConfig *config, const char *value)
 	iter = low_repo_rpmdb_search_provides (config->rpmdb, RELEASE_PKG);
 	iter = low_package_iter_next (iter);
 
+
 	replaced = low_config_replace_single_macro (value, "$releasever",
 						    iter->pkg->version);
+
+	/* Do we have to run through it all to free everything? */
+	while (iter = low_package_iter_next (iter), iter != NULL) ;
+
 	old_replaced = replaced;
 	replaced = low_config_replace_single_macro (old_replaced, "$basearch",
 						    uts.machine);

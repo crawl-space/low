@@ -49,15 +49,16 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 {
 	LowPackageIterSqlite *iter_sqlite = (LowPackageIterSqlite *) iter;
 
+	if (iter->pkg != NULL) {
+		free (iter->pkg);
+	}
+
 	if (sqlite3_step(iter_sqlite->pp_stmt) == SQLITE_DONE) {
 		sqlite3_finalize (iter_sqlite->pp_stmt);
 		free (iter_sqlite);
 		return NULL;
 	}
 
-	if (iter->pkg != NULL) {
-		free (iter->pkg);
-	}
 	iter->pkg = low_package_sqlite_new_from_row (iter_sqlite->pp_stmt,
 												 iter->repo);
 

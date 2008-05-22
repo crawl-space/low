@@ -54,7 +54,10 @@ void
 low_repo_rpmdb_shutdown (LowRepo *repo)
 {
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
-	rpmdbClose(repo_rpmdb->db);
+
+	rpmdbClose (repo_rpmdb->db);
+	rpmFreeRpmrc ();
+
 	free (repo);
 }
 

@@ -75,14 +75,15 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 	LowPackageIterRpmdb *iter_rpmdb = (LowPackageIterRpmdb *) iter;
 	Header header = rpmdbNextIterator(iter_rpmdb->rpm_iter);
 
+	if (iter->pkg != NULL) {
+		free (iter->pkg);
+	}
+
 	if (header == NULL) {
 		free (iter);
 		return NULL;
 	}
 
-	if (iter->pkg != NULL) {
-		free (iter->pkg);
-	}
 	iter->pkg = low_package_rpmdb_new_from_header (header);
 
 	if (iter_rpmdb->func != NULL) {

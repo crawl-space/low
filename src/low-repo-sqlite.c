@@ -68,6 +68,10 @@ void
 low_repo_sqlite_shutdown (LowRepo *repo)
 {
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+
+	free (repo->id);
+	free (repo->name);
+
 	sqlite3_close (repo_sqlite->primary_db);
 	free (repo);
 }
