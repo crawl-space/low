@@ -3,6 +3,10 @@
 *.swo
 *.tar.gz
 
+*.gcda
+*.gcno
+*.gcov
+
 low.spec
 
 INSTALL

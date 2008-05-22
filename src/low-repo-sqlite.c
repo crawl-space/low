@@ -31,7 +31,7 @@ typedef struct _LowRepoSqlite {
 	sqlite3 *filelists_db;
 } LowRepoSqlite;
 
-void
+static void
 low_repo_sqlite_open_db (const char *db_file, sqlite3 **db)
 {
 	if (sqlite3_open (db_file, db)) {

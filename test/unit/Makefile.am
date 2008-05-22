@@ -27,7 +27,12 @@ TESTS = check_low
 
 noinst_PROGRAMS = check_low
 
-check_low_SOURCES = check_low.c
+check_low_SOURCES = \
+		check_low.c \
+		low-repo-sqlite-fake.c \
+		low-repo-sqlite-fake.h \
+		$(NULL)
+
 check_low_LDADD = \
 		@CHECK_LIBS@ \
 		$(GLIB_LIBS) \
