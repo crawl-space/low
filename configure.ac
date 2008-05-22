@@ -42,11 +42,15 @@ dnl ---------------------------------------------------------------------------
 dnl - Library dependencies
 dnl ---------------------------------------------------------------------------
 GLIB_REQUIRED=2.14.0
+CURL_REQUIRED=7.18.1
+CHECK_REQUIRED=0.9.5
 
 dnl ---------------------------------------------------------------------------
 dnl - Make above strings available for packaging files (e.g. rpm spec files)
 dnl ---------------------------------------------------------------------------
 AC_SUBST(GLIB_REQUIRED)
+AC_SUBST(CURL_REQUIRED)
+AC_SUBST(CHECK_REQUIRED)
 
 dnl ---------------------------------------------------------------------------
 dnl - Check library dependencies
@@ -78,12 +82,13 @@ fi
 AC_SUBST(RPM_LIBS)
 
 dnl Check for libcurl (required)
-LIBCURL_CHECK_CONFIG(yes,7.18.1,,AC_MSG_ERROR(*** curl was not found))
+LIBCURL_CHECK_CONFIG(yes,$CURL_REQUIRED,,AC_MSG_ERROR(*** curl was not found))
 CURL_LIBS=$LIBCURL
 AC_SUBST(CURL_LIBS)
 
 dnl Check for check (unit testing library, optional)
-PKG_CHECK_MODULES(CHECK, check >= 0.9.5, HAVE_CHECK=yes, HAVE_CHECK=no)
+PKG_CHECK_MODULES(CHECK, check >= $CHECK_REQUIRED, HAVE_CHECK=yes,
+                  HAVE_CHECK=no)
 AM_CONDITIONAL(HAVE_CHECK, test x$HAVE_CHECK = xyes)
 AC_SUBST(CHECK_CFLAGS)
 AC_SUBST(CHECK_LIBS)
@@ -98,6 +103,46 @@ AC_SUBST(DATADIR, $datadir)
 AC_SUBST(BINDIR, $bindir)
 AC_SUBST(SBINDIR, $sbindir)
 AC_SUBST(LOCALSTATEDIR, $localstatedir)
+
+dnl ---------------------------------------------------------------------------
+dnl - Developer switches
+dnl ---------------------------------------------------------------------------
+AC_ARG_ENABLE(gcov, AS_HELP_STRING([--enable-gcov],
+              [compile with gcov code coverage support (gcc only)]),
+              enable_gcov=$enableval,enable_gcov=no)
+AC_ARG_ENABLE(gprof, AS_HELP_STRING([--enable-gprof],
+              [compile with gprof profiling support (gcc only)]),
+              enable_gprof=$enableval,enable_gprof=no)
+
+if test x$enable_gcov = xyes; then
+	## so that config.h changes when you toggle gcov support
+	AC_DEFINE_UNQUOTED(LOW_BUILD_GCOV, 1, [Defined if gcov is enabled to force a rebuild due to config.h changing])
+
+	AC_MSG_CHECKING([for gcc 3.3 version of gcov file format])
+	have_gcc33_gcov=no
+	AC_RUN_IFELSE( [AC_LANG_PROGRAM( , [[ if (__GNUC__ >=3 && __GNUC_MINOR__ >= 3) exit (0); else exit (1); ]])],
+			have_gcc33_gcov=yes)
+	if test x$have_gcc33_gcov = xyes ; then
+		AC_DEFINE_UNQUOTED(LOW_HAVE_GCC33_GCOV, 1, [Defined if we have gcc 3.3 and thus the new gcov format])
+	fi
+	CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
+	AC_MSG_RESULT($have_gcc33_gcov)
+fi
+AM_CONDITIONAL(LOW_BUILD_GCOV, test x$enable_gcov = xyes)
+
+if test x$enable_gprof = xyes; then
+	## so that config.h changes when you toggle gprof support
+	AC_DEFINE_UNQUOTED(LOW_BUILD_GPROF, 1, [Defined if gprof is enabled to force a rebuild due to config.h changing])
+	CPPFLAGS="$CPPFLAGS -pg"
+	LDFLAGS="$LDFLAGS -pg"
+    # don't need these twice
+    if test x$enable_gcov = xno; then
+        CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
+    fi
+	AC_MSG_RESULT($enable_gprof)
+fi
+AM_CONDITIONAL(LOW_BUILD_GPROF, test x$enable_gprof = xyes)
+
 
 dnl ---------------------------------------------------------------------------
 dnl - Makefiles, etc.
@@ -124,4 +169,6 @@ echo "
         compiler:                       ${CC}
         cflags:                         ${CFLAGS}
         Building 'check' unit tests:    ${HAVE_CHECK}
+        GCC coverage profiling:         ${enable_gcov}
+        GCC time profiling:             ${enable_gprof}
 "
