@@ -144,6 +144,41 @@ START_TEST (test_low_repo_set_search_single_repo_no_packages)
 }
 END_TEST
 
+START_TEST (test_low_repo_set_search_two_repos_no_packages)
+{
+	int i = 0;
+	LowPackage **packages = malloc (sizeof (LowPackage *));
+	LowRepoSqliteFake *repo;
+	LowPackageIter *iter;
+
+	/* Should this be part of low_repo_set's interface? */
+	LowRepoSet *repo_set = malloc (sizeof (LowRepoSet));
+	repo_set->repos = g_hash_table_new (NULL, NULL);
+
+	packages[0] = NULL;
+
+	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test1",
+								 "test repo",
+								 TRUE);
+	repo->packages = packages;
+	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
+
+	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test2",
+								 "test repo",
+								 TRUE);
+	repo->packages = packages;
+	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
+
+	iter = low_repo_set_search_provides (repo_set, "test_prov");
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		i++;
+	}
+
+	fail_unless (i == 0, "results found for empty repos");
+	low_repo_set_free (repo_set);
+}
+END_TEST
+
 Suite *
 low_suite(void)
 {
@@ -166,6 +201,7 @@ low_suite(void)
 
 	tc = tcase_create ("low-repo-set");
 	tcase_add_test (tc, test_low_repo_set_search_no_repos);
+	tcase_add_test (tc, test_low_repo_set_search_two_repos_no_packages);
 	tcase_add_test (tc, test_low_repo_set_search_single_repo_no_packages);
 	suite_add_tcase (s, tc);
 
