@@ -28,7 +28,12 @@ LOW=../src/low
 
 PASSED=1
 
+TOTAL=0
+NUM_PASSED=0
+
 function run_or_die {
+    let TOTAL=$TOTAL+1
+
     printf "Testing '$1'... "
     `$LOW $1 > /dev/null`
     if (($?)); then
@@ -36,6 +41,7 @@ function run_or_die {
         PASSED=0
     else
         printf "\E[32mOK\n"
+        let NUM_PASSED=$NUM_PASSED+1
     fi
     tput sgr0
 }
@@ -59,6 +65,8 @@ run_or_die "whatprovides zsh"
 run_or_die "whatrequires git"
 run_or_die "whatconflicts bash"
 run_or_die "whatobsoletes git-core"
+
+echo "$TOTAL tests run, $[ $TOTAL - $NUM_PASSED ] failures"
 
 if (($PASSED)); then
     echo "Smoke tests passed"
