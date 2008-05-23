@@ -18,6 +18,11 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #  02110-1301  USA
+#
+#  Basic smoke tests for low, which require a live system.
+#
+#  XXX Check the output
+
 
 LOW=../src/low
 
@@ -39,10 +44,16 @@ run_or_die "version"
 run_or_die "help"
 
 run_or_die "repolist"
+run_or_die "repolist all"
+run_or_die "repolist enabled"
+run_or_die "repolist disabled"
+
+run_or_die "info zsh"
+
 run_or_die "list installed"
 run_or_die "list all"
 
-run_or_die "list search zsh"
+run_or_die "search zsh"
 
 run_or_die "whatprovides zsh"
 run_or_die "whatrequires git"
