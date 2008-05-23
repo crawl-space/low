@@ -111,19 +111,6 @@ print_package (const LowPackage *pkg)
 	printf ("\n");
 }
 
-static void
-info (LowRepo *repo, gpointer data)
-{
-	LowPackageIter *iter;
-	char *name = (char *) data;
-
-	iter = low_repo_sqlite_list_by_name (repo, name);
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		LowPackage *pkg = iter->pkg;
-		print_package (pkg);
-	}
-}
-
 static int
 command_info (int argc, const char *argv[])
 {
@@ -143,7 +130,13 @@ command_info (int argc, const char *argv[])
 	}
 
 	repos = low_repo_set_initialize_from_config (config);
-	low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) info, name);
+
+	iter = low_repo_set_list_by_name (repos, name);
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package (pkg);
+	}
+
 	low_repo_set_free (repos);
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
@@ -163,18 +156,6 @@ print_package_short (LowPackage *pkg)
 
 	free (name_arch);
 	free (version_release);
-}
-
-static void
-list (LowRepo *repo, gpointer data)
-{
-	LowPackageIter *iter;
-
-	iter = low_repo_sqlite_list_all (repo);
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		LowPackage *pkg = iter->pkg;
-		print_package_short (pkg);
-	}
 }
 
 static int
@@ -197,8 +178,13 @@ command_list (int argc, const char *argv[])
 	if (!strcmp(argv[0], "all")) {
 		LowRepoSet *repos =
 			low_repo_set_initialize_from_config (config);
-		low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) list,
-				       NULL);
+
+		iter = low_repo_set_list_all (repos);
+		while (iter = low_package_iter_next (iter), iter != NULL) {
+			LowPackage *pkg = iter->pkg;
+			print_package_short (pkg);
+		}
+
 		low_repo_set_free (repos);
 	}
 
@@ -206,19 +192,6 @@ command_list (int argc, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 
 	return 0;
-}
-
-static void
-search (LowRepo *repo, gpointer data)
-{
-	LowPackageIter *iter;
-	const char *querystr = (const char *) data;
-
-	iter = low_repo_sqlite_generic_search (repo, querystr);
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		LowPackage *pkg = iter->pkg;
-		print_package_short (pkg);
-	}
 }
 
 static int
@@ -240,8 +213,13 @@ command_search (int argc, const char *argv[])
 	}
 
 	repos = low_repo_set_initialize_from_config (config);
-	low_repo_set_for_each (repos, ENABLED, (LowRepoSetFunc) search,
-			       querystr);
+
+	iter = low_repo_set_generic_search (repos, querystr);
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+		print_package_short (pkg);
+	}
+
 	low_repo_set_free (repos);
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);

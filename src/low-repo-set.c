@@ -186,6 +186,27 @@ low_repo_set_package_iter_new (LowRepoSet *repo_set,
 }
 
 LowPackageIter *
+low_repo_set_list_all (LowRepoSet *repo_set)
+{
+	/*
+	 * XXX list_all doesn't take any args, so we get off by passing NULL.
+	 *     this is still ugly though.
+	 */
+	return low_repo_set_package_iter_new (repo_set,
+					      (LowRepoSetIterSearchFunc)
+					      low_repo_sqlite_list_all,
+					      NULL);
+}
+
+LowPackageIter *
+low_repo_set_list_by_name (LowRepoSet *repo_set, const char *name)
+{
+	return low_repo_set_package_iter_new (repo_set,
+					      low_repo_sqlite_list_by_name,
+					      name);
+}
+
+LowPackageIter *
 low_repo_set_search_provides (LowRepoSet *repo_set, const char *provides)
 {
 	return low_repo_set_package_iter_new (repo_set,
@@ -223,6 +244,14 @@ low_repo_set_search_files (LowRepoSet *repo_set, const char *file)
 	return low_repo_set_package_iter_new (repo_set,
 					      low_repo_sqlite_search_files,
 					      file);
+}
+
+LowPackageIter *
+low_repo_set_generic_search (LowRepoSet *repo_set, const char *querystr)
+{
+	return low_repo_set_package_iter_new (repo_set,
+					      low_repo_sqlite_generic_search,
+					      querystr);
 }
 
 /* vim: set ts=8 sw=8 noet: */

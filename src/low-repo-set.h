@@ -51,6 +51,10 @@ void            low_repo_set_for_each                  	(LowRepoSet *repo_set,
 							 LowRepoSetFunc func,
 							 gpointer data);
 
+LowPackageIter * low_repo_set_list_all			(LowRepoSet *repo_set);
+LowPackageIter * low_repo_set_list_by_name 		(LowRepoSet *repo_set,
+							 const char *name);
+
 LowPackageIter * low_repo_set_search_provides      	(LowRepoSet *repo_set,
 							 const char *provides);
 LowPackageIter * low_repo_set_search_requires      	(LowRepoSet *repo_set,
@@ -62,6 +66,9 @@ LowPackageIter * low_repo_set_search_obsoletes 		(LowRepoSet *repo_set,
 
 LowPackageIter * low_repo_set_search_files      	(LowRepoSet *repo_set,
 							 const char *file);
+
+LowPackageIter * low_repo_set_generic_search      	(LowRepoSet *repo_set,
+							 const char *querystr);
 
 #endif /* _LOW_REPO_SET_H_ */
 
