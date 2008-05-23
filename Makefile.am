@@ -52,4 +52,7 @@ todo:
 	@find \( -name \*.c -o -name '*.h' \) \
 		| xargs grep -nP "(XXX)|(TODO)|(FIXME)"
 
+smoke-test:
+	@cd test && ./smoke-test.sh && cd ../
+
 .PHONY: doxygen
