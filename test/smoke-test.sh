@@ -21,13 +21,18 @@
 
 LOW=../src/low
 
+PASSED=1
+
 function run_or_die {
-    echo "Running $LOW $1 > /dev/null"
-    $LOW $1 > /dev/null
+    printf "Testing '$1'... "
+    `$LOW $1 > /dev/null`
     if (($?)); then
-        echo "*** SMOKE TESTS FAILED ***"
-        exit 1
+        printf "\E[31mFAIL\n"
+        PASSED=0
+    else
+        printf "\E[32mOK\n"
     fi
+    tput sgr0
 }
 
 run_or_die "version"
@@ -44,4 +49,9 @@ run_or_die "whatrequires git"
 run_or_die "whatconflicts bash"
 run_or_die "whatobsoletes git-core"
 
-echo "Smoke tests passed"
+if (($PASSED)); then
+    echo "Smoke tests passed"
+else
+    echo "*** SMOKE TESTS FAILED ***"
+    exit 1
+fi
