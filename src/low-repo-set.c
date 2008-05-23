@@ -148,6 +148,9 @@ low_repo_set_package_iter_next (LowPackageIter *iter)
 		return NULL;
 	}
 
+	iter_set->current_repo = current_repo;
+	iter_set->current_repo_iter = current_repo_iter;
+
 	iter->pkg = iter_set->current_repo_iter->pkg;
 
 	return iter;
