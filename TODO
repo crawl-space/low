@@ -16,3 +16,5 @@
   we can parse
 - unit tests for low-repo-set (using fake sqlite repos)
 - investigate using g_slice instead of malloc and friends
+- maybe lazy-load non-nevra package data
+- lazy load PRCO and file lists
