@@ -24,6 +24,15 @@
 #include <glib.h>
 #include "low-package.h"
 
+void
+low_package_free (LowPackage *pkg)
+{
+	free (pkg->summary);
+	free (pkg->description);
+
+	free (pkg);
+}
+
 LowPackageIter *
 low_package_iter_next (LowPackageIter *iter)
 {

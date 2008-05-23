@@ -73,6 +73,7 @@ low_repo_sqlite_shutdown (LowRepo *repo)
 	free (repo->name);
 
 	sqlite3_close (repo_sqlite->primary_db);
+	sqlite3_close (repo_sqlite->filelists_db);
 	free (repo);
 }
 

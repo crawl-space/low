@@ -20,6 +20,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include "low-package-sqlite.h"
 
 static LowPackage *
@@ -35,8 +36,13 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 
 	pkg->size = sqlite3_column_int (pp_stmt, i++);
 	pkg->repo = repo->id;
-	pkg->summary = (const char *) sqlite3_column_text (pp_stmt, i++);
-	pkg->description = (const char *) sqlite3_column_text (pp_stmt, i++);
+
+	/* We strdup these because rpm does not return const strings */
+	pkg->summary =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->description =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+
 	pkg->url = (const char *) sqlite3_column_text (pp_stmt, i++);
 	pkg->license = (const char *) sqlite3_column_text (pp_stmt, i++);
 	pkg->location_href = (const char *) sqlite3_column_text(pp_stmt, i++);
@@ -50,7 +56,7 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 	LowPackageIterSqlite *iter_sqlite = (LowPackageIterSqlite *) iter;
 
 	if (iter->pkg != NULL) {
-		free (iter->pkg);
+		low_package_free (iter->pkg);
 	}
 
 	if (sqlite3_step(iter_sqlite->pp_stmt) == SQLITE_DONE) {

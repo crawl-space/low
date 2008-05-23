@@ -53,8 +53,8 @@ typedef struct _LowPackage {
 
 	size_t size;
 	const char *repo;
-	const char *summary;
-	const char *description;
+	char *summary;
+	char *description;
 	const char *url; /** Optional URL for the package */
 	const char *license;
 	const char *location_href;
@@ -69,6 +69,8 @@ struct _LowPackageIter {
 	LowPackage *pkg;
 	LowPackageIterNextFunc next_func;
 };
+
+void 			low_package_free 	(LowPackage *pkg);
 
 LowPackageIter * 	low_package_iter_next 	(LowPackageIter *iter);
 

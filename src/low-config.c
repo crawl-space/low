@@ -82,7 +82,8 @@ low_config_initialize (LowRepo *rpmdb)
 	joined_config = g_strjoin ("\n", main_config, repo_configs, NULL);
 
 	g_key_file_load_from_data (config->config, joined_config,
-							   strlen (joined_config), G_KEY_FILE_NONE, &error);
+				   strlen (joined_config), G_KEY_FILE_NONE,
+				   &error);
 	if (error != NULL) {
 		g_print ("%s\n", error->message);
 		g_error_free (error);
