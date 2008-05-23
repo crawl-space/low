@@ -15,3 +15,4 @@
 - low dump [repo|all|PACKAGE] - output full package details in a format
   we can parse
 - unit tests for low-repo-set (using fake sqlite repos)
+- investigate using g_slice instead of malloc and friends
