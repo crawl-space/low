@@ -32,7 +32,7 @@ union rpm_entry {
 };
 
 static LowPackage *
-low_package_rpmdb_new_from_header (Header header)
+low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 {
 	union rpm_entry name, epoch, version, release, arch;
 	union rpm_entry size, summary, description, url, license;
@@ -60,7 +60,7 @@ low_package_rpmdb_new_from_header (Header header)
 	pkg->arch = arch.string;
 
 	pkg->size = *size.integer;
-	pkg->repo = "installed";
+	pkg->repo = repo;
 	pkg->summary = summary.string;
 	pkg->description = description.string;
 	pkg->url = url.string;
@@ -84,7 +84,7 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 		return NULL;
 	}
 
-	iter->pkg = low_package_rpmdb_new_from_header (header);
+	iter->pkg = low_package_rpmdb_new_from_header (header, iter->repo);
 
 	if (iter_rpmdb->func != NULL) {
 		/* move on to the next rpm if this one fails the filter */

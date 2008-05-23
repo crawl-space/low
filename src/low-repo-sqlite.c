@@ -26,9 +26,10 @@
 #include "low-package-sqlite.h"
 #include "low-repo-sqlite.h"
 
-#define SELECT_FIELDS_FROM "SELECT p.name, p.arch, p.version, p.release, " \
-			   "p.size_package, p.summary, p.description, " \
-			   "p.url, p.rpm_license, p.location_href FROM "
+#define SELECT_FIELDS_FROM "SELECT p.pkgKey, p.name, p.arch, p.version, " \
+			   "p.release, p.size_package, p.summary, " \
+			   "p.description, p.url, p.rpm_license, " \
+			   "p.location_href FROM "
 
 typedef struct _LowRepoSqlite {
 	LowRepo super;
@@ -77,7 +78,8 @@ detach_db (sqlite3 *db)
 }
 
 static void
-low_repo_sqlite_regexp (sqlite3_context *ctx, int argc, sqlite3_value **args)
+low_repo_sqlite_regexp (sqlite3_context *ctx, int argc G_GNUC_UNUSED,
+			sqlite3_value **args)
 {
 	gboolean matched;
 
@@ -333,6 +335,39 @@ low_repo_sqlite_generic_search (LowRepo *repo, const char *querystr)
 	sqlite3_bind_text (iter->pp_stmt, 1, like_querystr, -1, free);
 
 	return (LowPackageIter *) iter;
+}
+
+
+#define MAX_PROVIDES 1000
+
+char **
+low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
+{
+	const char *stmt = "SELECT prov.name from provides prov "
+			   "WHERE prov.pkgKey = :pkgKey";
+
+	/* XXX make this dynamic */
+	char **provides = malloc (sizeof (char *) * MAX_PROVIDES);
+	int i = 0;
+
+	sqlite3_stmt *pp_stmt;
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
+			 NULL);
+	sqlite3_bind_int (pp_stmt, 1, pkg->id);
+
+	while (sqlite3_step(pp_stmt) != SQLITE_DONE) {
+		/* XXX Do we need to strdup this? */
+		provides[i++] =
+			g_strdup ((const char *) sqlite3_column_text (pp_stmt,
+								      0));
+	}
+
+	sqlite3_finalize (pp_stmt);
+
+	provides[i] = NULL;
+	return provides;
 }
 
 /* vim: set ts=8 sw=8 noet: */

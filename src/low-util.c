@@ -39,7 +39,7 @@ low_util_word_wrap (const char *text, int width)
 	char cc = '\0';
 	char d, line[MAXLINE + 2], word[MAXWORD + 2];
 	int newline = 0, line_pos = 0, word_pos = 0;
-	int i;
+	unsigned int i;
 	int lineno = 0;
 
 	/* XXX make this dynamic */

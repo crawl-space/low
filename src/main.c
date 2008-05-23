@@ -88,7 +88,7 @@ wrap_and_print (const char *text)
 }
 
 static void
-print_package (const LowPackage *pkg)
+print_package (LowPackage *pkg, gboolean show_all)
 {
 	printf ("Name        : %s\n", pkg->name);
 	printf ("Arch        : %s\n", pkg->arch);
@@ -98,7 +98,7 @@ print_package (const LowPackage *pkg)
 	printf ("Size        : ");
 	print_size (pkg->size);
 
-	printf ("Repo        : %s\n", pkg->repo);
+	printf ("Repo        : %s\n", pkg->repo->id);
 
 	printf ("Summary     : ");
 	wrap_and_print (pkg->summary);
@@ -108,6 +108,21 @@ print_package (const LowPackage *pkg)
 
 	printf ("Description : ");
 	wrap_and_print (pkg->description);
+
+	/* XXX This doesn't work for rpmdb pkgs yet */
+	if (show_all && strcmp (pkg->repo->id, "installed")) {
+		int i;
+		char **provides = low_sqlite_package_get_provides (pkg);
+
+		printf ("Provides    : %s\n", provides[0]);
+
+		for (i = 1; provides[i] != NULL; i++) {
+			printf ("              %s\n", provides[i]);
+		}
+
+		g_strfreev (provides);
+	}
+
 	printf ("\n");
 }
 
@@ -118,7 +133,17 @@ command_info (int argc, const char *argv[])
 	LowRepoSet *repos;
 	LowPackageIter *iter;
 	LowConfig *config;
-	gchar *name = g_strdup (argv[0]);
+	gchar *name;
+	gboolean show_all = FALSE;
+
+	/* XXX We might not want to ship with the show_all stuff; its ugly. */
+	if (argc == 2) {
+		/* XXX do option parsing */
+		show_all = TRUE;
+		name = g_strdup (argv[1]);
+	} else {
+		name = g_strdup (argv[0]);
+	}
 
 	rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (rpmdb);
@@ -126,7 +151,7 @@ command_info (int argc, const char *argv[])
 	iter = low_repo_rpmdb_list_by_name (rpmdb, name);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
-		print_package (pkg);
+		print_package (pkg, show_all);
 	}
 
 	repos = low_repo_set_initialize_from_config (config);
@@ -134,7 +159,7 @@ command_info (int argc, const char *argv[])
 	iter = low_repo_set_list_by_name (repos, name);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
-		print_package (pkg);
+		print_package (pkg, show_all);
 	}
 
 	low_repo_set_free (repos);
@@ -152,14 +177,15 @@ print_package_short (LowPackage *pkg)
 	gchar *version_release = g_strdup_printf ("%s-%s", pkg->version,
 						  pkg->release);
 
-	printf ("%-41.41s%-23.23s%s\n", name_arch, version_release, pkg->repo);
+	printf ("%-41.41s%-23.23s%s\n", name_arch, version_release,
+		pkg->repo->id);
 
 	free (name_arch);
 	free (version_release);
 }
 
 static int
-command_list (int argc, const char *argv[])
+command_list (int argc G_GNUC_UNUSED, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowPackageIter *iter;
@@ -195,7 +221,7 @@ command_list (int argc, const char *argv[])
 }
 
 static int
-command_search (int argc, const char *argv[])
+command_search (int argc G_GNUC_UNUSED, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
@@ -275,7 +301,7 @@ command_repolist (int argc, const char *argv[])
 }
 
 static int
-command_whatprovides (int argc, const char *argv[])
+command_whatprovides (int argc G_GNUC_UNUSED, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
@@ -325,7 +351,7 @@ command_whatprovides (int argc, const char *argv[])
 }
 
 static int
-command_whatrequires (int argc, const char *argv[])
+command_whatrequires (int argc G_GNUC_UNUSED, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
@@ -361,7 +387,7 @@ command_whatrequires (int argc, const char *argv[])
 }
 
 static int
-command_whatconflicts (int argc, const char *argv[])
+command_whatconflicts (int argc G_GNUC_UNUSED, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
@@ -397,7 +423,7 @@ command_whatconflicts (int argc, const char *argv[])
 }
 
 static int
-command_whatobsoletes (int argc, const char *argv[])
+command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
@@ -435,7 +461,7 @@ command_whatobsoletes (int argc, const char *argv[])
  * Display the program version as specified in configure.ac
  */
 static int
-command_version (int argc, const char *argv[])
+command_version (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
 {
 	printf  (PACKAGE_STRING"\n");
 	return 0;
@@ -458,7 +484,7 @@ command_help (int argc, const char *argv[])
 }
 
 static int
-NOT_IMPLEMENTED (int argc, const char *argv[])
+NOT_IMPLEMENTED (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
 {
 	printf ("This function is not yet implemented\n");
 
@@ -466,7 +492,7 @@ NOT_IMPLEMENTED (int argc, const char *argv[])
 }
 
 static int
-command_download (int argc, const char *argv[])
+command_download (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
 {
 	char *url = YUM_REPO "fedora8.png";
 	char *file = "/tmp/fedora8.png";
@@ -513,7 +539,7 @@ const SubCommand commands[] = {
 static void
 show_help (const char *command)
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE (commands); i++) {
 		if (!strcmp (command, commands[i].name)) {
@@ -532,7 +558,7 @@ show_help (const char *command)
 static int
 usage (void)
 {
-	int i;
+	unsigned int i;
 
 	printf ("low: a yum-like package manager\n");
 	for (i = 0; i < ARRAY_SIZE (commands); i++) {
@@ -545,7 +571,7 @@ usage (void)
 int
 main (int argc, const char *argv[])
 {
-	int i;
+	unsigned int i;
 
 	if (argc < 2) {
 		return usage ();

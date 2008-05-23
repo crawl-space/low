@@ -85,37 +85,42 @@ low_repo_sqlite_list_all (LowRepo *repo)
 }
 
 LowPackageIter *
-low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
+low_repo_sqlite_list_by_name (LowRepo *repo, const char *name G_GNUC_UNUSED)
 {
 	return low_repo_sqlite_list_all (repo);
 }
 
 LowPackageIter *
-low_repo_sqlite_search_provides (LowRepo *repo, const char *provides)
+low_repo_sqlite_search_provides (LowRepo *repo,
+				 const char *provides G_GNUC_UNUSED)
 {
 	return low_repo_sqlite_list_all (repo);
 }
 
 LowPackageIter *
-low_repo_sqlite_search_requires (LowRepo *repo, const char *requires)
+low_repo_sqlite_search_requires (LowRepo *repo,
+				 const char *requires G_GNUC_UNUSED)
 {
 	return low_repo_sqlite_list_all (repo);
 }
 
 LowPackageIter *
-low_repo_sqlite_search_conflicts (LowRepo *repo, const char *conflicts)
+low_repo_sqlite_search_conflicts (LowRepo *repo,
+				  const char *conflicts G_GNUC_UNUSED)
 {
 	return low_repo_sqlite_list_all (repo);
 }
 
 LowPackageIter *
-low_repo_sqlite_search_obsoletes (LowRepo *repo, const char *obsoletes)
+low_repo_sqlite_search_obsoletes (LowRepo *repo,
+				  const char *obsoletes G_GNUC_UNUSED)
 {
 	return low_repo_sqlite_list_all (repo);
 }
 
 LowPackageIter *
-low_repo_sqlite_search_files (LowRepo *repo, const char *file)
+low_repo_sqlite_search_files (LowRepo *repo,
+			      const char *file G_GNUC_UNUSED)
 {
 	return low_repo_sqlite_list_all (repo);
 }
@@ -126,7 +131,8 @@ low_repo_sqlite_search_files (LowRepo *repo, const char *file)
  * XXX this function needs a better name
  */
 LowPackageIter *
-low_repo_sqlite_generic_search (LowRepo *repo, const char *querystr)
+low_repo_sqlite_generic_search (LowRepo *repo,
+				const char *querystr G_GNUC_UNUSED)
 {
 	return low_repo_sqlite_list_all (repo);
 }

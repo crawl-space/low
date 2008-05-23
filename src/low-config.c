@@ -100,7 +100,7 @@ low_config_initialize (LowRepo *rpmdb)
 char **
 low_config_get_repo_names (LowConfig *config)
 {
-	int i, j;
+	unsigned int i, j;
 	gchar **repo_names = g_key_file_get_groups (config->config, NULL);
 	gchar **new_repo_names = g_malloc (sizeof (gchar *) *
 									   g_strv_length (repo_names) - 1);

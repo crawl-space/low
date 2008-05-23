@@ -27,7 +27,7 @@
 LowRepoSet *
 low_repo_set_initialize_from_config (LowConfig *config)
 {
-	int i;
+	unsigned int i;
 	char **repo_names;
 	LowRepoSet *repo_set = malloc (sizeof (LowRepoSet));
 
@@ -53,7 +53,8 @@ low_repo_set_initialize_from_config (LowConfig *config)
 }
 
 static void
-low_repo_set_free_repo (gpointer key, gpointer value, gpointer user_data)
+low_repo_set_free_repo (gpointer key G_GNUC_UNUSED, gpointer value,
+			gpointer user_data G_GNUC_UNUSED)
 {
 	LowRepo *repo = (LowRepo *) value;
 
@@ -74,7 +75,8 @@ typedef struct _LowRepoSetForEachData {
 } LowRepoSetForEachData;
 
 static void
-low_repo_set_inner_for_each (gpointer key, gpointer value, gpointer data)
+low_repo_set_inner_for_each (gpointer key G_GNUC_UNUSED, gpointer value,
+			     gpointer data)
 {
 	LowRepo *repo = (LowRepo *) value;
 	LowRepoSetForEachData *for_each_data = (LowRepoSetForEachData *) data;

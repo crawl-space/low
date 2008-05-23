@@ -19,10 +19,10 @@
  *  02110-1301  USA
  */
 
-#include "low-repo.h"
-
 #ifndef _LOW_PACKAGE_H_
 #define _LOW_PACKAGE_H_
+
+#include "low-repo.h"
 
 typedef enum {
 	DEPENDENCY_SENSE_EQ,
@@ -45,6 +45,7 @@ typedef struct _LowPackageDependency {
 } LowPackageDependency;
 
 typedef struct _LowPackage {
+	unsigned int id;
 	const char *name;
 	const char *version;
 	const char *release;
@@ -52,7 +53,7 @@ typedef struct _LowPackage {
 	const char *epoch;
 
 	size_t size;
-	const char *repo;
+	LowRepo *repo;
 	char *summary;
 	char *description;
 	const char *url; /** Optional URL for the package */

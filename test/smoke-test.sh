@@ -55,6 +55,10 @@ run_or_die "repolist enabled"
 run_or_die "repolist disabled"
 
 run_or_die "info zsh"
+# An uninstalled package
+run_or_die "info -a kdesdk"
+# Something from the rpmdb
+run_or_die "info -a bash"
 
 run_or_die "list installed"
 run_or_die "list all"

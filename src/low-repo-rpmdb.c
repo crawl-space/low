@@ -37,8 +37,8 @@ low_repo_rpmdb_initialize ()
 {
 	LowRepoRpmdb *repo = malloc (sizeof (LowRepoRpmdb));
 
-	repo->super.id = "rpmdb";
-	repo->super.name = "installed";
+	repo->super.id = "installed";
+	repo->super.name = "Installed Packages";
 	repo->super.enabled = TRUE;
 
 	rpmReadConfigFiles (NULL, NULL);

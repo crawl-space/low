@@ -48,6 +48,9 @@ LowPackageIter *    low_repo_sqlite_search_files 	(LowRepo *repo,
 LowPackageIter *	low_repo_sqlite_generic_search 	(LowRepo *repo,
 							 const char *querystr);
 
+char **	low_repo_sqlite_get_provides (LowRepo *repo,
+					      LowPackage *pkg);
+
 #endif /* _LOW_REPO_SQLITE_H_ */
 
 /* vim: set ts=8 sw=8 noet: */

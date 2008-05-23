@@ -27,11 +27,13 @@
 #include <curl/curl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <glib.h>
 #include "low-download.h"
 
 int
 low_download_show_progress(void *clientp, double dltotal, double dlnow,
-			   double ultotal, double ulnow)
+			   double ultotal G_GNUC_UNUSED,
+			   double ulnow G_GNUC_UNUSED)
 {
 	const char *file = clientp;
 

@@ -38,7 +38,7 @@ low_config_initialize (LowRepo *rpmdb)
 }
 
 char **
-low_config_get_repo_names (LowConfig *config)
+low_config_get_repo_names (LowConfig *config G_GNUC_UNUSED)
 {
 	static char *names[] = {"test1", "test2", NULL};
 
@@ -46,13 +46,17 @@ low_config_get_repo_names (LowConfig *config)
 }
 
 char *
-low_config_get_string (LowConfig *config, const char *group, const char *key)
+low_config_get_string (LowConfig *config G_GNUC_UNUSED,
+		       const char *group G_GNUC_UNUSED,
+		       const char *key G_GNUC_UNUSED)
 {
 	return "test string";
 }
 
 gboolean
-low_config_get_boolean (LowConfig *config, const char *group, const char *key)
+low_config_get_boolean (LowConfig *config G_GNUC_UNUSED,
+			const char *group G_GNUC_UNUSED,
+			const char *key G_GNUC_UNUSED)
 {
 	return TRUE;
 }

@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "low-package-sqlite.h"
+#include "low-repo-sqlite.h"
 
 static LowPackage *
 low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
@@ -29,13 +30,14 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	int i = 0;
 	LowPackage *pkg = malloc (sizeof (LowPackage));
 
+	pkg->id = sqlite3_column_int (pp_stmt, i++);
 	pkg->name = (const char *) sqlite3_column_text (pp_stmt, i++);
 	pkg->arch = (const char *) sqlite3_column_text (pp_stmt, i++);
 	pkg->version = (const char *) sqlite3_column_text (pp_stmt, i++);
 	pkg->release = (const char *) sqlite3_column_text (pp_stmt, i++);
 
 	pkg->size = sqlite3_column_int (pp_stmt, i++);
-	pkg->repo = repo->id;
+	pkg->repo = repo;
 
 	/* We strdup these because rpm does not return const strings */
 	pkg->summary =
@@ -69,6 +71,16 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 												 iter->repo);
 
 	return iter;
+}
+
+char **
+low_sqlite_package_get_provides	(LowPackage *pkg)
+{
+	/*
+	 * XXX maybe this should all be in the same file,
+	 *     or the sqlite repo struct should be in the header
+	 */
+	return low_repo_sqlite_get_provides (pkg->repo, pkg);
 }
 
 /* vim: set ts=8 sw=8 noet: */

@@ -34,7 +34,9 @@ typedef struct _LowPackageIterSqlite {
 	sqlite3_stmt *pp_stmt;
 } LowPackageIterSqlite;
 
-LowPackageIter * low_sqlite_package_iter_next (LowPackageIter *iter);
+LowPackageIter * low_sqlite_package_iter_next	(LowPackageIter *iter);
+
+char **		low_sqlite_package_get_provides	(LowPackage *pkg);
 
 #endif /* _LOW_PACKAGE_SQLITE_H_ */
 
