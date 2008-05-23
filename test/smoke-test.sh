@@ -62,6 +62,8 @@ run_or_die "list all"
 run_or_die "search zsh"
 
 run_or_die "whatprovides zsh"
+run_or_die "whatprovides /bin/zsh"
+run_or_die "whatprovides /usr/share/git-core"
 run_or_die "whatrequires git"
 run_or_die "whatconflicts bash"
 run_or_die "whatobsoletes git-core"

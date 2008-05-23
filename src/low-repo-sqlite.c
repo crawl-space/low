@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <sqlite3.h>
 #include "low-package-sqlite.h"
 #include "low-repo-sqlite.h"
@@ -46,6 +47,51 @@ low_repo_sqlite_open_db (const char *db_file, sqlite3 **db)
 	}
 }
 
+static void
+attach_db (sqlite3 *db, const char *db_file)
+{
+	const char *stmt = "ATTACH :db_file AS :name";
+
+	sqlite3_stmt *pp_stmt;
+
+	sqlite3_prepare (db, stmt, -1, &pp_stmt, NULL);
+	sqlite3_bind_text (pp_stmt, 1, db_file, -1, SQLITE_STATIC);
+	sqlite3_bind_text (pp_stmt, 2, "filelists", -1, SQLITE_STATIC);
+
+	sqlite3_step (pp_stmt);
+	sqlite3_finalize (pp_stmt);
+}
+
+static void
+detach_db (sqlite3 *db)
+{
+	const char *stmt = "DETACH :name";
+
+	sqlite3_stmt *pp_stmt;
+
+	sqlite3_prepare (db, stmt, -1, &pp_stmt, NULL);
+	sqlite3_bind_text (pp_stmt, 1, "filelists", -1, SQLITE_STATIC);
+
+	sqlite3_step (pp_stmt);
+	sqlite3_finalize (pp_stmt);
+}
+
+static void
+low_repo_sqlite_regexp (sqlite3_context *ctx, int argc, sqlite3_value **args)
+{
+	gboolean matched;
+
+	const char *expr = (const char *) sqlite3_value_text (args[0]);
+	const char *item = (const char *) sqlite3_value_text (args[1]);
+
+	/* XXX Can we compile this and free it when done? */
+	matched = g_regex_match_simple (expr, item, 0, 0);
+	sqlite3_result_int (ctx, matched);
+}
+
+typedef void (*sqlFunc) (sqlite3_context *, int, sqlite3_value **);
+typedef void (*sqlFinal) (sqlite3_context *);
+
 LowRepo *
 low_repo_sqlite_initialize (const char *id, const char *name, gboolean enabled)
 {
@@ -55,8 +101,18 @@ low_repo_sqlite_initialize (const char *id, const char *name, gboolean enabled)
 	char *filelists_db =
 		g_strdup_printf ("/var/cache/yum/%s/filelists.sqlite", id);
 
-	low_repo_sqlite_open_db (primary_db, &repo->primary_db);
-	low_repo_sqlite_open_db (filelists_db, &repo->filelists_db);
+	/* Will need a way to flick this on later */
+	if (enabled) {
+		low_repo_sqlite_open_db (primary_db, &repo->primary_db);
+		attach_db (repo->primary_db, filelists_db);
+		sqlite3_create_function (repo->primary_db, "regexp", 2,
+					 SQLITE_ANY, NULL,
+					 low_repo_sqlite_regexp,
+					 (sqlFunc) NULL, (sqlFinal) NULL);
+	//	low_repo_sqlite_open_db (filelists_db, &repo->filelists_db);
+	} else {
+		repo->primary_db = NULL;
+	}
 
 	repo->super.id = g_strdup (id);
 	repo->super.name = g_strdup (name);
@@ -76,8 +132,11 @@ low_repo_sqlite_shutdown (LowRepo *repo)
 	free (repo->id);
 	free (repo->name);
 
-	sqlite3_close (repo_sqlite->primary_db);
-	sqlite3_close (repo_sqlite->filelists_db);
+	if (repo_sqlite->primary_db) {
+		detach_db (repo_sqlite->primary_db);
+		sqlite3_close (repo_sqlite->primary_db);
+	//	sqlite3_close (repo_sqlite->filelists_db);
+	}
 	free (repo);
 }
 
@@ -189,10 +248,9 @@ low_repo_sqlite_search_obsoletes (LowRepo *repo, const char *obsoletes)
 	return (LowPackageIter *) iter;
 }
 
-LowPackageIter *
-low_repo_sqlite_search_files (LowRepo *repo, const char *file)
+static LowPackageIter *
+low_repo_sqlite_search_primary_files (LowRepo *repo, const char *file)
 {
-	/* XXX Search the full filelists db too */
 	const char *stmt = SELECT_FIELDS_FROM "packages p, files f "
 			   "WHERE f.pkgKey = p.pkgKey "
 			   "AND f.name = :file";
@@ -207,6 +265,45 @@ low_repo_sqlite_search_files (LowRepo *repo, const char *file)
 			 NULL);
 	sqlite3_bind_text (iter->pp_stmt, 1, file, -1, SQLITE_STATIC);
 	return (LowPackageIter *) iter;
+}
+
+static LowPackageIter *
+low_repo_sqlite_search_filelists_files (LowRepo *repo, const char *file)
+{
+	/* XXX try optimizing for caces where there's only one filename */
+	const char *stmt = SELECT_FIELDS_FROM "packages p, filelist f "
+			   "WHERE f.pkgKey = p.pkgKey "
+			   "AND f.dirname = :dir "
+			   "AND f.filenames REGEXP :file";
+
+	char *slash = g_strrstr(file, "/");
+	char *filename = g_strdup_printf ("(^|/)%s(/|$)", (char *) (slash + 1));
+	char *dirname = g_strndup (file, slash - file);
+
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+	iter->super.repo = repo;
+	iter->super.next_func = low_sqlite_package_iter_next;
+	iter->super.pkg = NULL;
+
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
+			 NULL);
+	sqlite3_bind_text (iter->pp_stmt, 1, dirname, -1, free);
+	sqlite3_bind_text (iter->pp_stmt, 2, filename, -1, free);
+
+	return (LowPackageIter *) iter;
+}
+
+LowPackageIter *
+low_repo_sqlite_search_files (LowRepo *repo, const char *file)
+{
+	/* Createrepo puts these files in primary.xml */
+	if (strstr (file, "bin/") || g_str_has_prefix (file, "/etc/")
+	    || !strcmp (file, "/usr/lib/sendmail")) {
+		return low_repo_sqlite_search_primary_files (repo, file);
+	} else {
+		return low_repo_sqlite_search_filelists_files (repo, file);
+	}
 }
 
 /**

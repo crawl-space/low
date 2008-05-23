@@ -314,11 +314,13 @@ command_whatprovides (int argc, const char *argv[])
 		print_package_short (pkg);
 	}
 
-	iter = low_repo_rpmdb_search_files (rpmdb, provides);
+	if (provides[0] == '/') {
+		iter = low_repo_rpmdb_search_files (rpmdb, provides);
 
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		LowPackage *pkg = iter->pkg;
-		print_package_short (pkg);
+		while (iter = low_package_iter_next (iter), iter != NULL) {
+			LowPackage *pkg = iter->pkg;
+			print_package_short (pkg);
+		}
 	}
 
 	repos = low_repo_set_initialize_from_config (config);
@@ -329,12 +331,13 @@ command_whatprovides (int argc, const char *argv[])
 		print_package_short (pkg);
 	}
 
-	iter = low_repo_set_search_files (repos, provides);
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		LowPackage *pkg = iter->pkg;
-		print_package_short (pkg);
+	if (provides[0] == '/') {
+		iter = low_repo_set_search_files (repos, provides);
+		while (iter = low_package_iter_next (iter), iter != NULL) {
+			LowPackage *pkg = iter->pkg;
+			print_package_short (pkg);
+		}
 	}
-
 	low_repo_set_free (repos);
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
