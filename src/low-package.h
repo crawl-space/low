@@ -67,6 +67,7 @@ struct _LowPackage {
 	const char *location_href;
 
 	LowPackageGetDependency get_provides;
+	LowPackageGetDependency get_requires;
 };
 
 typedef struct _LowPackageIter LowPackageIter;
@@ -82,6 +83,7 @@ struct _LowPackageIter {
 void 			low_package_free 	(LowPackage *pkg);
 
 char **			low_package_get_provides 	(LowPackage *pkg);
+char **			low_package_get_requires 	(LowPackage *pkg);
 
 LowPackageIter * 	low_package_iter_next 	(LowPackageIter *iter);
 

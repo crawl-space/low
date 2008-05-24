@@ -38,6 +38,13 @@ low_package_get_provides (LowPackage *pkg)
 {
 	return (pkg->get_provides) (pkg);
 }
+
+char **
+low_package_get_requires (LowPackage *pkg)
+{
+	return (pkg->get_requires) (pkg);
+}
+
 LowPackageIter *
 low_package_iter_next (LowPackageIter *iter)
 {

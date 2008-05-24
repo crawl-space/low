@@ -88,6 +88,17 @@ wrap_and_print (const char *text)
 }
 
 static void
+print_dependencies (const char *dep_name, char **deps)
+{
+	int i;
+
+	printf ("%-12s: %s\n", dep_name, deps[0]);
+	for (i = 1; deps[i] != NULL; i++) {
+		printf ("              %s\n", deps[i]);
+	}
+}
+
+static void
 print_package (LowPackage *pkg, gboolean show_all)
 {
 	printf ("Name        : %s\n", pkg->name);
@@ -110,16 +121,20 @@ print_package (LowPackage *pkg, gboolean show_all)
 	wrap_and_print (pkg->description);
 
 	if (show_all) {
-		int i;
-		char **provides = low_package_get_provides (pkg);
+		char **provides;
+		char **requires;
+//		char **conflicts;
+//		char **obsoletes;
 
-		printf ("Provides    : %s\n", provides[0]);
+//		char **files;
 
-		for (i = 1; provides[i] != NULL; i++) {
-			printf ("              %s\n", provides[i]);
-		}
-
+		provides = low_package_get_provides (pkg);
+		print_dependencies ("Provides", provides);
 		g_strfreev (provides);
+
+		requires = low_package_get_requires (pkg);
+		print_dependencies ("Requires", requires);
+		g_strfreev (requires);
 	}
 
 	printf ("\n");

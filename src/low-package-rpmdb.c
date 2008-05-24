@@ -77,6 +77,7 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	pkg->license = license.string;
 
 	pkg->get_provides = low_rpmdb_package_get_provides;
+	pkg->get_requires = low_rpmdb_package_get_requires;
 
 	return pkg;
 }
@@ -115,7 +116,7 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 }
 
 char **
-low_rpmdb_package_get_provides	(LowPackage *pkg)
+low_rpmdb_package_get_provides (LowPackage *pkg)
 {
 	/*
 	 * XXX maybe this should all be in the same file,
@@ -124,4 +125,9 @@ low_rpmdb_package_get_provides	(LowPackage *pkg)
 	return low_repo_rpmdb_get_provides (pkg->repo, pkg);
 }
 
+char **
+low_rpmdb_package_get_requires (LowPackage *pkg)
+{
+	return low_repo_rpmdb_get_requires (pkg->repo, pkg);
+}
 /* vim: set ts=8 sw=8 noet: */

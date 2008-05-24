@@ -50,6 +50,8 @@ LowPackageIter *	low_repo_sqlite_generic_search 	(LowRepo *repo,
 
 char **		low_repo_sqlite_get_provides 		(LowRepo *repo,
 							 LowPackage *pkg);
+char **		low_repo_sqlite_get_requires 		(LowRepo *repo,
+							 LowPackage *pkg);
 
 #endif /* _LOW_REPO_SQLITE_H_ */
 

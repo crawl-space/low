@@ -370,4 +370,34 @@ low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
 	return provides;
 }
 
+char **
+low_repo_sqlite_get_requires (LowRepo *repo, LowPackage *pkg)
+{
+	const char *stmt = "SELECT req.name from requires req "
+			   "WHERE req.pkgKey = :pkgKey";
+
+	/* XXX make this dynamic */
+	char **requires = malloc (sizeof (char *) * MAX_PROVIDES);
+	int i = 0;
+
+	sqlite3_stmt *pp_stmt;
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
+			 NULL);
+	sqlite3_bind_int (pp_stmt, 1, GPOINTER_TO_INT (pkg->id));
+
+	while (sqlite3_step(pp_stmt) != SQLITE_DONE) {
+		/* XXX Do we need to strdup this? */
+		requires[i++] =
+			g_strdup ((const char *) sqlite3_column_text (pp_stmt,
+								      0));
+	}
+
+	sqlite3_finalize (pp_stmt);
+
+	requires[i] = NULL;
+	return requires;
+}
+
 /* vim: set ts=8 sw=8 noet: */
