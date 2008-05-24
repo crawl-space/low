@@ -19,9 +19,11 @@
  *  02110-1301  USA
  */
 
+#include <string.h>
 #include <rpm/rpmlib.h>
 #include <rpm/rpmdb.h>
 #include "low-package-rpmdb.h"
+#include "low-repo-rpmdb.h"
 
 union rpm_entry {
 	void *p;
@@ -34,11 +36,18 @@ union rpm_entry {
 static LowPackage *
 low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 {
-	union rpm_entry name, epoch, version, release, arch;
+	union rpm_entry id, name, epoch, version, release, arch;
 	union rpm_entry size, summary, description, url, license;
 	int_32 type, count;
 
 	rpmHeaderGetEntry(header, RPMTAG_NAME, &type, &name.p, &count);
+
+	/* We don't care about the gpg keys (plus they have missing fields */
+	if (!strcmp (name.string, "gpg-pubkey")) {
+		return NULL;
+	}
+
+	rpmHeaderGetEntry(header, RPMTAG_PKGID, &type, &id.p, &count);
 	rpmHeaderGetEntry(header, RPMTAG_EPOCH, &type, &epoch.p, &count);
 	rpmHeaderGetEntry(header, RPMTAG_VERSION, &type, &version.p, &count);
 	rpmHeaderGetEntry(header, RPMTAG_RELEASE, &type, &release.p, &count);
@@ -53,6 +62,7 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	LowPackage *pkg = malloc (sizeof (LowPackage));
 
+	pkg->id = id.p;
 	pkg->name = name.string;
 	pkg->epoch = epoch.string;
 	pkg->version = version.string;
@@ -86,6 +96,12 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 
 	iter->pkg = low_package_rpmdb_new_from_header (header, iter->repo);
 
+	/* Ignore the gpg-pubkeys */
+	while (iter->pkg == NULL && header) {
+		header = rpmdbNextIterator(iter_rpmdb->rpm_iter);
+		iter->pkg = low_package_rpmdb_new_from_header (header,
+							       iter->repo);
+	}
 	if (iter_rpmdb->func != NULL) {
 		/* move on to the next rpm if this one fails the filter */
 		if (!(iter_rpmdb->func) (iter->pkg, iter_rpmdb->filter_data)) {
@@ -94,6 +110,16 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 	}
 
 	return iter;
+}
+
+char **
+low_rpmdb_package_get_provides	(LowPackage *pkg)
+{
+	/*
+	 * XXX maybe this should all be in the same file,
+	 *     or the rpmdb repo struct should be in the header
+	 */
+	return low_repo_rpmdb_get_provides (pkg->repo, pkg);
 }
 
 /* vim: set ts=8 sw=8 noet: */

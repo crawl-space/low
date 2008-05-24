@@ -44,8 +44,10 @@ typedef struct _LowPackageDependency {
 	char *evr;
 } LowPackageDependency;
 
+typedef void * signature;
+
 typedef struct _LowPackage {
-	unsigned int id;
+	signature id;
 	const char *name;
 	const char *version;
 	const char *release;

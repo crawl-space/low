@@ -151,4 +151,41 @@ low_repo_rpmdb_generic_search (LowRepo *repo, const char *querystr)
 	return (LowPackageIter *) iter;
 }
 
+/* XXX Duplicated */
+union rpm_entry {
+	void *p;
+	char *string;
+	char **list;
+	uint_32 *flags;
+	uint_32 *integer;
+};
+
+char **
+low_repo_rpmdb_get_provides 	(LowRepo *repo, LowPackage *pkg G_GNUC_UNUSED)
+{
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
+	rpmdbMatchIterator iter;
+	Header header;
+	char *pkgid;
+	char **provides;
+	union rpm_entry prov;
+	int_32 type, count, i;
+
+	pkgid = g_strndup (pkg->id, 16);
+	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkgid, 0);
+	header = rpmdbNextIterator(iter);
+
+	rpmHeaderGetEntry(header, RPMTAG_PROVIDES, &type, &prov.p, &count);
+
+	provides = malloc (sizeof (char *) * (count + 1));
+	for (i = 0; i < count; i++) {
+		provides[i] = g_strdup (prov.list[i]);
+	}
+	provides[count] = NULL;
+
+	free (pkgid);
+
+	return provides;
+}
+
 /* vim: set ts=8 sw=8 noet: */

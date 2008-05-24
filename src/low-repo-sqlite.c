@@ -355,7 +355,7 @@ low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
 			 NULL);
-	sqlite3_bind_int (pp_stmt, 1, pkg->id);
+	sqlite3_bind_int (pp_stmt, 1, GPOINTER_TO_INT (pkg->id));
 
 	while (sqlite3_step(pp_stmt) != SQLITE_DONE) {
 		/* XXX Do we need to strdup this? */
