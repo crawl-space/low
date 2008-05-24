@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sqlite3.h>
+#include <unistd.h>
 #include "low-package-sqlite.h"
 #include "low-repo-sqlite.h"
 
@@ -105,6 +106,10 @@ low_repo_sqlite_initialize (const char *id, const char *name, gboolean enabled)
 
 	/* Will need a way to flick this on later */
 	if (enabled) {
+		if (access (primary_db, R_OK) || access (filelists_db, R_OK)) {
+			printf ("Can't open db files! (try running 'yum makecache')\n");
+			exit (1);
+		}
 		low_repo_sqlite_open_db (primary_db, &repo->primary_db);
 		attach_db (repo->primary_db, filelists_db);
 		sqlite3_create_function (repo->primary_db, "regexp", 2,
