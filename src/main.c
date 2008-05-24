@@ -111,14 +111,7 @@ print_package (LowPackage *pkg, gboolean show_all)
 
 	if (show_all) {
 		int i;
-		char **provides;
-
-		/* Use function pointers instead */
-		if (strcmp (pkg->repo->id, "installed")) {
-			provides = low_sqlite_package_get_provides (pkg);
-		} else {
-			provides = low_rpmdb_package_get_provides (pkg);
-		}
+		char **provides = low_package_get_provides (pkg);
 
 		printf ("Provides    : %s\n", provides[0]);
 

@@ -33,6 +33,11 @@ low_package_free (LowPackage *pkg)
 	free (pkg);
 }
 
+char **
+low_package_get_provides (LowPackage *pkg)
+{
+	return (pkg->get_provides) (pkg);
+}
 LowPackageIter *
 low_package_iter_next (LowPackageIter *iter)
 {

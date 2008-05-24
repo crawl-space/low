@@ -76,6 +76,8 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	pkg->url = url.string;
 	pkg->license = license.string;
 
+	pkg->get_provides = low_rpmdb_package_get_provides;
+
 	return pkg;
 }
 

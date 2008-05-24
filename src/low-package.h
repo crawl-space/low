@@ -44,10 +44,14 @@ typedef struct _LowPackageDependency {
 	char *evr;
 } LowPackageDependency;
 
-typedef void * signature;
+typedef struct _LowPackage LowPackage;
 
-typedef struct _LowPackage {
-	signature id;
+typedef void * signature;
+typedef char ** (*LowPackageGetDependency) (LowPackage *);
+
+struct _LowPackage {
+	signature id; /** Repo type dependent package identifier */
+
 	const char *name;
 	const char *version;
 	const char *release;
@@ -61,7 +65,9 @@ typedef struct _LowPackage {
 	const char *url; /** Optional URL for the package */
 	const char *license;
 	const char *location_href;
-} LowPackage;
+
+	LowPackageGetDependency get_provides;
+};
 
 typedef struct _LowPackageIter LowPackageIter;
 
@@ -74,6 +80,8 @@ struct _LowPackageIter {
 };
 
 void 			low_package_free 	(LowPackage *pkg);
+
+char **			low_package_get_provides 	(LowPackage *pkg);
 
 LowPackageIter * 	low_package_iter_next 	(LowPackageIter *iter);
 
