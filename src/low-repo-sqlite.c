@@ -345,14 +345,11 @@ low_repo_sqlite_generic_search (LowRepo *repo, const char *querystr)
 
 #define MAX_PROVIDES 1000
 
-char **
-low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
+static char **
+low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 {
-	const char *stmt = "SELECT prov.name from provides prov "
-			   "WHERE prov.pkgKey = :pkgKey";
-
 	/* XXX make this dynamic */
-	char **provides = malloc (sizeof (char *) * MAX_PROVIDES);
+	char **deps = malloc (sizeof (char *) * MAX_PROVIDES);
 	int i = 0;
 
 	sqlite3_stmt *pp_stmt;
@@ -364,15 +361,23 @@ low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
 
 	while (sqlite3_step(pp_stmt) != SQLITE_DONE) {
 		/* XXX Do we need to strdup this? */
-		provides[i++] =
+		deps[i++] =
 			g_strdup ((const char *) sqlite3_column_text (pp_stmt,
 								      0));
 	}
 
 	sqlite3_finalize (pp_stmt);
 
-	provides[i] = NULL;
-	return provides;
+	deps[i] = NULL;
+	return deps;
+}
+
+char **
+low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
+{
+	const char *stmt = "SELECT prov.name from provides prov "
+			   "WHERE prov.pkgKey = :pkgKey";
+	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
 char **
@@ -381,28 +386,7 @@ low_repo_sqlite_get_requires (LowRepo *repo, LowPackage *pkg)
 	const char *stmt = "SELECT req.name from requires req "
 			   "WHERE req.pkgKey = :pkgKey";
 
-	/* XXX make this dynamic */
-	char **requires = malloc (sizeof (char *) * MAX_PROVIDES);
-	int i = 0;
-
-	sqlite3_stmt *pp_stmt;
-	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-
-	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
-			 NULL);
-	sqlite3_bind_int (pp_stmt, 1, GPOINTER_TO_INT (pkg->id));
-
-	while (sqlite3_step(pp_stmt) != SQLITE_DONE) {
-		/* XXX Do we need to strdup this? */
-		requires[i++] =
-			g_strdup ((const char *) sqlite3_column_text (pp_stmt,
-								      0));
-	}
-
-	sqlite3_finalize (pp_stmt);
-
-	requires[i] = NULL;
-	return requires;
+	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
 /* vim: set ts=8 sw=8 noet: */
