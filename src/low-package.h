@@ -68,6 +68,8 @@ struct _LowPackage {
 
 	LowPackageGetDependency get_provides;
 	LowPackageGetDependency get_requires;
+	LowPackageGetDependency get_conflicts;
+	LowPackageGetDependency get_obsoletes;
 };
 
 typedef struct _LowPackageIter LowPackageIter;
@@ -84,6 +86,8 @@ void 			low_package_free 	(LowPackage *pkg);
 
 char **			low_package_get_provides 	(LowPackage *pkg);
 char **			low_package_get_requires 	(LowPackage *pkg);
+char **			low_package_get_conflicts 	(LowPackage *pkg);
+char **			low_package_get_obsoletes	(LowPackage *pkg);
 
 LowPackageIter * 	low_package_iter_next 	(LowPackageIter *iter);
 

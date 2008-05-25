@@ -78,6 +78,8 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	pkg->get_provides = low_rpmdb_package_get_provides;
 	pkg->get_requires = low_rpmdb_package_get_requires;
+	pkg->get_conflicts = low_rpmdb_package_get_conflicts;
+	pkg->get_obsoletes = low_rpmdb_package_get_obsoletes;
 
 	return pkg;
 }
@@ -130,4 +132,17 @@ low_rpmdb_package_get_requires (LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_requires (pkg->repo, pkg);
 }
+
+char **
+low_rpmdb_package_get_conflicts (LowPackage *pkg)
+{
+	return low_repo_rpmdb_get_conflicts (pkg->repo, pkg);
+}
+
+char **
+low_rpmdb_package_get_obsoletes (LowPackage *pkg)
+{
+	return low_repo_rpmdb_get_obsoletes (pkg->repo, pkg);
+}
+
 /* vim: set ts=8 sw=8 noet: */

@@ -372,6 +372,8 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 	return deps;
 }
 
+#define SELECT_DEP(dep) "SELECT name from " dep " WHERE pkgKey = :pkgKey"
+
 char **
 low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
 {
@@ -383,10 +385,21 @@ low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
 char **
 low_repo_sqlite_get_requires (LowRepo *repo, LowPackage *pkg)
 {
-	const char *stmt = "SELECT req.name from requires req "
-			   "WHERE req.pkgKey = :pkgKey";
-
+	const char *stmt = "SELECT name FROM requires WHERE pkgKey = :pkgKey";
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
+char **
+low_repo_sqlite_get_conflicts (LowRepo *repo, LowPackage *pkg)
+{
+	const char *stmt = "SELECT name FROM conflicts WHERE pkgKey = :pkgKey";
+	return low_repo_sqlite_get_deps (repo, stmt, pkg);
+}
+
+char **
+low_repo_sqlite_get_obsoletes (LowRepo *repo, LowPackage *pkg)
+{
+	const char *stmt = "SELECT name FROM obsoletes WHERE pkgKey = :pkgKey";
+	return low_repo_sqlite_get_deps (repo, stmt, pkg);
+}
 /* vim: set ts=8 sw=8 noet: */

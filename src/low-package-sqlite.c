@@ -53,6 +53,8 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 
 	pkg->get_provides = low_sqlite_package_get_provides;
 	pkg->get_requires = low_sqlite_package_get_requires;
+	pkg->get_conflicts = low_sqlite_package_get_conflicts;
+	pkg->get_obsoletes = low_sqlite_package_get_obsoletes;
 
 	return pkg;
 }
@@ -93,4 +95,17 @@ low_sqlite_package_get_requires (LowPackage *pkg)
 {
 	return low_repo_sqlite_get_requires (pkg->repo, pkg);
 }
+
+char **
+low_sqlite_package_get_conflicts (LowPackage *pkg)
+{
+	return low_repo_sqlite_get_conflicts (pkg->repo, pkg);
+}
+
+char **
+low_sqlite_package_get_obsoletes (LowPackage *pkg)
+{
+	return low_repo_sqlite_get_obsoletes (pkg->repo, pkg);
+}
+
 /* vim: set ts=8 sw=8 noet: */

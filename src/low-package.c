@@ -45,6 +45,18 @@ low_package_get_requires (LowPackage *pkg)
 	return (pkg->get_requires) (pkg);
 }
 
+char **
+low_package_get_conflicts (LowPackage *pkg)
+{
+	return (pkg->get_conflicts) (pkg);
+}
+
+char **
+low_package_get_obsoletes (LowPackage *pkg)
+{
+	return (pkg->get_obsoletes) (pkg);
+}
+
 LowPackageIter *
 low_package_iter_next (LowPackageIter *iter)
 {

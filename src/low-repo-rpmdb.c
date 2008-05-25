@@ -200,4 +200,16 @@ low_repo_rpmdb_get_requires (LowRepo *repo, LowPackage *pkg)
 	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_REQUIRES);
 }
 
+char **
+low_repo_rpmdb_get_conflicts (LowRepo *repo, LowPackage *pkg)
+{
+	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_CONFLICTS);
+}
+
+char **
+low_repo_rpmdb_get_obsoletes (LowRepo *repo, LowPackage *pkg)
+{
+	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_OBSOLETES);
+}
+
 /* vim: set ts=8 sw=8 noet: */
