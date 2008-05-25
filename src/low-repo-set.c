@@ -179,13 +179,12 @@ low_repo_set_package_iter_new (LowRepoSet *repo_set,
 					(gpointer) &(iter->current_repo));
 	} while (iter->current_repo != NULL && !iter->current_repo->enabled);
 
-	low_debug ("On repo '%s'", iter->current_repo->id);
-
 	iter->search_func = search_func;
 	iter->search_data = searchstr;
 
 	/* XXX For an empty hashtable. kind of ugly. */
 	if (iter->current_repo != NULL) {
+		low_debug ("On repo '%s'", iter->current_repo->id);
 		iter->current_repo_iter =
 			(iter->search_func) (iter->current_repo, searchstr);
 	}
