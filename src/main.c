@@ -39,7 +39,7 @@
 
 #define YUM_REPO "http://download.fedora.redhat.com/pub/fedora/linux/releases" \
                  "/9/Everything/x86_64/os/"
-#define LOCAL_CACHE "/var/cache/yum/fedora"
+#define LOCAL_CACHE "/var/cache/yum/fedora/packages/"
 
 static void show_help (const char *command);
 static int usage (void);
@@ -505,6 +505,63 @@ command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 	return 0;
 }
 
+static int
+command_download (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
+{
+	LowRepo *rpmdb;
+	LowRepoSet *repos;
+	LowPackageIter *iter;
+	LowConfig *config;
+	gchar *name = g_strdup (argv[0]);
+
+	rpmdb = low_repo_rpmdb_initialize ();
+	config = low_config_initialize (rpmdb);
+
+	repos = low_repo_set_initialize_from_config (config);
+
+	iter = low_repo_set_list_by_name (repos, name);
+	int found_pkg = 0;
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		found_pkg = 1;
+		LowPackage *pkg = iter->pkg;
+
+		/* Grab the package name by splitting the location_href on / */
+		char **tokens = g_strsplit (pkg->location_href, "/", 20);
+		int i = 0;
+		char *filename;
+		while (1) {
+			if (tokens[i + 1] == NULL) {
+				filename = tokens[i];
+				break;
+			}
+			i++;
+		}
+
+		char *full_url = g_strdup_printf ("%s%s", YUM_REPO, pkg->location_href);
+		char *local_file = g_strdup_printf ("%s%s", LOCAL_CACHE, filename);
+
+		printf ("Downloading %s...\n", pkg->name);
+		printf ("URL: %s\n", full_url);
+		printf ("Saving as: %s\n", local_file);
+
+		low_download_if_missing (full_url, local_file);
+		free (full_url);
+		free (local_file);
+	}
+
+	if (!found_pkg) {
+		printf("No such package: %s", name);
+		return 1;
+	}
+
+	low_repo_set_free (repos);
+	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
+	free (name);
+
+	return 0;
+}
+
 /**
  * Display the program version as specified in configure.ac
  */
@@ -537,15 +594,6 @@ NOT_IMPLEMENTED (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
 	printf ("This function is not yet implemented\n");
 
 	return 1;
-}
-
-static int
-command_download (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
-{
-	char *url = YUM_REPO "fedora8.png";
-	char *file = "/tmp/fedora8.png";
-	low_download_if_missing(url, file);
-	return 0;
 }
 
 typedef struct _SubCommand {

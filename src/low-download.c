@@ -47,9 +47,6 @@ low_download_show_progress(void *clientp, double dltotal, double dlnow,
 int
 low_download_if_missing(const char *url, const char *file)
 {
-	printf("Attempting to download: %s\n", url);
-	printf("File: %s\n", file);
-
 	CURL *curl;
 	struct stat buf;
 	char error[256];
@@ -58,8 +55,9 @@ low_download_if_missing(const char *url, const char *file)
 	long response;
 
 	curl = curl_easy_init();
-	if (curl == NULL)
+	if (curl == NULL) {
 		return 1;
+	}
 
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error);
 	curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
