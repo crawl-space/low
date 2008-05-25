@@ -516,7 +516,7 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
 	}
 
 	if (!found_pkg) {
-		printf("No such package: %s", name);
+		printf ("No such package: %s", name);
 		return 1;
 	}
 
