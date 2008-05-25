@@ -25,6 +25,7 @@
 
 #include "config.h"
 
+#include "low-debug.h"
 #include "low-config.h"
 #include "low-package.h"
 #include "low-package-rpmdb.h"
@@ -637,6 +638,8 @@ main (int argc, const char *argv[])
 	if (argc < 2) {
 		return usage ();
 	}
+
+	low_debug_init ();
 
 	for (i = 0; i < ARRAY_SIZE (commands); i++) {
 		if (!strcmp (argv[1], commands[i].name)) {

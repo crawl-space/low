@@ -20,6 +20,7 @@
  */
 
 #include <stdlib.h>
+#include "low-debug.h"
 #include "low-repo-sqlite.h"
 #include "low-repo-set.h"
 
@@ -139,6 +140,9 @@ low_repo_set_package_iter_next (LowPackageIter *iter)
 			current_repo_iter = NULL;
 			break;
 		}
+
+		low_debug ("On repo '%s'", current_repo->id);
+
 		current_repo_iter =
 			(iter_set->search_func) (current_repo,
 						 iter_set->search_data);
@@ -174,6 +178,8 @@ low_repo_set_package_iter_new (LowRepoSet *repo_set,
 		g_hash_table_iter_next (iter->repo_iter, NULL,
 					(gpointer) &(iter->current_repo));
 	} while (iter->current_repo != NULL && !iter->current_repo->enabled);
+
+	low_debug ("On repo '%s'", iter->current_repo->id);
 
 	iter->search_func = search_func;
 	iter->search_data = searchstr;
