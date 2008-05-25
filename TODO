@@ -4,7 +4,6 @@
 - test info description word wrapping.
 - all of yum's macro substitution for config files
 - doxygen code documentation
-- low download pkg: Download but don't install.
 - LowPackageDependency struct (name, sense, evr).
   - get search_provides etc using this instead of just a string
 - calculate list of updating packages
