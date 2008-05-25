@@ -372,8 +372,6 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 	return deps;
 }
 
-#define SELECT_DEP(dep) "SELECT name from " dep " WHERE pkgKey = :pkgKey"
-
 char **
 low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
 {
@@ -402,4 +400,42 @@ low_repo_sqlite_get_obsoletes (LowRepo *repo, LowPackage *pkg)
 	const char *stmt = "SELECT name FROM obsoletes WHERE pkgKey = :pkgKey";
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
+
+char **
+low_repo_sqlite_get_files (LowRepo *repo, LowPackage *pkg)
+{
+	const char *stmt = "SELECT dirname, filenames FROM filelist "
+			   "WHERE pkgKey = :pkgKey";
+
+	/* XXX make this dynamic */
+	char **files = malloc (sizeof (char *) * MAX_PROVIDES);
+	int i = 0;
+
+	sqlite3_stmt *pp_stmt;
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
+			 NULL);
+	sqlite3_bind_int (pp_stmt, 1, GPOINTER_TO_INT (pkg->id));
+
+	while (sqlite3_step(pp_stmt) != SQLITE_DONE) {
+		int j;
+		const unsigned char *dir = sqlite3_column_text (pp_stmt, 0);
+		const unsigned char *names = sqlite3_column_text (pp_stmt, 1);
+		char **names_split = g_strsplit ((const char *) names, "/", -1);
+
+		for (j = 0; names_split[j] != NULL; j++) {
+			files[i++] = g_strdup_printf ("%s/%s", dir,
+						      names_split[j]);
+		}
+
+		g_strfreev (names_split);
+	}
+
+	sqlite3_finalize (pp_stmt);
+
+	files[i] = NULL;
+	return files;
+}
+
 /* vim: set ts=8 sw=8 noet: */

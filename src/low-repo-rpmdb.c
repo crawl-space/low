@@ -156,6 +156,7 @@ union rpm_entry {
 	void *p;
 	char *string;
 	char **list;
+	uint_32 *int_list;
 	uint_32 *flags;
 	uint_32 *integer;
 };
@@ -210,6 +211,37 @@ char **
 low_repo_rpmdb_get_obsoletes (LowRepo *repo, LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_OBSOLETES);
+}
+
+char **
+low_repo_rpmdb_get_files (LowRepo *repo, LowPackage *pkg)
+{
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
+	rpmdbMatchIterator iter;
+	Header header;
+	char *pkgid;
+	char **files;
+	union rpm_entry index, dir, name;
+	int_32 type, count, i;
+
+	pkgid = g_strndup (pkg->id, 16);
+	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkgid, 0);
+	header = rpmdbNextIterator(iter);
+
+	rpmHeaderGetEntry(header, RPMTAG_DIRINDEXES, &type, &index.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_DIRNAMES, &type, &dir.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_BASENAMES, &type, &name.p, &count);
+
+	files = malloc (sizeof (char *) * (count + 1));
+	for (i = 0; i < count; i++) {
+		files[i] = g_strdup_printf ("%s%s", dir.list[index.int_list[i]],
+					    name.list[i]);
+	}
+	files[count] = NULL;
+
+	free (pkgid);
+
+	return files;
 }
 
 /* vim: set ts=8 sw=8 noet: */

@@ -41,6 +41,8 @@ char **		low_sqlite_package_get_requires		(LowPackage *pkg);
 char **		low_sqlite_package_get_conflicts	(LowPackage *pkg);
 char **		low_sqlite_package_get_obsoletes	(LowPackage *pkg);
 
+char **		low_sqlite_package_get_files		(LowPackage *pkg);
+
 #endif /* _LOW_PACKAGE_SQLITE_H_ */
 
 /* vim: set ts=8 sw=8 noet: */

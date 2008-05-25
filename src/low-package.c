@@ -57,6 +57,12 @@ low_package_get_obsoletes (LowPackage *pkg)
 	return (pkg->get_obsoletes) (pkg);
 }
 
+char **
+low_package_get_files (LowPackage *pkg)
+{
+	return (pkg->get_files) (pkg);
+}
+
 LowPackageIter *
 low_package_iter_next (LowPackageIter *iter)
 {

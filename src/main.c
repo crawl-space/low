@@ -106,6 +106,24 @@ print_dependencies (const char *dep_name, char **deps)
 }
 
 static void
+print_files (char **files)
+{
+	int i;
+
+	printf ("Files       :");
+
+	if (files[0] == NULL) {
+		printf ("\n");
+		return;
+	}
+
+	printf (" %s\n", files[0]);
+	for (i = 1; files[i] != NULL; i++) {
+		printf ("              %s\n", files[i]);
+	}
+}
+
+static void
 print_package (LowPackage *pkg, gboolean show_all)
 {
 	printf ("Name        : %s\n", pkg->name);
@@ -129,8 +147,7 @@ print_package (LowPackage *pkg, gboolean show_all)
 
 	if (show_all) {
 		char **deps;
-
-//		char **files;
+		char **files;
 
 		deps = low_package_get_provides (pkg);
 		print_dependencies ("Provides", deps);
@@ -147,6 +164,11 @@ print_package (LowPackage *pkg, gboolean show_all)
 		deps = low_package_get_obsoletes (pkg);
 		print_dependencies ("Obsoletes", deps);
 		g_strfreev (deps);
+
+		files = low_package_get_files (pkg);
+		print_files (files);
+		g_strfreev (files);
+
 	}
 
 	printf ("\n");

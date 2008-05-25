@@ -47,7 +47,9 @@ typedef struct _LowPackageDependency {
 typedef struct _LowPackage LowPackage;
 
 typedef void * signature;
-typedef char ** (*LowPackageGetDependency) (LowPackage *);
+
+typedef char **	(*LowPackageGetDependency)	(LowPackage *);
+typedef char **	(*LowPackageGetFiles) 		(LowPackage *);
 
 struct _LowPackage {
 	signature id; /** Repo type dependent package identifier */
@@ -70,6 +72,8 @@ struct _LowPackage {
 	LowPackageGetDependency get_requires;
 	LowPackageGetDependency get_conflicts;
 	LowPackageGetDependency get_obsoletes;
+
+	LowPackageGetFiles get_files;
 };
 
 typedef struct _LowPackageIter LowPackageIter;
@@ -88,6 +92,8 @@ char **			low_package_get_provides 	(LowPackage *pkg);
 char **			low_package_get_requires 	(LowPackage *pkg);
 char **			low_package_get_conflicts 	(LowPackage *pkg);
 char **			low_package_get_obsoletes	(LowPackage *pkg);
+
+char **			low_package_get_files 		(LowPackage *pkg);
 
 LowPackageIter * 	low_package_iter_next 	(LowPackageIter *iter);
 

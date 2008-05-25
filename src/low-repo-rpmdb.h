@@ -55,7 +55,8 @@ char **			low_repo_rpmdb_get_conflicts 	(LowRepo *repo,
 char **			low_repo_rpmdb_get_obsoletes 	(LowRepo *repo,
 							 LowPackage *pkg);
 
-
+char **			low_repo_rpmdb_get_files 	(LowRepo *repo,
+							 LowPackage *pkg);
 
 #endif /* _LOW_REPO_RPMDB_H_ */
 

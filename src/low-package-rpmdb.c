@@ -81,6 +81,8 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	pkg->get_conflicts = low_rpmdb_package_get_conflicts;
 	pkg->get_obsoletes = low_rpmdb_package_get_obsoletes;
 
+	pkg->get_files = low_rpmdb_package_get_files;
+
 	return pkg;
 }
 
@@ -143,6 +145,12 @@ char **
 low_rpmdb_package_get_obsoletes (LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_obsoletes (pkg->repo, pkg);
+}
+
+char **
+low_rpmdb_package_get_files (LowPackage *pkg)
+{
+	return low_repo_rpmdb_get_files (pkg->repo, pkg);
 }
 
 /* vim: set ts=8 sw=8 noet: */
