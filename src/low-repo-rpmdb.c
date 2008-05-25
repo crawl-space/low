@@ -160,60 +160,44 @@ union rpm_entry {
 	uint_32 *integer;
 };
 
-char **
-low_repo_rpmdb_get_provides (LowRepo *repo, LowPackage *pkg)
+static char **
+low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint_32 tag)
 {
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
 	rpmdbMatchIterator iter;
 	Header header;
 	char *pkgid;
-	char **provides;
-	union rpm_entry prov;
+	char **deps;
+	union rpm_entry entry;
 	int_32 type, count, i;
 
 	pkgid = g_strndup (pkg->id, 16);
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkgid, 0);
 	header = rpmdbNextIterator(iter);
 
-	rpmHeaderGetEntry(header, RPMTAG_PROVIDES, &type, &prov.p, &count);
+	rpmHeaderGetEntry(header, tag, &type, &entry.p, &count);
 
-	provides = malloc (sizeof (char *) * (count + 1));
+	deps = malloc (sizeof (char *) * (count + 1));
 	for (i = 0; i < count; i++) {
-		provides[i] = g_strdup (prov.list[i]);
+		deps[i] = g_strdup (entry.list[i]);
 	}
-	provides[count] = NULL;
+	deps[count] = NULL;
 
 	free (pkgid);
 
-	return provides;
+	return deps;
+}
+
+char **
+low_repo_rpmdb_get_provides (LowRepo *repo, LowPackage *pkg)
+{
+	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_PROVIDES);
 }
 
 char **
 low_repo_rpmdb_get_requires (LowRepo *repo, LowPackage *pkg)
 {
-	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
-	rpmdbMatchIterator iter;
-	Header header;
-	char *pkgid;
-	char **requires;
-	union rpm_entry dep;
-	int_32 type, count, i;
-
-	pkgid = g_strndup (pkg->id, 16);
-	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkgid, 0);
-	header = rpmdbNextIterator(iter);
-
-	rpmHeaderGetEntry(header, RPMTAG_REQUIRES, &type, &dep.p, &count);
-
-	requires = malloc (sizeof (char *) * (count + 1));
-	for (i = 0; i < count; i++) {
-		requires[i] = g_strdup (dep.list[i]);
-	}
-	requires[count] = NULL;
-
-	free (pkgid);
-
-	return requires;
+	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_REQUIRES);
 }
 
 /* vim: set ts=8 sw=8 noet: */
