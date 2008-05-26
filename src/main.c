@@ -484,7 +484,7 @@ command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 }
 
 static int
-command_download (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
+command_download (int argc G_GNUC_UNUSED, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
