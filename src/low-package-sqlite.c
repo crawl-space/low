@@ -66,10 +66,6 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 {
 	LowPackageIterSqlite *iter_sqlite = (LowPackageIterSqlite *) iter;
 
-	if (iter->pkg != NULL) {
-		low_package_free (iter->pkg);
-	}
-
 	if (sqlite3_step(iter_sqlite->pp_stmt) == SQLITE_DONE) {
 		sqlite3_finalize (iter_sqlite->pp_stmt);
 		free (iter_sqlite);
