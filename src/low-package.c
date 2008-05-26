@@ -27,8 +27,18 @@
 void
 low_package_free (LowPackage *pkg)
 {
+	free (pkg->name);
+	free (pkg->version);
+	free (pkg->release);
+	g_free (pkg->epoch);
+	free (pkg->arch);
+
 	free (pkg->summary);
 	free (pkg->description);
+
+	free (pkg->url);
+	free (pkg->license);
+	free (pkg->location_href);
 
 	free (pkg);
 }

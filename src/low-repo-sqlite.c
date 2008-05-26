@@ -28,7 +28,7 @@
 #include "low-repo-sqlite.h"
 
 #define SELECT_FIELDS_FROM "SELECT p.pkgKey, p.name, p.arch, p.version, " \
-			   "p.release, p.size_package, p.summary, " \
+			   "p.release, p.epoch, p.size_package, p.summary, " \
 			   "p.description, p.url, p.rpm_license, " \
 			   "p.location_href FROM "
 

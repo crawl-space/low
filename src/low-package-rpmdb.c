@@ -63,18 +63,23 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	LowPackage *pkg = malloc (sizeof (LowPackage));
 
 	pkg->id = id.p;
-	pkg->name = name.string;
-	pkg->epoch = epoch.string;
-	pkg->version = version.string;
-	pkg->release = release.string;
-	pkg->arch = arch.string;
+	pkg->name = strdup (name.string);
+	pkg->epoch = g_strdup (epoch.string);
+	pkg->version = strdup (version.string);
+	pkg->release = strdup (release.string);
+	pkg->arch = strdup (arch.string);
 
 	pkg->size = *size.integer;
 	pkg->repo = repo;
+
+	/* XXX need to confirm that we don't need to dup these */
 	pkg->summary = summary.string;
 	pkg->description = description.string;
-	pkg->url = url.string;
-	pkg->license = license.string;
+
+	pkg->url = g_strdup (url.string);
+	pkg->license = strdup (license.string);
+	/* installed packages can't be downloaded. */
+	pkg->location_href = NULL;
 
 	pkg->get_provides = low_rpmdb_package_get_provides;
 	pkg->get_requires = low_rpmdb_package_get_requires;

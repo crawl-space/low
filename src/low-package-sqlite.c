@@ -33,10 +33,14 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	/* XXX kind of hacky */
 	pkg->id = GINT_TO_POINTER (sqlite3_column_int (pp_stmt, i++));
 
-	pkg->name = (const char *) sqlite3_column_text (pp_stmt, i++);
-	pkg->arch = (const char *) sqlite3_column_text (pp_stmt, i++);
-	pkg->version = (const char *) sqlite3_column_text (pp_stmt, i++);
-	pkg->release = (const char *) sqlite3_column_text (pp_stmt, i++);
+	pkg->name = strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->arch = strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->version =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->release =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->epoch =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
 
 	pkg->size = sqlite3_column_int (pp_stmt, i++);
 	pkg->repo = repo;
@@ -47,9 +51,11 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	pkg->description =
 		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
 
-	pkg->url = (const char *) sqlite3_column_text (pp_stmt, i++);
-	pkg->license = (const char *) sqlite3_column_text (pp_stmt, i++);
-	pkg->location_href = (const char *) sqlite3_column_text(pp_stmt, i++);
+	pkg->url = g_strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->license =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->location_href =
+		strdup ((const char *) sqlite3_column_text(pp_stmt, i++));
 
 	pkg->get_provides = low_sqlite_package_get_provides;
 	pkg->get_requires = low_sqlite_package_get_requires;

@@ -54,19 +54,19 @@ typedef char **	(*LowPackageGetFiles) 		(LowPackage *);
 struct _LowPackage {
 	signature id; /** Repo type dependent package identifier */
 
-	const char *name;
-	const char *version;
-	const char *release;
-	const char *arch;
-	const char *epoch;
+	char *name;
+	char *version;
+	char *release;
+	char *arch;
+	char *epoch;
 
 	size_t size;
 	LowRepo *repo;
 	char *summary;
 	char *description;
-	const char *url; /** Optional URL for the package */
-	const char *license;
-	const char *location_href;
+	char *url; /** Optional URL for the package */
+	char *license;
+	char *location_href;
 
 	LowPackageGetDependency get_provides;
 	LowPackageGetDependency get_requires;
