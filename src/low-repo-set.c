@@ -114,7 +114,7 @@ typedef struct _LowRepoSetPackageIter {
 	LowRepoSetIterSearchFunc search_func;
 } LowRepoSetPackageIter;
 
-LowPackageIter *
+static LowPackageIter *
 low_repo_set_package_iter_next (LowPackageIter *iter)
 {
 	LowRepoSetPackageIter *iter_set = (LowRepoSetPackageIter *) iter;

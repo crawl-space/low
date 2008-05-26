@@ -61,7 +61,7 @@ low_repo_rpmdb_shutdown (LowRepo *repo)
 	free (repo);
 }
 
-LowPackageIter *
+static LowPackageIter *
 low_repo_rpmdb_search (LowRepo *repo, int_32 tag, const char *querystr)
 {
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;

@@ -246,7 +246,7 @@ START_TEST (test_low_repo_set_search_two_repos_two_packages)
 }
 END_TEST
 
-Suite *
+static Suite *
 low_suite(void)
 {
 	Suite *s = suite_create ("low");

@@ -56,7 +56,7 @@ typedef struct _LowFakePackageIter {
 	int position; /** current package in the list we're examining */
 } LowFakePackageIter;
 
-LowPackageIter *
+static LowPackageIter *
 low_repo_sqlite_fake_iter_next (LowPackageIter *iter) {
 	LowFakePackageIter *iter_fake = (LowFakePackageIter *) iter;
 	LowRepoSqliteFake *repo_fake = (LowRepoSqliteFake *) iter->repo;
