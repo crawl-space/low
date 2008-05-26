@@ -45,7 +45,7 @@ LowPackageIter *    low_repo_sqlite_search_obsoletes     (LowRepo *repo,
 LowPackageIter *    low_repo_sqlite_search_files 	(LowRepo *repo,
 							 const char *file);
 
-LowPackageIter *	low_repo_sqlite_generic_search 	(LowRepo *repo,
+LowPackageIter *	low_repo_sqlite_search_details 	(LowRepo *repo,
 							 const char *querystr);
 
 char **		low_repo_sqlite_get_provides 		(LowRepo *repo,

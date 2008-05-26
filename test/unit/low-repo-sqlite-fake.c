@@ -128,10 +128,9 @@ low_repo_sqlite_search_files (LowRepo *repo,
 /**
  * Search name, summary, description and & url for the provided string.
  *
- * XXX this function needs a better name
  */
 LowPackageIter *
-low_repo_sqlite_generic_search (LowRepo *repo,
+low_repo_sqlite_search_details (LowRepo *repo,
 				const char *querystr G_GNUC_UNUSED)
 {
 	return low_repo_sqlite_list_all (repo);

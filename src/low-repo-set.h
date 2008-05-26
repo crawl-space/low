@@ -67,7 +67,7 @@ LowPackageIter * low_repo_set_search_obsoletes 		(LowRepoSet *repo_set,
 LowPackageIter * low_repo_set_search_files      	(LowRepoSet *repo_set,
 							 const char *file);
 
-LowPackageIter * low_repo_set_generic_search      	(LowRepoSet *repo_set,
+LowPackageIter * low_repo_set_search_details      	(LowRepoSet *repo_set,
 							 const char *querystr);
 
 #endif /* _LOW_REPO_SET_H_ */

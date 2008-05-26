@@ -299,12 +299,12 @@ command_search (int argc G_GNUC_UNUSED, const char *argv[])
 	rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (rpmdb);
 
-	iter = low_repo_rpmdb_generic_search (rpmdb, querystr);
+	iter = low_repo_rpmdb_search_details (rpmdb, querystr);
 	print_all_packages_short (iter);
 
 	repos = low_repo_set_initialize_from_config (config);
 
-	iter = low_repo_set_generic_search (repos, querystr);
+	iter = low_repo_set_search_details (repos, querystr);
 	print_all_packages_short (iter);
 
 	low_repo_set_free (repos);

@@ -316,10 +316,9 @@ low_repo_sqlite_search_files (LowRepo *repo, const char *file)
 /**
  * Search name, summary, description and & url for the provided string.
  *
- * XXX this function needs a better name
  */
 LowPackageIter *
-low_repo_sqlite_generic_search (LowRepo *repo, const char *querystr)
+low_repo_sqlite_search_details (LowRepo *repo, const char *querystr)
 {
 	const char *stmt = SELECT_FIELDS_FROM "packages p "
 			   "WHERE p.name LIKE :query OR "

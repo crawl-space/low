@@ -120,7 +120,7 @@ low_repo_rpmdb_search_files (LowRepo *repo, const char *file)
 }
 
 static gboolean
-low_repo_rpmdb_generic_search_filter_fn (LowPackage *pkg, gpointer data)
+low_repo_rpmdb_search_details_filter_fn (LowPackage *pkg, gpointer data)
 {
 	gchar *querystr = (gchar *) data;
 
@@ -136,7 +136,7 @@ low_repo_rpmdb_generic_search_filter_fn (LowPackage *pkg, gpointer data)
 }
 
 LowPackageIter *
-low_repo_rpmdb_generic_search (LowRepo *repo, const char *querystr)
+low_repo_rpmdb_search_details (LowRepo *repo, const char *querystr)
 {
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
 	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
@@ -144,7 +144,7 @@ low_repo_rpmdb_generic_search (LowRepo *repo, const char *querystr)
 	iter->super.next_func = low_package_iter_rpmdb_next;
 	iter->super.pkg = NULL;
 
-	iter->func = low_repo_rpmdb_generic_search_filter_fn;
+	iter->func = low_repo_rpmdb_search_details_filter_fn;
 	iter->filter_data = (gpointer) querystr;
 
 	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, 0, NULL, 0);

@@ -254,10 +254,10 @@ low_repo_set_search_files (LowRepoSet *repo_set, const char *file)
 }
 
 LowPackageIter *
-low_repo_set_generic_search (LowRepoSet *repo_set, const char *querystr)
+low_repo_set_search_details (LowRepoSet *repo_set, const char *querystr)
 {
 	return low_repo_set_package_iter_new (repo_set,
-					      low_repo_sqlite_generic_search,
+					      low_repo_sqlite_search_details,
 					      querystr);
 }
 
