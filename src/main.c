@@ -267,7 +267,19 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 		print_all_packages_short (iter);
 
 		low_repo_set_free (repos);
+	} else {
+		iter = low_repo_rpmdb_list_by_name (rpmdb, argv[0]);
+		print_all_packages_short (iter);
+
+		LowRepoSet *repos =
+			low_repo_set_initialize_from_config (config);
+
+		iter = low_repo_set_list_by_name (repos, argv[0]);
+		print_all_packages_short (iter);
+
+		low_repo_set_free (repos);
 	}
+
 
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
@@ -576,7 +588,7 @@ const SubCommand commands[] = {
 	{ "remove", "PACKAGE", "Remove a package", NOT_IMPLEMENTED },
 	{ "clean", NULL, "Remove cached data", NOT_IMPLEMENTED },
 	{ "info", "PACKAGE", "Display package details", command_info },
-	{ "list", "[all|installed]", "Display a group of packages",
+	{ "list", "[all|installed|PACKAGE]", "Display a group of packages",
 	  command_list },
 	{ "download", NULL, "Download (but don't install) a list of packages",
 	  command_download},

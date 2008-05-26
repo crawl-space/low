@@ -62,6 +62,9 @@ run_or_die "info -a bash"
 
 run_or_die "list installed"
 run_or_die "list all"
+run_or_die "list bash"
+# An uninstalled package
+run_or_die "list beagle"
 
 run_or_die "search zsh"
 
