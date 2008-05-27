@@ -17,3 +17,5 @@
 - investigate using g_slice instead of malloc and friends
 - maybe lazy-load non-nevra package data
 - lazy load PRCO and file lists
+- Add a function to iterate over provides and files, rather than having
+  to call both. Still provide the old ones though.
