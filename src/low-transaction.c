@@ -47,7 +47,8 @@ low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
 }
 
 /**
- * Check if a requires is in a list of provides */
+ * Check if a requires is in a list of provides
+ */
 static gboolean
 low_transaction_string_in_list (const char *needle, char **haystack)
 {
@@ -63,35 +64,42 @@ low_transaction_string_in_list (const char *needle, char **haystack)
 }
 
 static void
-low_transaction_check_requires (LowTransaction *trans)
+low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 {
-	GSList *cur = trans->install;
+	char **requires;
+	char **provides;
+	char **files;
+	int i;
 
-	while (cur != NULL) {
-		char **requires;
-		char **provides;
-		int i;
+	low_debug_pkg ("Checking requires for", pkg);
 
-		LowPackage *pkg = (LowPackage *) cur->data;
-		low_debug_pkg ("Checking requires for", pkg);
+	requires = low_package_get_requires (pkg);
+	provides = low_package_get_provides (pkg);
+	files = low_package_get_files (pkg);
 
-		requires = low_package_get_requires (pkg);
-		provides = low_package_get_provides (pkg);
+	for (i = 0; requires[i] != NULL; i++) {
+		LowPackageIter *providing;
 
-		for (i = 0; requires[i] != NULL; i++) {
-			LowPackageIter *providing;
+		if (low_transaction_string_in_list (requires[i], provides)
+		    || low_transaction_string_in_list (requires[i], files)) {
+		    low_debug ("Self provided requires %s, skipping",
+			       requires[i]);
+		    continue;
+		}
+		low_debug ("Checking requires %s", requires[i]);
 
-			if (low_transaction_string_in_list (requires[i],
-							    provides)) {
-			    low_debug ("Self provided requires %s, skipping",
-				       requires[i]);
-			    continue;
-			}
-			low_debug ("Checking requires %s", requires[i]);
-
+		providing =
+			low_repo_rpmdb_search_provides (trans->rpmdb,
+							requires[i]);
+		/* XXX memory leak */
+		providing = low_package_iter_next (providing);
+		if (providing != NULL) {
+			low_debug_pkg ("Provided by", providing->pkg);
+		/* Check files if appropriate */
+		} else if (requires[i][0] == '/') {
 			providing =
-				low_repo_rpmdb_search_provides (trans->rpmdb,
-								requires[i]);
+				low_repo_rpmdb_search_files (trans->rpmdb,
+							     requires[i]);
 			/* XXX memory leak */
 			providing = low_package_iter_next (providing);
 			if (providing != NULL) {
@@ -100,7 +108,28 @@ low_transaction_check_requires (LowTransaction *trans)
 				low_debug ("%s not provided by installed pkg",
 					   requires[i]);
 			}
+
+
+		} else {
+			low_debug ("%s not provided by installed pkg",
+				   requires[i]);
 		}
+	}
+
+	g_strfreev (provides);
+	g_strfreev (requires);
+	g_strfreev (files);
+}
+
+static void
+low_transaction_check_all_requires (LowTransaction *trans)
+{
+	GSList *cur = trans->install;
+
+	while (cur != NULL) {
+		LowPackage *pkg = (LowPackage *) cur->data;
+
+		low_transaction_check_package_requires (trans, pkg);
 
 		cur = cur->next;
 	}
@@ -112,7 +141,7 @@ low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 	low_debug ("Resolving transaction");
 
 	while (TRUE) {
-		low_transaction_check_requires (trans);
+		low_transaction_check_all_requires (trans);
 		break;
 	}
 }
