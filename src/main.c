@@ -221,7 +221,7 @@ command_info (int argc, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 	free (name);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 static void
@@ -288,7 +288,7 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 static int
@@ -316,8 +316,9 @@ command_search (int argc G_GNUC_UNUSED, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 	free (querystr);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
+
 #define FORMAT_STRING "%-30.30s  %-35.35s  %s\n"
 
 static void
@@ -362,7 +363,7 @@ command_repolist (int argc, const char *argv[])
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 static int
@@ -400,7 +401,7 @@ command_whatprovides (int argc G_GNUC_UNUSED, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 	g_free (provides);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 static int
@@ -428,7 +429,7 @@ command_whatrequires (int argc G_GNUC_UNUSED, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 	g_free (requires);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 static int
@@ -456,7 +457,7 @@ command_whatconflicts (int argc G_GNUC_UNUSED, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 	g_free (conflicts);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 static int
@@ -484,7 +485,7 @@ command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 	g_free (obsoletes);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 static int
@@ -535,7 +536,7 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 
 	if (!found_pkg) {
 		printf ("No such package: %s", name);
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	low_repo_set_free (repos);
@@ -543,7 +544,7 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	low_repo_rpmdb_shutdown (rpmdb);
 	free (name);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 /**
@@ -553,7 +554,7 @@ static int
 command_version (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
 {
 	printf  (PACKAGE_STRING"\n");
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 
@@ -569,7 +570,7 @@ command_help (int argc, const char *argv[])
 		show_help ("help");
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 static int
@@ -577,7 +578,7 @@ NOT_IMPLEMENTED (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
 {
 	printf ("This function is not yet implemented\n");
 
-	return 1;
+	return EXIT_FAILURE;
 }
 
 typedef struct _SubCommand {
@@ -645,7 +646,7 @@ usage (void)
 		printf ("  %-20s%s\n", commands[i].name, commands[i].summary);
 	}
 
-	return 1;
+	return EXIT_FAILURE;
 }
 
 int
