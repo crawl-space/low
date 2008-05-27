@@ -25,6 +25,11 @@
 #ifndef _LOW_TRANSACTION_H_
 #define _LOW_TRANSACTION_H_
 
+typedef enum _LowTransactionResult {
+	LOW_TRANSACTION_OK,
+	LOW_TRANSACTION_ERROR
+} LowTransactionResult;
+
 typedef struct _LowTransaction {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
@@ -51,7 +56,7 @@ void 	low_transaction_add_install 	(LowTransaction *trans,
 /**
  * Resolve missing dependencies, add them to the transaction as needed.
  */
-void 	low_transaction_resolve 	(LowTransaction *trans);
+LowTransactionResult 	low_transaction_resolve	(LowTransaction *trans);
 
 /**
  * read the list of operations to perform.

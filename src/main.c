@@ -572,7 +572,10 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 
 	while (iter = low_package_iter_next (iter), iter != NULL);
 
-	low_transaction_resolve (trans);
+	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
+		printf ("Error resolving transaction\n");
+		return EXIT_FAILURE;
+	}
 
 	install = trans->install;
 	while (install != NULL) {
@@ -585,7 +588,7 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 /**

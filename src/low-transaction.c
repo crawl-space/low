@@ -135,7 +135,7 @@ low_transaction_check_all_requires (LowTransaction *trans)
 	}
 }
 
-void
+LowTransactionResult
 low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 {
 	low_debug ("Resolving transaction");
@@ -144,6 +144,8 @@ low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 		low_transaction_check_all_requires (trans);
 		break;
 	}
+
+	return LOW_TRANSACTION_OK;
 }
 
 void
