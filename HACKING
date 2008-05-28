@@ -1,12 +1,25 @@
+= Hacking =
+
 remember to turn on your pre-commit hook:
 
 	chmod +x .git/hooks/pre-commit
 
 
-= Coding Style =
+== Coding Style ==
 
 Style is identical to that used in the Linux kernel, except with function names
 on a newline, and a space between the function name and first parenthesis in a
 function call, ie:
 
 	indent -linux -pcs -psl
+
+== Tests ==
+
+We have two levels of tests: smoke and unit.
+
+The smoke tests (run with 'make smoke-test') are very high level
+check-for-segfaults kinds of tests. There is no validation of command output,
+just the return code.
+
+The unit tests (run with 'make check') Attempt to be true unit tests, not using
+any external resources, and verifying the unit under test.

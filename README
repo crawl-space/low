@@ -1,2 +1,13 @@
+= Low =
+
 This is Low, a package manager for rpm based systems intended to be a drop-in
 replacement for yum.
+
+== Requirements ==
+
+* The autotools
+* gcc
+* glib > 2.16.3
+* curl
+* rpm
+* associated -devel packages

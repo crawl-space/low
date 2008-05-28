@@ -24,13 +24,16 @@
 
 #include "low-repo.h"
 
+/**
+ * Package dependency types.
+ */
 typedef enum {
-	DEPENDENCY_SENSE_EQ,
-	DEPENDENCY_SENSE_GT,
-	DEPENDENCY_SENSE_GE,
-	DEPENDENCY_SENSE_LT,
-	DEPENDENCY_SENSE_LE,
-	DEPENDENCY_SENSE_NONE
+	DEPENDENCY_SENSE_EQ, /**< == */
+	DEPENDENCY_SENSE_GT, /**< > */
+	DEPENDENCY_SENSE_GE, /**< >= */
+	DEPENDENCY_SENSE_LT, /**< < */
+	DEPENDENCY_SENSE_LE, /**< <= */
+	DEPENDENCY_SENSE_NONE /**< An unversioned dependency */
 } LowPackageDependencySense;
 
 /**
@@ -41,7 +44,7 @@ typedef enum {
 typedef struct _LowPackageDependency {
 	char *name;
 	LowPackageDependencySense sense;
-	char *evr;
+	char *evr; /**< The epoch:version-release of the depenency */
 } LowPackageDependency;
 
 typedef struct _LowPackage LowPackage;
@@ -51,8 +54,11 @@ typedef void * signature;
 typedef char **	(*LowPackageGetDependency)	(LowPackage *);
 typedef char **	(*LowPackageGetFiles) 		(LowPackage *);
 
+/**
+ * A struct representing an RPM package.
+ */
 struct _LowPackage {
-	signature id; /** Repo type dependent package identifier */
+	signature id; /**< Repo type dependent package identifier */
 
 	char *name;
 	char *version;
@@ -64,7 +70,7 @@ struct _LowPackage {
 	LowRepo *repo;
 	char *summary;
 	char *description;
-	char *url; /** Optional URL for the package */
+	char *url; /**< Optional URL for the package */
 	char *license;
 	char *location_href;
 

@@ -22,6 +22,9 @@ SUBDIRS = doxygen src test
 doxygen:
 	$(MAKE) -C doxygen doxygen
 
+view-docs: doxygen
+	xdg-open doxygen/html/index.html
+
 # Automatically convert trailing spaces, as found in 'trailinglint'
 eolspace:
 	find \( -name '*.c' -o -name '*.h' -o -name 'Makefile.am' \) -exec perl -i -pe 's/\s+\n$$/\1\n/;' \{\} \;

@@ -22,6 +22,21 @@
 #include <stdlib.h>
 #include "low-transaction.h"
 
+/**
+ * \page depsolver The Depedency Resolution Algorithm
+ *
+ * This page documents the dependency resolution algorithm used in Low
+ * (as copied from YUM).
+ *
+ * \section algorithm The Algorithm
+ * - WHILE there are unresolved dependencies DO:
+ *   - FOR EACH package to be installed DO:
+ *     - FOR EACH requires of the package DO:
+ *       - IF NOT requires provided by installed packages
+ *         OR NOT requires provided by packages in the transaction DO:
+ * 	     - Add requires to unresolved requires.
+ */
+
 LowTransaction *
 low_transaction_new (LowRepo *rpmdb, LowRepoSet *repos) {
 	LowTransaction *trans = malloc (sizeof (LowTransaction));
