@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <glib.h>
 #include <syck.h>
@@ -185,21 +186,95 @@ low_repo_from_list (char *name, char *id, gboolean enabled, GSList *list)
 	LowRepo *repo = low_fake_repo_initialize (name, id, enabled);
 	LowPackage **packages =
 		malloc (sizeof (LowPackage *) * g_slist_length (list));
-	GSList *cur = list;
-	int i = 0;
+	GSList *cur;
+	int i;
 
-	while (cur != NULL) {
-		packages[i++] = low_package_from_hash (cur->data);
-		cur = cur->next;
+	for (cur = list, i = 0; cur != NULL; cur = cur->next, i++) {
+		packages[i] = low_package_from_hash (cur->data);
 	}
 
 	((LowFakeRepo *) repo)->packages = packages;
 	return repo;
 }
 
-static void
-schedule_transactions (LowTransaction *trans G_GNUC_UNUSED, GSList *list G_GNUC_UNUSED)
+static LowPackage *
+find_package (LowRepo *repo, GHashTable *hash)
 {
+	char *name = g_hash_table_lookup (hash, "name");
+	char *arch = g_hash_table_lookup (hash, "arch");
+	char *evr = g_hash_table_lookup (hash, "evr");
+
+	char *epoch = NULL;
+	char *version = NULL;
+	char *release = NULL;
+
+	if (evr != NULL) {
+		parse_evr (evr, &epoch, &version, &release);
+	}
+
+	LowPackageIter *iter;
+
+	/* We need at least the name. */
+	iter = low_fake_repo_list_by_name (repo, name);
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		LowPackage *pkg = iter->pkg;
+
+		if (arch && strcmp (arch, pkg->arch)) {
+			low_package_free (pkg);
+			continue;
+		}
+		if (epoch && strcmp (epoch, pkg->epoch)) {
+			low_package_free (pkg);
+			continue;
+		}
+		if (version && strcmp (version, pkg->version)) {
+			low_package_free (pkg);
+			continue;
+		}
+		if (release && strcmp (release, pkg->release)) {
+			low_package_free (pkg);
+			continue;
+		}
+
+		return pkg;
+	}
+
+	printf ("could not find matching package\n");
+	exit (EXIT_FAILURE);
+}
+
+static void
+schedule_transactions (LowTransaction *trans, LowRepo *installed G_GNUC_UNUSED,
+		       LowRepo *available G_GNUC_UNUSED, GSList *list)
+{
+	GSList *cur;
+	LowPackage *pkg;
+
+	for (cur = list; cur != NULL; cur = cur->next) {
+		GHashTable *table = cur->data;
+		/* There should only be a single key */
+		GList *keys = g_hash_table_get_keys (table);
+		char *op = keys->data;
+		if (!strcmp (op, "update")) {
+			low_debug ("scheduling update");
+			pkg = find_package (available,
+					    g_hash_table_lookup (table, op));
+//			low_transaction_add_update (trans, pkg);
+		} else if (!strcmp (op, "install")) {
+			low_debug ("scheduling install");
+			pkg = find_package (available,
+					    g_hash_table_lookup (table, op));
+			low_transaction_add_install (trans, pkg);
+		} else if (!strcmp (op, "remove")) {
+			low_debug ("scheduling remove");
+			pkg = find_package (installed,
+					    g_hash_table_lookup (table, op));
+//			low_transaction_add_remove (trans, pkg);
+		} else {
+			printf ("Unknown operation %s\n", op);
+			exit (EXIT_FAILURE);
+		}
+	}
 
 }
 
@@ -230,7 +305,7 @@ run_test (GHashTable *test)
 
 	list = g_hash_table_lookup (test, "transaction");
 
-	schedule_transactions (trans, list);
+	schedule_transactions (trans, installed, available, list);
 	low_transaction_resolve (trans);
 
 	low_transaction_free (trans);
