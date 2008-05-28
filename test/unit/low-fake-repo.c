@@ -22,18 +22,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <sqlite3.h>
-#include "low-repo-sqlite.h"
-#include "low-repo-sqlite-fake.h"
+
+#include "low-fake-repo.h"
 
 /**
- * Stub in-memory replacement for the sqlite repo type.
+ * Stub in-memory replacement for a package repository.
  */
 
 LowRepo *
-low_repo_sqlite_initialize (const char *id, const char *name, gboolean enabled)
+low_fake_repo_initialize (const char *id, const char *name, gboolean enabled)
 {
-	LowRepoSqliteFake *repo = malloc (sizeof (LowRepoSqliteFake));
+	LowFakeRepo *repo = malloc (sizeof (LowFakeRepo));
 
 	repo->super.id = strdup (id);
 	repo->super.name = strdup (name);
@@ -46,7 +45,7 @@ low_repo_sqlite_initialize (const char *id, const char *name, gboolean enabled)
 }
 
 void
-low_repo_sqlite_shutdown (LowRepo *repo)
+low_fake_repo_shutdown (LowRepo *repo)
 {
 	free (repo);
 }
@@ -57,9 +56,10 @@ typedef struct _LowFakePackageIter {
 } LowFakePackageIter;
 
 static LowPackageIter *
-low_repo_sqlite_fake_iter_next (LowPackageIter *iter) {
+low_fake_repo_fake_iter_next (LowPackageIter *iter)
+{
 	LowFakePackageIter *iter_fake = (LowFakePackageIter *) iter;
-	LowRepoSqliteFake *repo_fake = (LowRepoSqliteFake *) iter->repo;
+	LowFakeRepo *repo_fake = (LowFakeRepo *) iter->repo;
 
 	if (repo_fake->packages[iter_fake->position] == NULL) {
 		free (iter_fake);
@@ -72,11 +72,11 @@ low_repo_sqlite_fake_iter_next (LowPackageIter *iter) {
 }
 
 LowPackageIter *
-low_repo_sqlite_list_all (LowRepo *repo)
+low_fake_repo_list_all (LowRepo *repo)
 {
 	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
 	iter->super.repo = repo;
-	iter->super.next_func = low_repo_sqlite_fake_iter_next;
+	iter->super.next_func = low_fake_repo_fake_iter_next;
 	iter->super.pkg = NULL;
 
 	iter->position = 0;
@@ -85,44 +85,43 @@ low_repo_sqlite_list_all (LowRepo *repo)
 }
 
 LowPackageIter *
-low_repo_sqlite_list_by_name (LowRepo *repo, const char *name G_GNUC_UNUSED)
+low_fake_repo_list_by_name (LowRepo *repo, const char *name G_GNUC_UNUSED)
 {
-	return low_repo_sqlite_list_all (repo);
+	return low_fake_repo_list_all (repo);
 }
 
 LowPackageIter *
-low_repo_sqlite_search_provides (LowRepo *repo,
-				 const char *provides G_GNUC_UNUSED)
+low_fake_repo_search_provides (LowRepo *repo,
+			       const char *provides G_GNUC_UNUSED)
 {
-	return low_repo_sqlite_list_all (repo);
+	return low_fake_repo_list_all (repo);
 }
 
 LowPackageIter *
-low_repo_sqlite_search_requires (LowRepo *repo,
-				 const char *requires G_GNUC_UNUSED)
+low_fake_repo_search_requires (LowRepo *repo,
+			       const char *requires G_GNUC_UNUSED)
 {
-	return low_repo_sqlite_list_all (repo);
+	return low_fake_repo_list_all (repo);
 }
 
 LowPackageIter *
-low_repo_sqlite_search_conflicts (LowRepo *repo,
-				  const char *conflicts G_GNUC_UNUSED)
+low_fake_repo_search_conflicts (LowRepo *repo,
+				const char *conflicts G_GNUC_UNUSED)
 {
-	return low_repo_sqlite_list_all (repo);
+	return low_fake_repo_list_all (repo);
 }
 
 LowPackageIter *
-low_repo_sqlite_search_obsoletes (LowRepo *repo,
-				  const char *obsoletes G_GNUC_UNUSED)
+low_fake_repo_search_obsoletes (LowRepo *repo,
+				const char *obsoletes G_GNUC_UNUSED)
 {
-	return low_repo_sqlite_list_all (repo);
+	return low_fake_repo_list_all (repo);
 }
 
 LowPackageIter *
-low_repo_sqlite_search_files (LowRepo *repo,
-			      const char *file G_GNUC_UNUSED)
+low_fake_repo_search_files (LowRepo *repo, const char *file G_GNUC_UNUSED)
 {
-	return low_repo_sqlite_list_all (repo);
+	return low_fake_repo_list_all (repo);
 }
 
 /**
@@ -130,10 +129,9 @@ low_repo_sqlite_search_files (LowRepo *repo,
  *
  */
 LowPackageIter *
-low_repo_sqlite_search_details (LowRepo *repo,
-				const char *querystr G_GNUC_UNUSED)
+low_fake_repo_search_details (LowRepo *repo, const char *querystr G_GNUC_UNUSED)
 {
-	return low_repo_sqlite_list_all (repo);
+	return low_fake_repo_list_all (repo);
 }
 
 /* vim: set ts=8 sw=8 noet: */
