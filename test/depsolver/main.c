@@ -114,35 +114,45 @@ print_repo (gpointer repo)
 	}
 }
 
-int
-main (int argc, char *argv[])
+static GHashTable *
+parse_yaml (const char *file_name)
 {
-	SYMID top_map;
+	SYMID top_symid;
 	GHashTable *top_hash;
 	SyckParser *parser = syck_new_parser ();
 	FILE *file;
+
+	symbols = g_hash_table_new (NULL, NULL);
+
+	syck_parser_handler (parser, node_handler);
+
+	file = fopen (file_name, "r");
+	syck_parser_file (parser, file, NULL);
+
+	top_symid = syck_parse (parser);
+
+	syck_free_parser (parser);
+
+	top_hash = g_hash_table_lookup (symbols, GINT_TO_POINTER (top_symid));
+
+	return top_hash;
+}
+
+int
+main (int argc, char *argv[])
+{
+	GHashTable *top_hash;
 
 	if (argc != 2) {
 		printf ("Usage: %s FILE\n", argv[0]);
 		exit (EXIT_FAILURE);
 	}
 
-	symbols = g_hash_table_new (NULL, NULL);
-
-	syck_parser_handler (parser, node_handler);
-
-	file = fopen (argv[1], "r");
-	syck_parser_file (parser, file, NULL);
-
-	top_map = syck_parse (parser);
-
-	syck_free_parser (parser);
-
-	top_hash = g_hash_table_lookup (symbols, GINT_TO_POINTER (top_map));
+	top_hash = parse_yaml (argv[1]);
 
 	print_repo (g_hash_table_lookup (top_hash, "installed"));
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 /* vim: set ts=8 sw=8 noet: */
