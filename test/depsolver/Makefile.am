@@ -18,6 +18,8 @@
 #  02110-1301  USA
 
 INCLUDES = \
+	-I${top_builddir}/src/ \
+	-I${top_builddir}/test/unit/ \
 	$(GLIB_CFLAGS) \
 	$(NULL)
 
@@ -28,6 +30,10 @@ test_depsolver_SOURCES = main.c
 test_depsolver_LDADD = \
 		$(GLIB_LIBS) \
 		$(SYCK_LIBS) \
+		${top_builddir}/src/low-debug.o \
+		${top_builddir}/src/low-package.o \
+		${top_builddir}/src/low-transaction.o \
+		${top_builddir}/test/unit/low-fake-repo.o \
 		$(NULL)
 
 

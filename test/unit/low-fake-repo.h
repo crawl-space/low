@@ -83,12 +83,6 @@ char **			low_fake_repo_get_files 	(LowRepo *repo,
 	\
 	typedef LowFakeRepo LowRepo ## studley_name ## Fake; \
 	\
-	LowRepo * \
-	low_repo_ ## name ## _initialize (const char *name, const char *id, \
-					  gboolean enabled) { \
-		return low_fake_repo_initialize (name, id, enabled); \
-	} \
-	\
 	void \
 	low_repo_ ## name ## _shutdown (LowRepo *repo) \
 	{ \
@@ -113,6 +107,23 @@ char **			low_fake_repo_get_files 	(LowRepo *repo,
 //	DELEGATE_GET_FUNCTION(name, conflicts)
 //	DELEGATE_GET_FUNCTION(name, obsoletes)
 //	DELEGATE_GET_FUNCTION(name, files)
+
+#define FAKE_SQLITE_REPO \
+	FAKE_REPO (sqlite, Sqlite) \
+	\
+	LowRepo * \
+	low_repo_sqlite_initialize (const char *name, const char *id, \
+				    gboolean enabled) { \
+		return low_fake_repo_initialize (name, id, enabled); \
+	}
+
+#define FAKE_RPMDB \
+	FAKE_REPO (rpmdb, Rpmdb) \
+	\
+	LowRepo * \
+	low_repo_rpmdb_initialize (void) { \
+		return low_fake_repo_initialize ("rpmdb", "installed", TRUE); \
+	}
 
 #endif /* _LOW_FAKE_REPO_H_ */
 

@@ -25,7 +25,29 @@
 #include <glib.h>
 #include <syck.h>
 
+#include "low-debug.h"
+#include "low-package.h"
+#include "low-repo-set.h"
+#include "low-repo-rpmdb.h"
+#include "low-repo-sqlite.h"
+#include "low-transaction.h"
+#include "low-fake-repo.h"
+
+FAKE_RPMDB;
+FAKE_SQLITE_REPO;
+
+/**********************************************************************
+ * YAML parsing functions
+ **********************************************************************/
+
+/**
+ * Our symbol table for syck.
+ */
 GHashTable *symbols;
+
+/**
+ * An id we increment for the symbol table
+ */
 unsigned long int id = 0;
 
 static void
@@ -88,32 +110,6 @@ node_handler (SyckParser *parser G_GNUC_UNUSED, SyckNode *node)
 	return node->id;
 }
 
-static void
-print_package (gpointer pkg)
-{
-	GHashTable *table = (GHashTable *) pkg;
-
-	GHashTableIter iter;
-	gpointer key, value;
-
-	g_hash_table_iter_init (&iter, table);
-	while (g_hash_table_iter_next (&iter, &key, &value)) {
-		printf ("%s - %s\n", (char *) key, (char *) value);
-	}
-
-}
-
-static void
-print_repo (gpointer repo)
-{
-	GSList *list = (GSList *) repo;
-
-	while (list != NULL) {
-		print_package (list->data);
-		list = list->next;
-	}
-}
-
 static GHashTable *
 parse_yaml (const char *file_name)
 {
@@ -138,6 +134,108 @@ parse_yaml (const char *file_name)
 	return top_hash;
 }
 
+/**********************************************************************
+ * Repo & Package creation from parsed YAML functions
+ **********************************************************************/
+
+static void
+parse_evr (const char *evr, char **epoch, char **version, char **release)
+{
+	char *didx;
+	const char *cidx = index (evr, ':');
+
+	if (cidx == NULL) {
+		*epoch = NULL;
+		cidx = evr - 1;
+	} else {
+		*epoch = g_strndup (evr, cidx - evr);
+	}
+
+	didx = rindex (evr, '-');
+
+	if (didx == NULL) {
+		*version = g_strdup (cidx + 1);
+	} else {
+		*version = g_strndup (cidx + 1, didx - (cidx + 1));
+		*release = g_strdup (didx + 1);
+	}
+}
+
+static LowPackage *
+low_package_from_hash (GHashTable *hash)
+{
+	LowPackage *pkg = malloc (sizeof (LowPackage));
+
+	hash = g_hash_table_lookup (hash, "package");
+
+	pkg->name = g_hash_table_lookup (hash, "name");
+	pkg->arch = g_hash_table_lookup (hash, "arch");
+
+	parse_evr (g_hash_table_lookup (hash, "evr"), &pkg->epoch,
+		   &pkg->version, &pkg->release);
+
+	low_debug_pkg ("found package", pkg);
+
+	return pkg;
+}
+
+static LowRepo *
+low_repo_from_list (char *name, char *id, gboolean enabled, GSList *list)
+{
+	LowRepo *repo = low_fake_repo_initialize (name, id, enabled);
+	LowPackage **packages =
+		malloc (sizeof (LowPackage *) * g_slist_length (list));
+	GSList *cur = list;
+	int i = 0;
+
+	while (cur != NULL) {
+		packages[i++] = low_package_from_hash (cur->data);
+		cur = cur->next;
+	}
+
+	((LowFakeRepo *) repo)->packages = packages;
+	return repo;
+}
+
+static void
+schedule_transactions (LowTransaction *trans G_GNUC_UNUSED, GSList *list G_GNUC_UNUSED)
+{
+
+}
+
+static void
+run_test (GHashTable *test)
+{
+	LowRepo *installed;
+	LowRepo *available;
+	LowRepoSet *repo_set;
+	LowTransaction *trans;
+	GSList *list;
+
+
+	installed =
+		low_repo_from_list ("installed", "installed", TRUE,
+				    g_hash_table_lookup (test, "installed"));
+
+	available =
+		low_repo_from_list ("available", "available", TRUE,
+				    g_hash_table_lookup (test, "available"));
+
+	repo_set = malloc (sizeof (LowRepoSet));
+	repo_set->repos = g_hash_table_new (NULL, NULL);
+
+	g_hash_table_insert (repo_set->repos, available->id, available);
+
+	trans = low_transaction_new (installed, repo_set);
+
+	list = g_hash_table_lookup (test, "transaction");
+
+	schedule_transactions (trans, list);
+	low_transaction_resolve (trans);
+
+	low_transaction_free (trans);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -148,9 +246,11 @@ main (int argc, char *argv[])
 		exit (EXIT_FAILURE);
 	}
 
+	low_debug_init ();
+
 	top_hash = parse_yaml (argv[1]);
 
-	print_repo (g_hash_table_lookup (top_hash, "installed"));
+	run_test (top_hash);
 
 	return EXIT_SUCCESS;
 }

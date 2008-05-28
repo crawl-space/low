@@ -26,7 +26,7 @@
 #include "low-fake-repo.h"
 #include "low-repo-sqlite.h"
 
-FAKE_REPO (sqlite, Sqlite);
+FAKE_SQLITE_REPO;
 
 #endif /* _LOW_REPO_SQLITE_FAKE_H_ */
 
