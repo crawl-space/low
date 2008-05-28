@@ -94,6 +94,15 @@ AM_CONDITIONAL(HAVE_CHECK, test x$HAVE_CHECK = xyes)
 AC_SUBST(CHECK_CFLAGS)
 AC_SUBST(CHECK_LIBS)
 
+dnl Check for syck yaml parser (Used in depsolver test harness, optional)
+AC_CHECK_HEADER(syck.h,
+            AC_CHECK_LIB(syck, syck_new_parser,
+                 [HAVE_YAML=yes
+                  SYCK_LIBS="-lsyck"
+                 ]))
+AM_CONDITIONAL(HAVE_YAML, test x$HAVE_YAML = xyes)
+AC_SUBST(SYCK_LIBS)
+
 dnl ---------------------------------------------------------------------------
 dnl - Make paths available for source files
 dnl ---------------------------------------------------------------------------
@@ -156,6 +165,7 @@ doxygen/doxygen.conf
 src/Makefile
 test/Makefile
 test/unit/Makefile
+test/depsolver/Makefile
 ])
 
 dnl ---------------------------------------------------------------------------
@@ -170,6 +180,7 @@ echo "
         compiler:                       ${CC}
         cflags:                         ${CFLAGS}
         Building 'check' unit tests:    ${HAVE_CHECK}
+        Building depsolver tests:       ${HAVE_YAML}
         GCC coverage profiling:         ${enable_gcov}
         GCC time profiling:             ${enable_gprof}
 "

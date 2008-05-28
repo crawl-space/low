@@ -70,7 +70,7 @@ parse_hash (SyckNode *node)
 	g_hash_table_insert (symbols, GINT_TO_POINTER (node->id), table);
 }
 
-SYMID
+static SYMID
 node_handler (SyckParser *parser G_GNUC_UNUSED, SyckNode *node)
 {
 	node->id = id++;
