@@ -49,6 +49,8 @@ low_transaction_new (LowRepo *rpmdb, LowRepoSet *repos) {
 	trans->repos = repos;
 
 	trans->install = NULL;
+	trans->update = NULL;
+	trans->remove = NULL;
 
 	return trans;
 }
@@ -61,6 +63,21 @@ low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
 	trans->install = g_slist_append (trans->install, to_install);
 }
 
+void
+low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
+{
+	low_debug_pkg ("Adding for install", to_update);
+
+	trans->update = g_slist_append (trans->update, to_update);
+}
+
+void
+low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove)
+{
+	low_debug_pkg ("Adding for removal", to_remove);
+
+	trans->remove = g_slist_append (trans->remove, to_remove);
+}
 /**
  * Check if a requires is in a list of provides
  */

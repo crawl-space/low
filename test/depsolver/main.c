@@ -315,7 +315,7 @@ schedule_transactions (LowTransaction *trans, LowRepo *installed G_GNUC_UNUSED,
 			low_debug ("scheduling update");
 			pkg = find_package (available,
 					    g_hash_table_lookup (table, op));
-//			low_transaction_add_update (trans, pkg);
+			low_transaction_add_update (trans, pkg);
 		} else if (!strcmp (op, "install")) {
 			low_debug ("scheduling install");
 			pkg = find_package (available,
@@ -325,7 +325,7 @@ schedule_transactions (LowTransaction *trans, LowRepo *installed G_GNUC_UNUSED,
 			low_debug ("scheduling remove");
 			pkg = find_package (installed,
 					    g_hash_table_lookup (table, op));
-//			low_transaction_add_remove (trans, pkg);
+			low_transaction_add_remove (trans, pkg);
 		} else {
 			printf ("Unknown operation %s\n", op);
 			exit (EXIT_FAILURE);
@@ -384,16 +384,16 @@ compare_results (LowTransaction *trans, GSList *list)
 		char *op = keys->data;
 		if (!strcmp (op, "update")) {
 			expected_updates++;
-//			res = assert_package (trans->update
-//					      g_hash_table_lookup (table, op));
+			res = assert_package (trans->update,
+					      g_hash_table_lookup (table, op));
 		} else if (!strcmp (op, "install")) {
 			expected_installs++;
 			res = assert_package (trans->install,
 					      g_hash_table_lookup (table, op));
 		} else if (!strcmp (op, "remove")) {
 			expected_removals++;
-//			res = assert_package (trans->remove
-//					      g_hash_table_lookup (table, op));
+			res = assert_package (trans->remove,
+					      g_hash_table_lookup (table, op));
 		} else {
 			printf ("Unknown operation %s\n", op);
 			exit (EXIT_FAILURE);

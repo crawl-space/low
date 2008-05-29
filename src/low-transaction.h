@@ -35,6 +35,8 @@ typedef struct _LowTransaction {
 	LowRepoSet *repos;
 
 	GSList *install;
+	GSList *update;
+	GSList *remove;
 } LowTransaction;
 
 LowTransaction *	low_transaction_new 	(LowRepo *rpmdb,
@@ -50,6 +52,11 @@ void			low_transaction_free 	(LowTransaction *trans);
 
 void 	low_transaction_add_install 	(LowTransaction *trans,
 					 LowPackage *to_install);
+void 	low_transaction_add_update 	(LowTransaction *trans,
+					 LowPackage *to_update);
+void 	low_transaction_add_remove 	(LowTransaction *trans,
+					 LowPackage *to_remove);
+
 //low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove);
 //low_transaction_add_update (LowTransaction *trans, LowPackage *to_update);
 
