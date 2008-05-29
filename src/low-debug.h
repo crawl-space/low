@@ -25,11 +25,15 @@
 #include <stdarg.h>
 
 #define low_debug(...) low_debug_impl (__FILE__, __func__, __LINE__, \
-									   __VA_ARGS__)
+				       __VA_ARGS__)
+
+#define low_debug_pkg(msg, pkg) low_debug("%s : %s-%s-%s.%s", (msg), \
+					  (pkg)->name, (pkg)->version, \
+					  (pkg)->release, (pkg)->arch)
 
 void 	low_debug_impl 	(const char *file, const char *func, const int line,
-						 const char *format, ...)
-						 __attribute__ ((format (printf, 4, 5)));
+			 const char *format, ...)
+			 __attribute__ ((format (printf, 4, 5)));
 
 void 	low_debug_init 	(void);
 

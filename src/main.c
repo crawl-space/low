@@ -33,6 +33,7 @@
 #include "low-repo-set.h"
 #include "low-package-sqlite.h"
 #include "low-repo-sqlite.h"
+#include "low-transaction.h"
 #include "low-util.h"
 #include "low-download.h"
 
@@ -547,6 +548,50 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	return EXIT_SUCCESS;
 }
 
+static int
+command_install (int argc G_GNUC_UNUSED, const char *argv[])
+{
+	LowRepo *rpmdb;
+	LowRepoSet *repos;
+	LowPackageIter *iter;
+	LowConfig *config;
+	LowTransaction *trans;
+	const char *provides = argv[0];
+	GSList *install;
+
+	rpmdb = low_repo_rpmdb_initialize ();
+
+	config = low_config_initialize (rpmdb);
+	repos = low_repo_set_initialize_from_config (config);
+
+	trans = low_transaction_new (rpmdb, repos);
+
+	/* XXX just do the most EVR newest */
+	iter = low_repo_set_search_provides (repos, provides);
+	iter = low_package_iter_next (iter);
+	low_transaction_add_install (trans, iter->pkg);
+
+	while (iter = low_package_iter_next (iter), iter != NULL);
+
+	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
+		printf ("Error resolving transaction\n");
+		return EXIT_FAILURE;
+	}
+
+	install = trans->install;
+	while (install != NULL) {
+		print_package_short (install->data);
+		install = install->next;
+	}
+
+	low_transaction_free (trans);
+	low_repo_set_free (repos);
+	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
+
+	return EXIT_SUCCESS;
+}
+
 /**
  * Display the program version as specified in configure.ac
  */
@@ -589,7 +634,7 @@ typedef struct _SubCommand {
 } SubCommand;
 
 const SubCommand commands[] = {
-	{ "install", "PACKAGE", "Install a package", NOT_IMPLEMENTED },
+	{ "install", "PACKAGE", "Install a package", command_install },
 	{ "update", "[PACKAGE]", "Update or install a package",
 	  NOT_IMPLEMENTED },
 	{ "remove", "PACKAGE", "Remove a package", NOT_IMPLEMENTED },

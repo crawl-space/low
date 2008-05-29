@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #  Low: a yum-like package manager
 #
 #  Copyright (C) 2008 James Bowes <jbowes@dangerouslyinc.com>
@@ -16,13 +18,40 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #  02110-1301  USA
+#
+#  Collect results from the YAML driven depsolver test cases
 
-SUBDIRS =
 
-if HAVE_CHECK
-SUBDIRS += unit
-endif
+PASSED=1
 
-if HAVE_YAML
-SUBDIRS += depsolver
-endif
+TOTAL=0
+NUM_PASSED=0
+
+function run_test {
+    let TOTAL=$TOTAL+1
+
+    printf "Testing '$1'... "
+    `./test_depsolver yaml/$1 > /dev/null`
+    if (($?)); then
+        printf "\E[31mFAIL\n"
+        PASSED=0
+    else
+        printf "\E[32mOK\n"
+        let NUM_PASSED=$NUM_PASSED+1
+    fi
+    tput sgr0
+}
+
+for test_file in $( ls yaml ); do
+    run_test $test_file
+done
+
+echo "$TOTAL tests run, $[ $TOTAL - $NUM_PASSED ] failures"
+
+if (($PASSED)); then
+    echo "Depsolver tests passed"
+    exit 0
+else
+    echo "*** DEPSOLVER TESTS FAILED ***"
+    exit 1
+fi

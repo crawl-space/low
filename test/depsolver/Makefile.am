@@ -17,12 +17,23 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #  02110-1301  USA
 
-SUBDIRS =
+INCLUDES = \
+	-I${top_builddir}/src/ \
+	-I${top_builddir}/test/unit/ \
+	$(GLIB_CFLAGS) \
+	$(NULL)
 
-if HAVE_CHECK
-SUBDIRS += unit
-endif
+noinst_PROGRAMS = test_depsolver
 
-if HAVE_YAML
-SUBDIRS += depsolver
-endif
+test_depsolver_SOURCES = main.c
+
+test_depsolver_LDADD = \
+		$(GLIB_LIBS) \
+		$(SYCK_LIBS) \
+		${top_builddir}/src/low-debug.o \
+		${top_builddir}/src/low-package.o \
+		${top_builddir}/src/low-transaction.o \
+		${top_builddir}/test/unit/low-fake-repo.o \
+		$(NULL)
+
+TESTS = run-depsolver-tests.sh

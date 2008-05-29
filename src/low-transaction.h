@@ -25,33 +25,46 @@
 #ifndef _LOW_TRANSACTION_H_
 #define _LOW_TRANSACTION_H_
 
+typedef enum _LowTransactionResult {
+	LOW_TRANSACTION_OK,
+	LOW_TRANSACTION_ERROR
+} LowTransactionResult;
+
 typedef struct _LowTransaction {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
+
+	GSList *install;
 } LowTransaction;
 
 LowTransaction *	low_transaction_new 	(LowRepo *rpmdb,
 						 LowRepoSet *repos);
 void			low_transaction_free 	(LowTransaction *trans);
 
+//low_transaction_find_updates (LowTransaction *trans);
+
 /*
+ * If anything is getting updated or obsoleted, calculate that during these
+ * function calls.
+ */
 
-low_transaction_find_updates (LowTransaction *trans);
+void 	low_transaction_add_install 	(LowTransaction *trans,
+					 LowPackage *to_install);
+//low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove);
+//low_transaction_add_update (LowTransaction *trans, LowPackage *to_update);
 
-If anything is getting updated or obsoleted, calculate that during these
-function calls
-low_transaction_add_install (LowTransaction *trans, LowPackage *to_install);
-low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove);
-low_transaction_add_update (LowTransaction *trans, LowPackage *to_update);
+/**
+ * Resolve missing dependencies, add them to the transaction as needed.
+ */
+LowTransactionResult 	low_transaction_resolve	(LowTransaction *trans);
 
-resolve missing dependencies, add them to the transaction as needed.
-low_transaction_resolve (LowTransaction *trans);
+/**
+ * read the list of operations to perform.
+ * From here we can download the rpms we need, and have the rpmdb
+ * perform the operation.
+ */
+//:low_transaction_get_diff (lowTransaction *trans);
 
-read the list of operations to perform. from here we can download the rpms we
-need, and have the rpmdb perform the operation.
-low_transaction_get_diff (lowTransaction *trans);
-
-*/
 #endif /* _LOW_TRANSACTION_H_ */
 
 /* vim: set ts=8 sw=8 noet: */

@@ -23,13 +23,10 @@
 #ifndef _LOW_REPO_SQLITE_FAKE_H_
 #define _LOW_REPO_SQLITE_FAKE_H_
 
-#include "low-package.h"
+#include "low-fake-repo.h"
 #include "low-repo-sqlite.h"
 
-typedef struct _LowRepoSqliteFake {
-	LowRepo super;
-	LowPackage **packages;
-} LowRepoSqliteFake;
+FAKE_SQLITE_REPO;
 
 #endif /* _LOW_REPO_SQLITE_FAKE_H_ */
 

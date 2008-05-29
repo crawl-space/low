@@ -29,7 +29,8 @@ noinst_PROGRAMS = check_low
 
 check_low_SOURCES = \
 		check_low.c \
-		low-repo-sqlite-fake.c \
+		low-fake-repo.c \
+		low-fake-repo.h \
 		low-repo-sqlite-fake.h \
 		low-config-fake.c \
 		low-config-fake.h \
