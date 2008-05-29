@@ -36,4 +36,4 @@ test_depsolver_LDADD = \
 		${top_builddir}/test/unit/low-fake-repo.o \
 		$(NULL)
 
-
+TESTS = run-depsolver-tests.sh
