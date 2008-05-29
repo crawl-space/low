@@ -334,7 +334,84 @@ schedule_transactions (LowTransaction *trans, LowRepo *installed G_GNUC_UNUSED,
 
 }
 
-static void
+static int
+assert_package (GSList *list, GHashTable *hash)
+{
+	char *name = g_hash_table_lookup (hash, "name");
+	char *arch = g_hash_table_lookup (hash, "arch");
+	char *evr = g_hash_table_lookup (hash, "evr");
+
+	char *epoch = NULL;
+	char *version = NULL;
+	char *release = NULL;
+
+	if (evr != NULL) {
+		parse_evr (evr, &epoch, &version, &release);
+	}
+
+	GSList *cur;
+
+	for (cur = list; cur != NULL; cur = cur->next) {
+		LowPackage *pkg = cur->data;
+		low_debug_pkg ("on package", pkg);
+		if (!strcmp (name, pkg->name) &&
+		    !strcmp (version, pkg->version) &&
+		    !strcmp (release, pkg->release) &&
+		    !strcmp (arch, pkg->arch) &&
+		    (!(epoch || pkg->epoch) || !strcmp (epoch, pkg->epoch))) {
+			return 0;
+		}
+	}
+	printf ("No matching package found\n");
+
+	return 1;
+}
+
+static int
+compare_results (LowTransaction *trans, GSList *list)
+{
+	GSList *cur;
+	int res;
+
+	unsigned int expected_updates = 0;
+	unsigned int expected_installs = 0;
+	unsigned int expected_removals = 0;
+
+	for (cur = list; cur != NULL; cur = cur->next) {
+		GHashTable *table = cur->data;
+		/* There should only be a single key */
+		GList *keys = g_hash_table_get_keys (table);
+		char *op = keys->data;
+		if (!strcmp (op, "update")) {
+			expected_updates++;
+//			res = assert_package (trans->update
+//					      g_hash_table_lookup (table, op));
+		} else if (!strcmp (op, "install")) {
+			expected_installs++;
+			res = assert_package (trans->install,
+					      g_hash_table_lookup (table, op));
+		} else if (!strcmp (op, "remove")) {
+			expected_removals++;
+//			res = assert_package (trans->remove
+//					      g_hash_table_lookup (table, op));
+		} else {
+			printf ("Unknown operation %s\n", op);
+			exit (EXIT_FAILURE);
+		}
+
+		if (res != 0) {
+			return res;
+		}
+	}
+
+	if (expected_installs != g_slist_length (trans->install)) {
+		return 1;
+	}
+
+	return 0;
+}
+
+static int
 run_test (GHashTable *test)
 {
 	LowRepo *installed;
@@ -342,6 +419,7 @@ run_test (GHashTable *test)
 	LowRepoSet *repo_set;
 	LowTransaction *trans;
 	GSList *list;
+	int res;
 
 
 	installed =
@@ -364,7 +442,12 @@ run_test (GHashTable *test)
 	schedule_transactions (trans, installed, available, list);
 	low_transaction_resolve (trans);
 
+	list = g_hash_table_lookup (test, "results");
+	res = compare_results (trans, list);
+
 	low_transaction_free (trans);
+
+	return res;
 }
 
 int
@@ -381,9 +464,7 @@ main (int argc, char *argv[])
 
 	top_hash = parse_yaml (argv[1]);
 
-	run_test (top_hash);
-
-	return EXIT_SUCCESS;
+	return run_test (top_hash);
 }
 
 /* vim: set ts=8 sw=8 noet: */

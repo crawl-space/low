@@ -8,5 +8,4 @@ transaction:
     - install: { name: zsh }
 
 results:
-    - package: { name: zsh, evr: 1.3.1-2, arch: i386 }
-    - package: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+    - install: { name: zsh, evr: 1.3.1-2, arch: i386 }
