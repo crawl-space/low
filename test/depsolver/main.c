@@ -136,6 +136,45 @@ parse_yaml (const char *file_name)
 }
 
 /**********************************************************************
+ * A fake package type that holds its own dep info
+ **********************************************************************/
+
+typedef struct _LowFakePackage {
+	LowPackage super;
+
+	char **provides;
+	char **requires;
+	char **conflicts;
+	char **obsoletes;
+	char **files;
+} LowFakePackage;
+
+static char **
+low_fake_package_get_provides (LowPackage *pkg) {
+	return g_strdupv (((LowFakePackage *) pkg)->provides);
+}
+
+static char **
+low_fake_package_get_requires (LowPackage *pkg) {
+	return g_strdupv (((LowFakePackage *) pkg)->requires);
+}
+
+static char **
+low_fake_package_get_conflicts (LowPackage *pkg) {
+	return g_strdupv (((LowFakePackage *) pkg)->conflicts);
+}
+
+static char **
+low_fake_package_get_obsoletes (LowPackage *pkg) {
+	return g_strdupv (((LowFakePackage *) pkg)->obsoletes);
+}
+
+static char **
+low_fake_package_get_files (LowPackage *pkg) {
+	return g_strdupv (((LowFakePackage *) pkg)->files);
+}
+
+/**********************************************************************
  * Repo & Package creation from parsed YAML functions
  **********************************************************************/
 
@@ -165,7 +204,12 @@ parse_evr (const char *evr, char **epoch, char **version, char **release)
 static LowPackage *
 low_package_from_hash (GHashTable *hash)
 {
-	LowPackage *pkg = malloc (sizeof (LowPackage));
+	LowFakePackage *fake_pkg = malloc (sizeof (LowFakePackage));
+	LowPackage *pkg = (LowPackage *) fake_pkg;
+
+	/* Default empty deps for prco */
+	char **empty_dep = malloc (sizeof (char *));
+	empty_dep[0] = NULL;
 
 	hash = g_hash_table_lookup (hash, "package");
 
@@ -174,6 +218,18 @@ low_package_from_hash (GHashTable *hash)
 
 	parse_evr (g_hash_table_lookup (hash, "evr"), &pkg->epoch,
 		   &pkg->version, &pkg->release);
+
+	fake_pkg->provides = empty_dep;
+	fake_pkg->requires = empty_dep;
+	fake_pkg->conflicts = empty_dep;
+	fake_pkg->obsoletes = empty_dep;
+	fake_pkg->files = empty_dep;
+
+	pkg->get_provides = low_fake_package_get_provides;
+	pkg->get_requires = low_fake_package_get_requires;
+	pkg->get_conflicts = low_fake_package_get_conflicts;
+	pkg->get_obsoletes = low_fake_package_get_obsoletes;
+	pkg->get_files = low_fake_package_get_files;
 
 	low_debug_pkg ("found package", pkg);
 
