@@ -271,24 +271,28 @@ find_package (LowRepo *repo, GHashTable *hash)
 	LowPackageIter *iter;
 
 	/* We need at least the name. */
-	iter = low_fake_repo_list_by_name (repo, name);
+	iter = low_fake_repo_list_all (repo);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 
+		if (strcmp (name, pkg->name)) {
+		//	low_package_free (pkg);
+			continue;
+		}
 		if (arch && strcmp (arch, pkg->arch)) {
-			low_package_free (pkg);
+		//	low_package_free (pkg);
 			continue;
 		}
 		if (epoch && strcmp (epoch, pkg->epoch)) {
-			low_package_free (pkg);
+		//	low_package_free (pkg);
 			continue;
 		}
 		if (version && strcmp (version, pkg->version)) {
-			low_package_free (pkg);
+		//	low_package_free (pkg);
 			continue;
 		}
 		if (release && strcmp (release, pkg->release)) {
-			low_package_free (pkg);
+		//	low_package_free (pkg);
 			continue;
 		}
 

@@ -1,0 +1,18 @@
+test: Update two packages
+
+installed:
+    - package: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+    - package: { name: zsh, evr: 1.0.0-1, arch: i386 }
+    - package: { name: git, evr: 1.5.0-1, arch: noarch }
+
+available:
+    - package: { name: zsh, evr: 1.3.1-2, arch: i386 }
+    - package: { name: git, evr: 1.5.4-1, arch: noarch }
+
+transaction:
+    - update: { name: zsh }
+    - update: { name: git }
+
+results:
+    - update: { name: zsh, evr: 1.3.1-2, arch: i386 }
+    - update: { name: git, evr: 1.5.4-1, arch: noarch }

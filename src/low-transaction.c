@@ -66,7 +66,7 @@ low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
 void
 low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
 {
-	low_debug_pkg ("Adding for install", to_update);
+	low_debug_pkg ("Adding for update", to_update);
 
 	trans->update = g_slist_append (trans->update, to_update);
 }
