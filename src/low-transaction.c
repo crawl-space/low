@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "low-debug.h"
 #include "low-transaction.h"
@@ -195,7 +196,12 @@ LowTransactionResult
 low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 {
 	LowTransactionStatus status;
+
+	struct timeval start;
+	struct timeval end;
+
 	low_debug ("Resolving transaction");
+	gettimeofday (&start, NULL);
 
 	while (TRUE) {
 		status = low_transaction_check_all_requires (trans);
@@ -207,6 +213,10 @@ low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 		break;
 	}
 
+	gettimeofday (&end, NULL);
+	low_debug ("Transaction resolved successfully in %.2fs",
+		   (int) (end.tv_sec - start.tv_sec) +
+		   ((float) (end.tv_usec - start.tv_usec) / 1000000));
 	return LOW_TRANSACTION_OK;
 }
 
