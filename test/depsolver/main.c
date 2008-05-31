@@ -508,6 +508,7 @@ run_test (GHashTable *test)
 int
 main (int argc, char *argv[])
 {
+	int res;
 	GHashTable *top_hash;
 
 	if (argc != 2) {
@@ -515,11 +516,21 @@ main (int argc, char *argv[])
 		exit (EXIT_FAILURE);
 	}
 
+	printf("Starting test\n");
+
 	low_debug_init ();
 
 	top_hash = parse_yaml (argv[1]);
 
-	return run_test (top_hash);
+	res = run_test (top_hash);
+
+	if (!res) {
+		printf ("Test passed\n");
+	} else {
+		printf ("Test failed\n");
+	}
+
+	return res;
 }
 
 /* vim: set ts=8 sw=8 noet: */
