@@ -41,6 +41,12 @@
  * 	     - Add requires to unresolved requires.
  */
 
+typedef enum _LowTransactionStatus {
+	LOW_TRANSACTION_NO_CHANGE,
+	LOW_TRANSACTION_PACKAGES_ADDED,
+	LOW_TRANSACTION_UNRESOLVABLE
+} LowTransactionStatus;
+
 LowTransaction *
 low_transaction_new (LowRepo *rpmdb, LowRepoSet *repos) {
 	LowTransaction *trans = malloc (sizeof (LowTransaction));
@@ -51,6 +57,8 @@ low_transaction_new (LowRepo *rpmdb, LowRepoSet *repos) {
 	trans->install = NULL;
 	trans->update = NULL;
 	trans->remove = NULL;
+
+	trans->unresolved = NULL;
 
 	return trans;
 }
@@ -78,6 +86,7 @@ low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove)
 
 	trans->remove = g_slist_append (trans->remove, to_remove);
 }
+
 /**
  * Check if a requires is in a list of provides
  */
@@ -95,7 +104,7 @@ low_transaction_string_in_list (const char *needle, char **haystack)
 	return FALSE;
 }
 
-static void
+static LowTransactionStatus
 low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 {
 	char **requires;
@@ -139,41 +148,62 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 			} else {
 				low_debug ("%s not provided by installed pkg",
 					   requires[i]);
+				return LOW_TRANSACTION_UNRESOLVABLE;
 			}
 
 
 		} else {
 			low_debug ("%s not provided by installed pkg",
 				   requires[i]);
+			return LOW_TRANSACTION_UNRESOLVABLE;
 		}
 	}
 
 	g_strfreev (provides);
 	g_strfreev (requires);
 	g_strfreev (files);
+
+	return LOW_TRANSACTION_OK;
 }
 
-static void
+static LowTransactionStatus
 low_transaction_check_all_requires (LowTransaction *trans)
 {
+	LowTransactionStatus status;
 	GSList *cur = trans->install;
 
 	while (cur != NULL) {
 		LowPackage *pkg = (LowPackage *) cur->data;
 
-		low_transaction_check_package_requires (trans, pkg);
+		status = low_transaction_check_package_requires (trans, pkg);
+
+		if (status == LOW_TRANSACTION_UNRESOLVABLE) {
+			low_debug_pkg ("Adding to unresolved", pkg);
+			trans->unresolved = g_slist_append (trans->unresolved,
+							    pkg);
+			trans->install = g_slist_remove (trans->install, pkg);
+			return status;
+		}
 
 		cur = cur->next;
 	}
+
+	return LOW_TRANSACTION_NO_CHANGE;
 }
 
 LowTransactionResult
 low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 {
+	LowTransactionStatus status;
 	low_debug ("Resolving transaction");
 
 	while (TRUE) {
-		low_transaction_check_all_requires (trans);
+		status = low_transaction_check_all_requires (trans);
+		if (status == LOW_TRANSACTION_UNRESOLVABLE) {
+			low_debug ("Unresolvable transaction");
+			return LOW_TRANSACTION_UNRESOLVED;
+		}
+
 		break;
 	}
 

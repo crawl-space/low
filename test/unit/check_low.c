@@ -106,7 +106,7 @@ START_TEST (test_low_repo_set_search_no_repos)
 	LowRepoSet *repo_set = malloc (sizeof (LowRepoSet));
 	repo_set->repos = g_hash_table_new (NULL, NULL);
 
-	iter = low_repo_set_search_provides (repo_set, "test_prov");
+	iter = low_repo_set_list_all (repo_set);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		i++;
 	}
@@ -134,7 +134,7 @@ START_TEST (test_low_repo_set_search_single_repo_no_packages)
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
-	iter = low_repo_set_search_provides (repo_set, "test_prov");
+	iter = low_repo_set_list_all (repo_set);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		i++;
 	}
@@ -169,7 +169,7 @@ START_TEST (test_low_repo_set_search_two_repos_no_packages)
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
-	iter = low_repo_set_search_provides (repo_set, "test_prov");
+	iter = low_repo_set_list_all (repo_set);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		i++;
 	}
@@ -199,7 +199,7 @@ START_TEST (test_low_repo_set_search_single_repo_one_package)
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
-	iter = low_repo_set_search_provides (repo_set, "test_prov");
+	iter = low_repo_set_list_all (repo_set);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		i++;
 	}
@@ -236,7 +236,7 @@ START_TEST (test_low_repo_set_search_two_repos_two_packages)
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
-	iter = low_repo_set_search_provides (repo_set, "test_prov");
+	iter = low_repo_set_list_all (repo_set);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		i++;
 	}

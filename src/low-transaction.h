@@ -27,6 +27,7 @@
 
 typedef enum _LowTransactionResult {
 	LOW_TRANSACTION_OK,
+	LOW_TRANSACTION_UNRESOLVED,
 	LOW_TRANSACTION_ERROR
 } LowTransactionResult;
 
@@ -37,6 +38,9 @@ typedef struct _LowTransaction {
 	GSList *install;
 	GSList *update;
 	GSList *remove;
+
+	/* Should this be on the struct or returned? */
+	GSList *unresolved;
 } LowTransaction;
 
 LowTransaction *	low_transaction_new 	(LowRepo *rpmdb,

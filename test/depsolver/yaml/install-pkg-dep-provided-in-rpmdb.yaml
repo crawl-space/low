@@ -1,0 +1,14 @@
+test: Install a single uninstalled whose dep is provided by a pkg in the rpmdb
+
+installed:
+    - package: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+
+available:
+    - package: { name: zsh, evr: 1.3.1-2, arch: i386 }
+      requires: [ bash ]
+
+transaction:
+    - install: { name: zsh }
+
+results:
+    - install: { name: zsh, evr: 1.3.1-2, arch: i386 }

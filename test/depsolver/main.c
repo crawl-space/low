@@ -201,26 +201,52 @@ parse_evr (const char *evr, char **epoch, char **version, char **release)
 	}
 }
 
+static char **
+parse_package_dep (GHashTable *hash, const char *dep_type)
+{
+	GSList *dep = g_hash_table_lookup (hash, dep_type);
+	char **deps = malloc (sizeof (char *) * (g_slist_length (dep) + 1));
+	int i = 0;
+
+	for (; dep != NULL; dep = dep->next) {
+		deps[i++] = dep->data;
+	}
+	deps[i] = NULL;
+
+	return deps;
+}
+
 static LowPackage *
 low_package_from_hash (GHashTable *hash)
 {
 	LowFakePackage *fake_pkg = malloc (sizeof (LowFakePackage));
 	LowPackage *pkg = (LowPackage *) fake_pkg;
+	GHashTable *nevra_hash;
 
 	/* Default empty deps for prco */
 	char **empty_dep = malloc (sizeof (char *));
 	empty_dep[0] = NULL;
 
-	hash = g_hash_table_lookup (hash, "package");
+	nevra_hash = g_hash_table_lookup (hash, "package");
 
-	pkg->name = g_hash_table_lookup (hash, "name");
-	pkg->arch = g_hash_table_lookup (hash, "arch");
+	pkg->name = g_hash_table_lookup (nevra_hash, "name");
+	pkg->arch = g_hash_table_lookup (nevra_hash, "arch");
 
-	parse_evr (g_hash_table_lookup (hash, "evr"), &pkg->epoch,
+	parse_evr (g_hash_table_lookup (nevra_hash, "evr"), &pkg->epoch,
 		   &pkg->version, &pkg->release);
 
-	fake_pkg->provides = empty_dep;
-	fake_pkg->requires = empty_dep;
+	/* Have to add the implicit provides on the pkg's name */
+	fake_pkg->provides = parse_package_dep (hash, "provides");
+	fake_pkg->provides =
+		realloc (fake_pkg->provides,
+			 (g_strv_length (fake_pkg->provides) + 1) *
+			 sizeof (char *));
+
+	fake_pkg->provides[g_strv_length (fake_pkg->provides) + 1] = NULL;
+	fake_pkg->provides[g_strv_length (fake_pkg->provides)] =
+		pkg->name;
+
+	fake_pkg->requires = parse_package_dep (hash, "requires");
 	fake_pkg->conflicts = empty_dep;
 	fake_pkg->obsoletes = empty_dep;
 	fake_pkg->files = empty_dep;
@@ -372,7 +398,8 @@ assert_package (GSList *list, GHashTable *hash)
 }
 
 static int
-compare_results (LowTransaction *trans, GSList *list)
+compare_results (LowTransactionResult trans_res, LowTransaction *trans,
+		 GSList *list)
 {
 	GSList *cur;
 	int res;
@@ -380,6 +407,7 @@ compare_results (LowTransaction *trans, GSList *list)
 	unsigned int expected_updates = 0;
 	unsigned int expected_installs = 0;
 	unsigned int expected_removals = 0;
+	unsigned int expected_unresolved = 0;
 
 	for (cur = list; cur != NULL; cur = cur->next) {
 		GHashTable *table = cur->data;
@@ -398,6 +426,10 @@ compare_results (LowTransaction *trans, GSList *list)
 			expected_removals++;
 			res = assert_package (trans->remove,
 					      g_hash_table_lookup (table, op));
+		} else if (!strcmp (op, "unresolved")) {
+			expected_unresolved++;
+			res = assert_package (trans->unresolved,
+					      g_hash_table_lookup (table, op));
 		} else {
 			printf ("Unknown operation %s\n", op);
 			exit (EXIT_FAILURE);
@@ -409,6 +441,24 @@ compare_results (LowTransaction *trans, GSList *list)
 	}
 
 	if (expected_installs != g_slist_length (trans->install)) {
+		printf ("Unexpected number of packages marked for install\n");
+		return 1;
+	}
+	if (expected_removals != g_slist_length (trans->remove)) {
+		printf ("Unexpected number of packages marked for remove\n");
+		return 1;
+	}
+	if (expected_updates != g_slist_length (trans->update)) {
+		printf ("Unexpected number of packages marked for update\n");
+		return 1;
+	}
+
+	if (trans_res == LOW_TRANSACTION_OK && expected_unresolved != 0) {
+		printf ("Expected transaction to fail but it succeeded\n");
+		return 1;
+	}
+	if (trans_res == LOW_TRANSACTION_UNRESOLVED && expected_installs != 0
+	    && expected_removals != 0 && expected_updates != 0) {
 		return 1;
 	}
 
@@ -422,6 +472,7 @@ run_test (GHashTable *test)
 	LowRepo *available;
 	LowRepoSet *repo_set;
 	LowTransaction *trans;
+	LowTransactionResult trans_res;
 	GSList *list;
 	int res;
 
@@ -444,10 +495,10 @@ run_test (GHashTable *test)
 	list = g_hash_table_lookup (test, "transaction");
 
 	schedule_transactions (trans, installed, available, list);
-	low_transaction_resolve (trans);
+	trans_res = low_transaction_resolve (trans);
 
 	list = g_hash_table_lookup (test, "results");
-	res = compare_results (trans, list);
+	res = compare_results (trans_res, trans, list);
 
 	low_transaction_free (trans);
 

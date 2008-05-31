@@ -50,9 +50,13 @@ low_fake_repo_shutdown (LowRepo *repo)
 	free (repo);
 }
 
+typedef gboolean (*LowFakePackageIterFilterFn) (LowPackage *pkg, gpointer data);
+
 typedef struct _LowFakePackageIter {
 	LowPackageIter super;
 	int position; /** current package in the list we're examining */
+	LowFakePackageIterFilterFn func;
+	gpointer data;
 } LowFakePackageIter;
 
 static LowPackageIter *
@@ -68,6 +72,13 @@ low_fake_repo_fake_iter_next (LowPackageIter *iter)
 
 	iter->pkg = repo_fake->packages[iter_fake->position++];
 
+	if (iter_fake->func != NULL) {
+		/* move on to the next rpm if this one fails the filter */
+		if (!(iter_fake->func) (iter->pkg, iter_fake->data)) {
+			return low_package_iter_next (iter);
+		}
+	}
+
 	return iter;
 }
 
@@ -80,6 +91,8 @@ low_fake_repo_list_all (LowRepo *repo)
 	iter->super.pkg = NULL;
 
 	iter->position = 0;
+	iter->func = NULL;
+	iter->data = NULL;
 
 	return (LowPackageIter *) iter;
 }
@@ -90,11 +103,35 @@ low_fake_repo_list_by_name (LowRepo *repo, const char *name G_GNUC_UNUSED)
 	return low_fake_repo_list_all (repo);
 }
 
-LowPackageIter *
-low_fake_repo_search_provides (LowRepo *repo,
-			       const char *provides G_GNUC_UNUSED)
+static gboolean
+low_fake_repo_search_provides_filter_fn (LowPackage *pkg, gpointer data)
 {
-	return low_fake_repo_list_all (repo);
+	int i;
+	char **deps = low_package_get_provides (pkg);
+	const char *querystr = (const char *) data;
+
+	for (i = 0; deps[i] != NULL; i++) {
+		if (!strcmp (querystr, deps[i])) {
+		    return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+LowPackageIter *
+low_fake_repo_search_provides (LowRepo *repo, const char *provides)
+{
+	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
+	iter->super.repo = repo;
+	iter->super.next_func = low_fake_repo_fake_iter_next;
+	iter->super.pkg = NULL;
+
+	iter->position = 0;
+	iter->func = low_fake_repo_search_provides_filter_fn;
+	iter->data = g_strdup (provides);
+
+	return (LowPackageIter *) iter;
 }
 
 LowPackageIter *
