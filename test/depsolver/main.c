@@ -267,13 +267,14 @@ low_repo_from_list (char *name, char *id, gboolean enabled, GSList *list)
 {
 	LowRepo *repo = low_fake_repo_initialize (name, id, enabled);
 	LowPackage **packages =
-		malloc (sizeof (LowPackage *) * g_slist_length (list));
+		malloc (sizeof (LowPackage *) * (g_slist_length (list) + 1));
 	GSList *cur;
 	int i;
 
 	for (cur = list, i = 0; cur != NULL; cur = cur->next, i++) {
 		packages[i] = low_package_from_hash (cur->data);
 	}
+	packages[i] = NULL;
 
 	((LowFakeRepo *) repo)->packages = packages;
 	return repo;

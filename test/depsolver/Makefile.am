@@ -32,7 +32,9 @@ test_depsolver_LDADD = \
 		$(SYCK_LIBS) \
 		${top_builddir}/src/low-debug.o \
 		${top_builddir}/src/low-package.o \
+		${top_builddir}/src/low-repo-set.o \
 		${top_builddir}/src/low-transaction.o \
+		${top_builddir}/test/unit/low-config-fake.o \
 		${top_builddir}/test/unit/low-fake-repo.o \
 		$(NULL)
 

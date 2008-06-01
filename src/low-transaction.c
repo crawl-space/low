@@ -64,22 +64,6 @@ low_transaction_new (LowRepo *rpmdb, LowRepoSet *repos) {
 	return trans;
 }
 
-void
-low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
-{
-	low_debug_pkg ("Adding for install", to_install);
-
-	trans->install = g_slist_append (trans->install, to_install);
-}
-
-void
-low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
-{
-	low_debug_pkg ("Adding for update", to_update);
-
-	trans->update = g_slist_append (trans->update, to_update);
-}
-
 static int
 low_transaction_pkg_compare_func (gconstpointer data1, gconstpointer data2)
 {
@@ -97,6 +81,31 @@ low_transaction_pkg_compare_func (gconstpointer data1, gconstpointer data2)
 		return 1;
 	}
 
+}
+
+gboolean
+low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
+{
+	if (!g_slist_find_custom (trans->install, to_install,
+				  low_transaction_pkg_compare_func)) {
+		low_debug_pkg ("Adding for install", to_install);
+		trans->install = g_slist_append (trans->install, to_install);
+
+		return TRUE;
+	} else {
+		low_debug_pkg ("Not adding already added pkg for install",
+			       to_install);
+
+		return FALSE;
+	}
+}
+
+void
+low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
+{
+	low_debug_pkg ("Adding for update", to_update);
+
+	trans->update = g_slist_append (trans->update, to_update);
 }
 
 gboolean
@@ -188,6 +197,7 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
 static LowTransactionStatus
 low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 {
+	LowTransactionStatus status;
 	char **requires;
 	char **provides;
 	char **files;
@@ -217,6 +227,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 		providing = low_package_iter_next (providing);
 		if (providing != NULL) {
 			low_debug_pkg ("Provided by", providing->pkg);
+			continue;
 		/* Check files if appropriate */
 		} else if (requires[i][0] == '/') {
 			providing =
@@ -226,18 +237,50 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 			providing = low_package_iter_next (providing);
 			if (providing != NULL) {
 				low_debug_pkg ("Provided by", providing->pkg);
+				continue;
+			} else {
+				low_debug ("%s not provided by installed pkg",
+					   requires[i]);
+				return LOW_TRANSACTION_UNRESOLVABLE;
+			}
+		}
+
+		/* Check available packages */
+		providing = low_repo_set_search_provides (trans->repos,
+							  requires[i]);
+		/* XXX memory leak */
+		providing = low_package_iter_next (providing);
+		if (providing != NULL) {
+			low_debug_pkg ("Provided by", providing->pkg);
+			/* XXX this might be an update, as well */
+			if (low_transaction_add_install (trans,
+							 providing->pkg)) {
+				status = LOW_TRANSACTION_PACKAGES_ADDED;
+			}
+			continue;
+		/* Check files if appropriate */
+		} else if (requires[i][0] == '/') {
+			providing = low_repo_set_search_files (trans->repos,
+							       requires[i]);
+			/* XXX memory leak */
+			providing = low_package_iter_next (providing);
+			if (providing != NULL) {
+				low_debug_pkg ("Provided by", providing->pkg);
+				if (low_transaction_add_install (trans, providing->pkg)) {
+					status = LOW_TRANSACTION_PACKAGES_ADDED;
+				}
+				continue;
 			} else {
 				low_debug ("%s not provided by installed pkg",
 					   requires[i]);
 				return LOW_TRANSACTION_UNRESOLVABLE;
 			}
 
-
-		} else {
-			low_debug ("%s not provided by installed pkg",
-				   requires[i]);
-			return LOW_TRANSACTION_UNRESOLVABLE;
 		}
+
+		low_debug ("%s not provided by installed pkg",
+			   requires[i]);
+		return LOW_TRANSACTION_UNRESOLVABLE;
 	}
 
 	g_strfreev (provides);
