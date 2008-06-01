@@ -163,6 +163,23 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
 		}
 	}
 
+	for (i = 0; files[i] != NULL; i++) {
+		LowPackageIter *iter;
+
+		low_debug ("Checking file %s", files[i]);
+
+		iter = low_repo_rpmdb_search_requires (trans->rpmdb,
+						       files[i]);
+		while (iter = low_package_iter_next (iter), iter != NULL) {
+			LowPackage *pkg = iter->pkg;
+
+			low_debug_pkg ("Adding for removal", pkg);
+			if (low_transaction_add_remove (trans, pkg)) {
+				status = LOW_TRANSACTION_PACKAGES_ADDED;
+			}
+		}
+	}
+
 	g_strfreev (provides);
 	g_strfreev (files);
 

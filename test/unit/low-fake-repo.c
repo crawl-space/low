@@ -134,11 +134,35 @@ low_fake_repo_search_provides (LowRepo *repo, const char *provides)
 	return (LowPackageIter *) iter;
 }
 
-LowPackageIter *
-low_fake_repo_search_requires (LowRepo *repo,
-			       const char *requires G_GNUC_UNUSED)
+static gboolean
+low_fake_repo_search_requires_filter_fn (LowPackage *pkg, gpointer data)
 {
-	return low_fake_repo_list_all (repo);
+	int i;
+	char **deps = low_package_get_requires (pkg);
+	const char *querystr = (const char *) data;
+
+	for (i = 0; deps[i] != NULL; i++) {
+		if (!strcmp (querystr, deps[i])) {
+		    return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+LowPackageIter *
+low_fake_repo_search_requires (LowRepo *repo, const char *requires)
+{
+	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
+	iter->super.repo = repo;
+	iter->super.next_func = low_fake_repo_fake_iter_next;
+	iter->super.pkg = NULL;
+
+	iter->position = 0;
+	iter->func = low_fake_repo_search_requires_filter_fn;
+	iter->data = g_strdup (requires);
+
+	return (LowPackageIter *) iter;
 }
 
 LowPackageIter *

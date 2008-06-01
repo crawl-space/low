@@ -1,0 +1,17 @@
+test: Remove an installed package whose files are required by another installed
+      package
+
+installed:
+    - package: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+      files: [ /bin/sh ]
+    - package: { name: zsh, evr: 1.3.1-2, arch: i386 }
+      requires: [ /bin/sh ]
+
+available: []
+
+transaction:
+    - remove: { name: bash }
+
+results:
+    - remove: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+    - remove: { name: zsh, evr: 1.3.1-2, arch: i386 }
