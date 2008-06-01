@@ -167,13 +167,11 @@ low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint_32 tag)
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
 	rpmdbMatchIterator iter;
 	Header header;
-	char *pkgid;
 	char **deps;
 	union rpm_entry entry;
 	int_32 type, count, i;
 
-	pkgid = g_strndup (pkg->id, 16);
-	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkgid, 0);
+	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator(iter);
 
 	rpmHeaderGetEntry(header, tag, &type, &entry.p, &count);
@@ -183,8 +181,6 @@ low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint_32 tag)
 		deps[i] = g_strdup (entry.list[i]);
 	}
 	deps[count] = NULL;
-
-	free (pkgid);
 
 	return deps;
 }
@@ -219,13 +215,11 @@ low_repo_rpmdb_get_files (LowRepo *repo, LowPackage *pkg)
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
 	rpmdbMatchIterator iter;
 	Header header;
-	char *pkgid;
 	char **files;
 	union rpm_entry index, dir, name;
 	int_32 type, count, i;
 
-	pkgid = g_strndup (pkg->id, 16);
-	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkgid, 0);
+	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator(iter);
 
 	rpmHeaderGetEntry(header, RPMTAG_DIRINDEXES, &type, &index.p, &count);
@@ -238,8 +232,6 @@ low_repo_rpmdb_get_files (LowRepo *repo, LowPackage *pkg)
 					    name.list[i]);
 	}
 	files[count] = NULL;
-
-	free (pkgid);
 
 	return files;
 }
