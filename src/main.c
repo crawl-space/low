@@ -592,6 +592,49 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 	return EXIT_SUCCESS;
 }
 
+static int
+command_remove (int argc G_GNUC_UNUSED, const char *argv[])
+{
+	LowRepo *rpmdb;
+	LowRepoSet *repos;
+	LowPackageIter *iter;
+	LowConfig *config;
+	LowTransaction *trans;
+	const char *provides = argv[0];
+	GSList *remove;
+
+	rpmdb = low_repo_rpmdb_initialize ();
+
+	config = low_config_initialize (rpmdb);
+	repos = low_repo_set_initialize_from_config (config);
+
+	trans = low_transaction_new (rpmdb, repos);
+
+	/* XXX just do the most EVR newest */
+	iter = low_repo_rpmdb_search_provides (rpmdb, provides);
+	iter = low_package_iter_next (iter);
+	low_transaction_add_remove (trans, iter->pkg);
+
+	while (iter = low_package_iter_next (iter), iter != NULL);
+
+	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
+		printf ("Error resolving transaction\n");
+		return EXIT_FAILURE;
+	}
+
+	remove = trans->remove;
+	while (remove != NULL) {
+		print_package_short (remove->data);
+		remove = remove->next;
+	}
+
+	low_transaction_free (trans);
+	low_repo_set_free (repos);
+	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
+
+	return EXIT_SUCCESS;
+}
 /**
  * Display the program version as specified in configure.ac
  */
@@ -637,7 +680,7 @@ const SubCommand commands[] = {
 	{ "install", "PACKAGE", "Install a package", command_install },
 	{ "update", "[PACKAGE]", "Update or install a package",
 	  NOT_IMPLEMENTED },
-	{ "remove", "PACKAGE", "Remove a package", NOT_IMPLEMENTED },
+	{ "remove", "PACKAGE", "Remove a package", command_remove },
 	{ "clean", NULL, "Remove cached data", NOT_IMPLEMENTED },
 	{ "info", "PACKAGE", "Display package details", command_info },
 	{ "list", "[all|installed|PACKAGE]", "Display a group of packages",

@@ -80,15 +80,39 @@ low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
 	trans->update = g_slist_append (trans->update, to_update);
 }
 
-void
+static int
+low_transaction_pkg_compare_func (gconstpointer data1, gconstpointer data2)
+{
+	const LowPackage *pkg1 = (LowPackage *) data1;
+	const LowPackage *pkg2 = (LowPackage *) data2;
+
+	if (!strcmp (pkg1->name, pkg2->name) &&
+	    !strcmp (pkg1->version, pkg2->version) &&
+	    !strcmp (pkg1->release, pkg2->release) &&
+	    !strcmp (pkg1->arch, pkg2->arch) &&
+	    (!(pkg1->epoch || pkg2->epoch) ||
+	     !strcmp (pkg1->epoch, pkg2->epoch))) {
+		return 0;
+	} else {
+		return 1;
+	}
+
+}
+
+gboolean
 low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove)
 {
-	if (!g_slist_find (trans->remove, to_remove)) {
+	if (!g_slist_find_custom (trans->remove, to_remove,
+				  low_transaction_pkg_compare_func)) {
 		low_debug_pkg ("Adding for removal", to_remove);
 		trans->remove = g_slist_append (trans->remove, to_remove);
+
+		return TRUE;
 	} else {
 		low_debug_pkg ("Not adding already added pkg for removal",
 			       to_remove);
+
+		return FALSE;
 	}
 }
 
@@ -133,9 +157,9 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
 			LowPackage *pkg = iter->pkg;
 
 			low_debug_pkg ("Adding for removal", pkg);
-			low_transaction_add_remove (trans, pkg);
-
-			status = LOW_TRANSACTION_PACKAGES_ADDED;
+			if (low_transaction_add_remove (trans, pkg)) {
+				status = LOW_TRANSACTION_PACKAGES_ADDED;
+			}
 		}
 	}
 
