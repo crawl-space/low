@@ -83,9 +83,13 @@ low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
 void
 low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove)
 {
-	low_debug_pkg ("Adding for removal", to_remove);
-
-	trans->remove = g_slist_append (trans->remove, to_remove);
+	if (!g_slist_find (trans->remove, to_remove)) {
+		low_debug_pkg ("Adding for removal", to_remove);
+		trans->remove = g_slist_append (trans->remove, to_remove);
+	} else {
+		low_debug_pkg ("Not adding already added pkg for removal",
+			       to_remove);
+	}
 }
 
 /**
@@ -105,6 +109,41 @@ low_transaction_string_in_list (const char *needle, char **haystack)
 	return FALSE;
 }
 
+static LowTransactionStatus
+low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
+{
+	LowTransactionStatus status = LOW_TRANSACTION_OK;
+	char **provides;
+	char **files;
+	int i;
+
+	low_debug_pkg ("Checking removal of", pkg);
+
+	provides = low_package_get_provides (pkg);
+	files = low_package_get_files (pkg);
+
+	for (i = 0; provides[i] != NULL; i++) {
+		LowPackageIter *iter;
+
+		low_debug ("Checking provides %s", provides[i]);
+
+		iter = low_repo_rpmdb_search_requires (trans->rpmdb,
+						       provides[i]);
+		while (iter = low_package_iter_next (iter), iter != NULL) {
+			LowPackage *pkg = iter->pkg;
+
+			low_debug_pkg ("Adding for removal", pkg);
+			low_transaction_add_remove (trans, pkg);
+
+			status = LOW_TRANSACTION_PACKAGES_ADDED;
+		}
+	}
+
+	g_strfreev (provides);
+	g_strfreev (files);
+
+	return status;
+}
 static LowTransactionStatus
 low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 {
@@ -185,6 +224,15 @@ low_transaction_check_all_requires (LowTransaction *trans)
 			trans->install = g_slist_remove (trans->install, pkg);
 			return status;
 		}
+
+		cur = cur->next;
+	}
+
+	cur = trans->remove;
+	while (cur != NULL) {
+		LowPackage *pkg = (LowPackage *) cur->data;
+
+		status = low_transaction_check_removal (trans, pkg);
 
 		cur = cur->next;
 	}
