@@ -238,10 +238,6 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 			if (providing != NULL) {
 				low_debug_pkg ("Provided by", providing->pkg);
 				continue;
-			} else {
-				low_debug ("%s not provided by installed pkg",
-					   requires[i]);
-				return LOW_TRANSACTION_UNRESOLVABLE;
 			}
 		}
 
@@ -270,10 +266,6 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 					status = LOW_TRANSACTION_PACKAGES_ADDED;
 				}
 				continue;
-			} else {
-				low_debug ("%s not provided by installed pkg",
-					   requires[i]);
-				return LOW_TRANSACTION_UNRESOLVABLE;
 			}
 
 		}
