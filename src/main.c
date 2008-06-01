@@ -613,9 +613,15 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 	/* XXX just do the most EVR newest */
 	iter = low_repo_rpmdb_search_provides (rpmdb, provides);
 	iter = low_package_iter_next (iter);
+
+	if (iter == NULL) {
+		printf ("No such package to remove\n");
+		return EXIT_FAILURE;
+	}
+
 	low_transaction_add_remove (trans, iter->pkg);
 
-	while (iter = low_package_iter_next (iter), iter != NULL);
+	while (iter = low_package_iter_next (iter), iter != NULL) ;
 
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		printf ("Error resolving transaction\n");
