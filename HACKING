@@ -23,3 +23,7 @@ just the return code.
 
 The unit tests (run with 'make check') Attempt to be true unit tests, not using
 any external resources, and verifying the unit under test.
+
+== Documentation ==
+
+Run 'make doxygen' and then view doxygen/html/index.html.
