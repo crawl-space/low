@@ -27,3 +27,9 @@ any external resources, and verifying the unit under test.
 == Documentation ==
 
 Run 'make doxygen' and then view doxygen/html/index.html.
+
+== Enable Debug Logging ==
+
+Set the "LOW_DEBUG" environment variable to 1. I.e.
+
+    LOW_DEBUG=1 low info zsh
