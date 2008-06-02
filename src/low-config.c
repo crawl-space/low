@@ -102,8 +102,9 @@ low_config_get_repo_names (LowConfig *config)
 {
 	unsigned int i, j;
 	gchar **repo_names = g_key_file_get_groups (config->config, NULL);
-	gchar **new_repo_names = g_malloc (sizeof (gchar *) *
-									   g_strv_length (repo_names) - 1);
+	gchar **new_repo_names =
+		g_malloc (sizeof (gchar *) * g_strv_length (repo_names));
+
 	j = 0;
 	for (i = 0; i < g_strv_length (repo_names); i++) {
 		if (strcmp (repo_names[i], "main")) {
