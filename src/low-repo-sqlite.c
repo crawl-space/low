@@ -342,14 +342,12 @@ low_repo_sqlite_search_details (LowRepo *repo, const char *querystr)
 }
 
 
-#define MAX_PROVIDES 1000
-
 static char **
 low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 {
-	/* XXX make this dynamic */
-	char **deps = malloc (sizeof (char *) * MAX_PROVIDES);
-	int i = 0;
+	size_t deps_size = 5;
+	char **deps = malloc (sizeof (char *) * deps_size);
+	unsigned int i = 0;
 
 	sqlite3_stmt *pp_stmt;
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
@@ -363,6 +361,10 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 		deps[i++] =
 			g_strdup ((const char *) sqlite3_column_text (pp_stmt,
 								      0));
+		if (i == deps_size - 1) {
+			deps_size *= 2;
+			deps = realloc (deps, sizeof (char *) * deps_size);
+		}
 	}
 
 	sqlite3_finalize (pp_stmt);
@@ -406,9 +408,9 @@ low_repo_sqlite_get_files (LowRepo *repo, LowPackage *pkg)
 	const char *stmt = "SELECT dirname, filenames FROM filelist "
 			   "WHERE pkgKey = :pkgKey";
 
-	/* XXX make this dynamic */
-	char **files = malloc (sizeof (char *) * MAX_PROVIDES);
-	int i = 0;
+	size_t files_size = 5;
+	char **files = malloc (sizeof (char *) * files_size);
+	unsigned int i = 0;
 
 	sqlite3_stmt *pp_stmt;
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
@@ -426,6 +428,11 @@ low_repo_sqlite_get_files (LowRepo *repo, LowPackage *pkg)
 		for (j = 0; names_split[j] != NULL; j++) {
 			files[i++] = g_strdup_printf ("%s/%s", dir,
 						      names_split[j]);
+			if (i == files_size - 1) {
+				files_size *= 2;
+				files = realloc (files,
+						 sizeof (char *) * files_size);
+			}
 		}
 
 		g_strfreev (names_split);
