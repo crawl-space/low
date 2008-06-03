@@ -95,6 +95,8 @@ low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
 	} else {
 		low_debug_pkg ("Not adding already added pkg for install",
 			       to_install);
+		/* XXX not the right place for this */
+		low_package_unref (to_install);
 
 		return FALSE;
 	}
@@ -120,6 +122,9 @@ low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove)
 	} else {
 		low_debug_pkg ("Not adding already added pkg for removal",
 			       to_remove);
+
+		/* XXX not the right place for this */
+		low_package_unref (to_remove);
 
 		return FALSE;
 	}
@@ -371,7 +376,20 @@ low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 }
 
 void
-low_transaction_free (LowTransaction *trans) {
+low_transaction_free (LowTransaction *trans)
+{
+	g_slist_foreach (trans->install, (GFunc) low_package_unref, NULL);
+	g_slist_foreach (trans->update, (GFunc) low_package_unref, NULL);
+	g_slist_foreach (trans->remove, (GFunc) low_package_unref, NULL);
+
+	g_slist_foreach (trans->unresolved, (GFunc) low_package_unref, NULL);
+
+	g_slist_free (trans->install);
+	g_slist_free (trans->update);
+	g_slist_free (trans->remove);
+
+	g_slist_free (trans->unresolved);
+
 	free (trans);
 }
 
