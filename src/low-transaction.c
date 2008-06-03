@@ -223,22 +223,34 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 		providing =
 			low_repo_rpmdb_search_provides (trans->rpmdb,
 							requires[i]);
-		/* XXX memory leak */
+		
 		providing = low_package_iter_next (providing);
 		if (providing != NULL) {
 			low_debug_pkg ("Provided by", providing->pkg);
 			low_package_free (providing->pkg);
+
+			/* XXX we just need a free function */
+			while (providing = low_package_iter_next (providing),
+				   providing != NULL) {
+					low_package_free (providing->pkg);
+			}
 			continue;
 		/* Check files if appropriate */
 		} else if (requires[i][0] == '/') {
 			providing =
 				low_repo_rpmdb_search_files (trans->rpmdb,
 							     requires[i]);
-			/* XXX memory leak */
+			
 			providing = low_package_iter_next (providing);
 			if (providing != NULL) {
 				low_debug_pkg ("Provided by", providing->pkg);
 				low_package_free (providing->pkg);
+				
+				/* XXX we just need a free function */
+				while (providing = low_package_iter_next (providing),
+					   providing != NULL) {
+						low_package_free (providing->pkg);
+				}
 				continue;
 			}
 		}
@@ -246,7 +258,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 		/* Check available packages */
 		providing = low_repo_set_search_provides (trans->repos,
 							  requires[i]);
-		/* XXX memory leak */
+		
 		providing = low_package_iter_next (providing);
 		if (providing != NULL) {
 			low_debug_pkg ("Provided by", providing->pkg);
@@ -255,18 +267,30 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 							 providing->pkg)) {
 				status = LOW_TRANSACTION_PACKAGES_ADDED;
 			}
+			/* XXX we just need a free function */
+			while (providing = low_package_iter_next (providing),
+				   providing != NULL) {
+					low_package_free (providing->pkg);
+			}
+
 			continue;
 		/* Check files if appropriate */
 		} else if (requires[i][0] == '/') {
 			providing = low_repo_set_search_files (trans->repos,
 							       requires[i]);
-			/* XXX memory leak */
+			
 			providing = low_package_iter_next (providing);
 			if (providing != NULL) {
 				low_debug_pkg ("Provided by", providing->pkg);
 				if (low_transaction_add_install (trans, providing->pkg)) {
 					status = LOW_TRANSACTION_PACKAGES_ADDED;
 				}
+				/* XXX we just need a free function */
+				while (providing = low_package_iter_next (providing),
+					   providing != NULL) {
+						low_package_free (providing->pkg);
+				}
+
 				continue;
 			}
 
