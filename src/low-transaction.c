@@ -227,6 +227,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 		providing = low_package_iter_next (providing);
 		if (providing != NULL) {
 			low_debug_pkg ("Provided by", providing->pkg);
+			low_package_free (providing->pkg);
 			continue;
 		/* Check files if appropriate */
 		} else if (requires[i][0] == '/') {
@@ -237,6 +238,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 			providing = low_package_iter_next (providing);
 			if (providing != NULL) {
 				low_debug_pkg ("Provided by", providing->pkg);
+				low_package_free (providing->pkg);
 				continue;
 			}
 		}
