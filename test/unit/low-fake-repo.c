@@ -71,6 +71,7 @@ low_fake_repo_fake_iter_next (LowPackageIter *iter)
 	}
 
 	iter->pkg = repo_fake->packages[iter_fake->position++];
+	low_package_ref (iter->pkg);
 
 	if (iter_fake->func != NULL) {
 		/* move on to the next rpm if this one fails the filter */

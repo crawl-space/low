@@ -183,7 +183,7 @@ print_all_packages (LowPackageIter *iter, gboolean show_all)
 		LowPackage *pkg = iter->pkg;
 		print_package (pkg, show_all);
 
-		low_package_free (pkg);
+		low_package_unref (pkg);
 	}
 }
 
@@ -246,7 +246,7 @@ print_all_packages_short (LowPackageIter *iter)
 		LowPackage *pkg = iter->pkg;
 		print_package_short (pkg);
 
-		low_package_free (pkg);
+		low_package_unref (pkg);
 	}
 }
 
@@ -532,7 +532,7 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 		free (full_url);
 		free (local_file);
 
-		low_package_free (pkg);
+		low_package_unref (pkg);
 	}
 
 	if (!found_pkg) {
@@ -573,7 +573,7 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 
 	/* XXX get rid of this nastiness somehow */
 	while (iter = low_package_iter_next (iter), iter != NULL) {
-		low_package_free (iter->pkg);
+		low_package_unref (iter->pkg);
 	}
 
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {

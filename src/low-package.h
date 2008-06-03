@@ -58,6 +58,8 @@ typedef char **	(*LowPackageGetFiles) 		(LowPackage *);
  * A struct representing an RPM package.
  */
 struct _LowPackage {
+	unsigned int ref_count;
+
 	signature id; /**< Repo type dependent package identifier */
 
 	char *name;
@@ -92,7 +94,9 @@ struct _LowPackageIter {
 	LowPackageIterNextFunc next_func;
 };
 
-void 			low_package_free 	(LowPackage *pkg);
+LowPackage * 		low_package_ref_init 	(LowPackage *pkg);
+LowPackage * 		low_package_ref 	(LowPackage *pkg);
+void 			low_package_unref 	(LowPackage *pkg);
 
 char **			low_package_get_provides 	(LowPackage *pkg);
 char **			low_package_get_requires 	(LowPackage *pkg);

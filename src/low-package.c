@@ -24,7 +24,7 @@
 #include <glib.h>
 #include "low-package.h"
 
-void
+static void
 low_package_free (LowPackage *pkg)
 {
 	free (pkg->id);
@@ -42,6 +42,30 @@ low_package_free (LowPackage *pkg)
 	free (pkg->location_href);
 
 	free (pkg);
+}
+
+LowPackage *
+low_package_ref_init (LowPackage *pkg)
+{
+	pkg->ref_count = 1;
+
+	return pkg;
+}
+LowPackage *
+low_package_ref (LowPackage *pkg)
+{
+	pkg->ref_count++;
+
+	return pkg;
+}
+
+void
+low_package_unref (LowPackage *pkg)
+{
+	pkg->ref_count--;
+	if (pkg->ref_count == 0) {
+		low_package_free (pkg);
+	}
 }
 
 char **

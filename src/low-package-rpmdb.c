@@ -62,6 +62,8 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	LowPackage *pkg = malloc (sizeof (LowPackage));
 
+	low_package_ref_init (pkg);
+
 	pkg->id = id.p;
 	pkg->name = strdup (name.string);
 	pkg->epoch = g_strdup (epoch.string);

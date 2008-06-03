@@ -30,6 +30,8 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	int i = 0;
 	LowPackage *pkg = malloc (sizeof (LowPackage));
 
+	low_package_ref_init (pkg);
+
 	/* XXX kind of hacky */
 	pkg->id = malloc (sizeof (int));
 	*((int *) pkg->id) = sqlite3_column_int (pp_stmt, i++);

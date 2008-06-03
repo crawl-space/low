@@ -223,6 +223,9 @@ low_package_from_hash (GHashTable *hash)
 	LowPackage *pkg = (LowPackage *) fake_pkg;
 	GHashTable *nevra_hash;
 
+	// We always keep a ref to the test pkgs
+	low_package_ref_init (pkg);
+
 	/* Default empty deps for prco */
 	char **empty_dep = malloc (sizeof (char *));
 	empty_dep[0] = NULL;
@@ -303,23 +306,23 @@ find_package (LowRepo *repo, GHashTable *hash)
 		LowPackage *pkg = iter->pkg;
 
 		if (strcmp (name, pkg->name)) {
-		//	low_package_free (pkg);
+			low_package_unref (pkg);
 			continue;
 		}
 		if (arch && strcmp (arch, pkg->arch)) {
-		//	low_package_free (pkg);
+			low_package_unref (pkg);
 			continue;
 		}
 		if (epoch && strcmp (epoch, pkg->epoch)) {
-		//	low_package_free (pkg);
+			low_package_unref (pkg);
 			continue;
 		}
 		if (version && strcmp (version, pkg->version)) {
-		//	low_package_free (pkg);
+			low_package_unref (pkg);
 			continue;
 		}
 		if (release && strcmp (release, pkg->release)) {
-		//	low_package_free (pkg);
+			low_package_unref (pkg);
 			continue;
 		}
 
