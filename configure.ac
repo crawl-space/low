@@ -99,7 +99,7 @@ AC_CHECK_HEADER(syck.h,
             AC_CHECK_LIB(syck, syck_new_parser,
                  [HAVE_YAML=yes
                   SYCK_LIBS="-lsyck"
-                 ]))
+                 ],HAVE_YAML=no),HAVE_YAML=no)
 AM_CONDITIONAL(HAVE_YAML, test x$HAVE_YAML = xyes)
 AC_SUBST(SYCK_LIBS)
 
