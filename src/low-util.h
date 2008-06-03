@@ -22,8 +22,12 @@
 #ifndef _LOW_UTIL_H_
 #define _LOW_UTIL_H_
 
+#include <glib.h>
+
 char ** low_util_word_wrap (const char *text, int width);
 
+gboolean low_util_parse_nevra (const char *nevra, char **name, char **epoch,
+			       char **version, char **release, char **arch);
 #endif /* _LOW_UTIL_H_ */
 
 /* vim: set ts=8 sw=8 noet: */

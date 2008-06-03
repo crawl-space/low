@@ -97,6 +97,28 @@ START_TEST (test_low_util_word_wrap_wrap_one_line_to_two)
 }
 END_TEST
 
+START_TEST (test_low_util_parse_nevra_empty_string)
+{
+	const char *input = "";
+	gboolean result = low_util_parse_nevra (input, NULL, NULL, NULL, NULL,
+						NULL);
+	fail_unless (!result, "parse_nevra did not error on an empty string");
+}
+END_TEST
+
+START_TEST (test_low_util_parse_nevra_just_name)
+{
+	const char *input = "zsh";
+	char *name;
+	gboolean result = low_util_parse_nevra (input, &name, NULL, NULL, NULL,
+						NULL);
+	fail_unless (result, "parse_nevra did not errored");
+	fail_unless (!strcmp ("zsh", name),
+		     "parse_nevra did not parse the name");
+}
+END_TEST
+
+
 START_TEST (test_low_repo_set_search_no_repos)
 {
 	int i = 0;
@@ -264,6 +286,8 @@ low_suite(void)
 	tc = tcase_create ("low-util");
 	tcase_add_test (tc, test_low_util_word_wrap_no_wrap_needed);
 	tcase_add_test (tc, test_low_util_word_wrap_wrap_one_line_to_two);
+	tcase_add_test (tc, test_low_util_parse_nevra_empty_string);
+	tcase_add_test (tc, test_low_util_parse_nevra_just_name);
 	suite_add_tcase (s, tc);
 
 	tc = tcase_create ("low-repo-set");
