@@ -27,6 +27,7 @@
 void
 low_package_free (LowPackage *pkg)
 {
+	free (pkg->id);
 	free (pkg->name);
 	free (pkg->version);
 	free (pkg->release);
