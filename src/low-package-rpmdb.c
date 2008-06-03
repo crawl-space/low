@@ -88,6 +88,8 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	pkg->get_files = low_rpmdb_package_get_files;
 
+	headerFree (header);
+
 	return pkg;
 }
 
