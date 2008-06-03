@@ -123,6 +123,7 @@ low_repo_set_package_iter_next (LowPackageIter *iter)
 
 	/* XXX When we have no repos. this is ugly. */
 	if (current_repo == NULL) {
+		free (iter_set->repo_iter);
 		free (iter);
 		return NULL;
 	}
@@ -150,6 +151,7 @@ low_repo_set_package_iter_next (LowPackageIter *iter)
 	}
 
 	if (current_repo_iter == NULL) {
+		free (iter_set->repo_iter);
 		free (iter);
 		return NULL;
 	}

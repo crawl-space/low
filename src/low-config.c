@@ -155,9 +155,12 @@ low_config_replace_macros (LowConfig *config, const char *value)
 
 	replaced = low_config_replace_single_macro (value, "$releasever",
 						    iter->pkg->version);
+	low_package_free (iter->pkg);
 
 	/* Do we have to run through it all to free everything? */
-	while (iter = low_package_iter_next (iter), iter != NULL) ;
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		low_package_free (iter->pkg);
+	}
 
 	old_replaced = replaced;
 	replaced = low_config_replace_single_macro (old_replaced, "$basearch",

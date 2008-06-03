@@ -571,7 +571,10 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 	iter = low_package_iter_next (iter);
 	low_transaction_add_install (trans, iter->pkg);
 
-	while (iter = low_package_iter_next (iter), iter != NULL);
+	/* XXX get rid of this nastiness somehow */
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		low_package_free (iter->pkg);
+	}
 
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		printf ("Error resolving transaction\n");
