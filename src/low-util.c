@@ -100,6 +100,7 @@ gboolean
 low_util_parse_nevra (const char *nevra, char **name G_GNUC_UNUSED, char **epoch G_GNUC_UNUSED,
 		      char **version G_GNUC_UNUSED, char **release G_GNUC_UNUSED, char **arch G_GNUC_UNUSED)
 {
+	/* XXX fill me in */
 	if (strlen (nevra) == 0) {
 		return FALSE;
 	}
