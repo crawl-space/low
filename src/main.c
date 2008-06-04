@@ -624,7 +624,9 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 
 	low_transaction_add_remove (trans, iter->pkg);
 
-	while (iter = low_package_iter_next (iter), iter != NULL) ;
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		low_package_unref (iter->pkg);
+	}
 
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		printf ("Error resolving transaction\n");
