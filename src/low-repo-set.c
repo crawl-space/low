@@ -66,6 +66,7 @@ void
 low_repo_set_free (LowRepoSet *repo_set)
 {
 	g_hash_table_foreach (repo_set->repos, low_repo_set_free_repo, NULL);
+	g_hash_table_unref (repo_set->repos);
 	free (repo_set);
 }
 

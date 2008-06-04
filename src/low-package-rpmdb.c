@@ -116,6 +116,7 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 	if (iter_rpmdb->func != NULL) {
 		/* move on to the next rpm if this one fails the filter */
 		if (!(iter_rpmdb->func) (iter->pkg, iter_rpmdb->filter_data)) {
+			low_package_unref (iter->pkg);
 			return low_package_iter_next (iter);
 		}
 	}
