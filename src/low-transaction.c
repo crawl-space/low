@@ -347,6 +347,82 @@ low_transaction_check_all_requires (LowTransaction *trans)
 	return LOW_TRANSACTION_NO_CHANGE;
 }
 
+static LowTransactionStatus
+low_transaction_check_all_conflicts (LowTransaction *trans)
+{
+	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
+	GSList *cur = trans->install;
+
+	while (cur != NULL) {
+		LowPackage *pkg = (LowPackage *) cur->data;
+		char **provides = low_package_get_provides (pkg);
+		char **conflicts = low_package_get_conflicts (pkg);
+		int i;
+
+		low_debug_pkg ("Checking for installed pkgs that conflict",
+			       pkg);
+		for (i = 0; provides[i] != NULL; i++) {
+			LowPackageIter *iter;
+			iter =
+				low_repo_rpmdb_search_conflicts (trans->rpmdb,
+								 provides[i]);
+
+			iter = low_package_iter_next (iter);
+			if (iter != NULL) {
+				low_debug_pkg ("Conflicted by", iter->pkg);
+				low_package_unref (iter->pkg);
+
+				/* XXX we just need a free function */
+				while (iter = low_package_iter_next (iter),
+				       iter != NULL) {
+					low_package_unref (iter->pkg);
+				}
+				status = LOW_TRANSACTION_UNRESOLVABLE;
+				break;
+			}
+
+		}
+
+		for (i = 0; conflicts[i] != NULL; i++) {
+			LowPackageIter *iter;
+			iter =
+				low_repo_rpmdb_search_provides (trans->rpmdb,
+								conflicts[i]);
+
+			iter = low_package_iter_next (iter);
+			if (iter != NULL) {
+				low_debug_pkg ("Conflicts with", iter->pkg);
+				low_package_unref (iter->pkg);
+
+				/* XXX we just need a free function */
+				while (iter = low_package_iter_next (iter),
+				       iter != NULL) {
+					low_package_unref (iter->pkg);
+				}
+				status = LOW_TRANSACTION_UNRESOLVABLE;
+				break;
+			}
+
+		}
+
+		g_strfreev (provides);
+		g_strfreev (conflicts);
+
+		if (status == LOW_TRANSACTION_UNRESOLVABLE) {
+			low_debug_pkg ("Adding to unresolved", pkg);
+			trans->unresolved = g_slist_append (trans->unresolved,
+							    pkg);
+			trans->install = g_slist_remove (trans->install, pkg);
+			return status;
+		}
+
+
+		cur = cur->next;
+	}
+
+	return status;
+}
+
 LowTransactionResult
 low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 {
@@ -359,6 +435,12 @@ low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 	gettimeofday (&start, NULL);
 
 	while (TRUE) {
+		status = low_transaction_check_all_conflicts (trans);
+		if (status == LOW_TRANSACTION_UNRESOLVABLE) {
+			low_debug ("Unresolvable transaction");
+			return LOW_TRANSACTION_UNRESOLVED;
+		}
+
 		status = low_transaction_check_all_requires (trans);
 		if (status == LOW_TRANSACTION_UNRESOLVABLE) {
 			low_debug ("Unresolvable transaction");

@@ -250,8 +250,8 @@ low_package_from_hash (GHashTable *hash)
 		pkg->name;
 
 	fake_pkg->requires = parse_package_dep (hash, "requires");
-	fake_pkg->conflicts = empty_dep;
-	fake_pkg->obsoletes = empty_dep;
+	fake_pkg->conflicts = parse_package_dep (hash, "conflicts");
+	fake_pkg->obsoletes = parse_package_dep (hash, "obsoletes");
 	fake_pkg->files = parse_package_dep (hash, "files");
 
 	pkg->get_provides = low_fake_package_get_provides;
