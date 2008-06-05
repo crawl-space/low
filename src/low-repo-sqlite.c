@@ -26,10 +26,15 @@
 #include <unistd.h>
 #include "low-package-sqlite.h"
 #include "low-repo-sqlite.h"
-
+/*
 #define SELECT_FIELDS_FROM "SELECT p.pkgKey, p.name, p.arch, p.version, " \
 			   "p.release, p.epoch, p.size_package, p.summary, " \
 			   "p.description, p.url, p.rpm_license, " \
+			   "p.location_href FROM "
+*/
+
+#define SELECT_FIELDS_FROM "SELECT p.pkgKey, p.name, p.arch, p.version, " \
+			   "p.release, p.epoch, p.size_package, " \
 			   "p.location_href FROM "
 
 typedef struct _LowRepoSqlite {
@@ -341,6 +346,38 @@ low_repo_sqlite_search_details (LowRepo *repo, const char *querystr)
 	return (LowPackageIter *) iter;
 }
 
+LowPackageDetails *
+low_repo_sqlite_get_details (LowRepo *repo, LowPackage *pkg)
+{
+	const char *stmt = "SELECT summary, description, url, rpm_license "
+			   "FROM packages where pkgKey=:pkgKey";
+
+	LowPackageDetails *details = malloc (sizeof (LowPackageDetails));
+	int i = 0;
+
+	sqlite3_stmt *pp_stmt;
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
+			 NULL);
+	sqlite3_bind_int (pp_stmt, 1, *((int *) pkg->id));
+
+	sqlite3_step(pp_stmt);
+
+	details->summary =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	details->description =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+
+	details->url =
+		g_strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	details->license =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+
+	sqlite3_finalize (pp_stmt);
+
+	return details;
+}
 
 static char **
 low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)

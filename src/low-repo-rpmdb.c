@@ -125,13 +125,23 @@ low_repo_rpmdb_search_details_filter_fn (LowPackage *pkg, gpointer data)
 	gchar *querystr = (gchar *) data;
 
 	/* url can be NULL, so check first. */
-	if (strstr (pkg->name, querystr) ||
-	    strstr (pkg->summary, querystr) ||
-	    strstr (pkg->description, querystr) ||
-	    (pkg->url != NULL && strstr (pkg->url, querystr))) {
+	if (strstr (pkg->name, querystr)) {
 		return TRUE;
 	} else {
-		return FALSE;
+		gboolean res;
+		LowPackageDetails *details = low_package_get_details (pkg);
+
+		if (strstr (details->summary, querystr) ||
+		    strstr (details->description, querystr) ||
+		    (details->url != NULL && strstr (details->url, querystr))) {
+			res = TRUE;
+		} else {
+			res = FALSE;
+		}
+
+		low_package_details_free (details);
+
+		return res;
 	}
 }
 
@@ -160,6 +170,37 @@ union rpm_entry {
 	uint_32 *flags;
 	uint_32 *integer;
 };
+
+LowPackageDetails *
+low_repo_rpmdb_get_details (LowRepo *repo, LowPackage *pkg)
+{
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
+	rpmdbMatchIterator iter;
+	Header header;
+	LowPackageDetails *details = malloc (sizeof (LowPackageDetails));
+	union rpm_entry summary, description, url, license;
+	int_32 type, count;
+
+	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
+	header = rpmdbNextIterator (iter);
+
+	rpmHeaderGetEntry(header, RPMTAG_SUMMARY, &type, &summary.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_DESCRIPTION, &type, &description.p,
+			  &count);
+	rpmHeaderGetEntry(header, RPMTAG_URL, &type, &url.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_LICENSE, &type, &license.p, &count);
+
+	/* XXX need to confirm that we don't need to dup these */
+	details->summary = summary.string;
+	details->description = description.string;
+
+	details->url = g_strdup (url.string);
+	details->license = strdup (license.string);
+
+	rpmdbFreeIterator (iter);
+
+	return details;
+}
 
 static char **
 low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint_32 tag)

@@ -41,6 +41,8 @@ typedef struct _LowPackageIterRpmdb {
 
 LowPackageIter * low_package_iter_rpmdb_next (LowPackageIter *iter);
 
+LowPackageDetails *	low_rpmdb_package_get_details	(LowPackage *pkg);
+
 char **		low_rpmdb_package_get_provides		(LowPackage *pkg);
 char **		low_rpmdb_package_get_requires		(LowPackage *pkg);
 char **		low_rpmdb_package_get_conflicts 	(LowPackage *pkg);

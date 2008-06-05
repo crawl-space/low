@@ -34,11 +34,6 @@ low_package_free (LowPackage *pkg)
 	g_free (pkg->epoch);
 	free (pkg->arch);
 
-	free (pkg->summary);
-	free (pkg->description);
-
-	free (pkg->url);
-	free (pkg->license);
 	free (pkg->location_href);
 
 	free (pkg);
@@ -66,6 +61,24 @@ low_package_unref (LowPackage *pkg)
 	if (pkg->ref_count == 0) {
 		low_package_free (pkg);
 	}
+}
+
+void
+low_package_details_free (LowPackageDetails *details)
+{
+	free (details->summary);
+	free (details->description);
+
+	free (details->url);
+	free (details->license);
+
+	free (details);
+}
+
+LowPackageDetails *
+low_package_get_details (LowPackage *pkg)
+{
+	return (pkg->get_details) (pkg);
 }
 
 char **

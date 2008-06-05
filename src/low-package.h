@@ -47,9 +47,18 @@ typedef struct _LowPackageDependency {
 	char *evr; /**< The epoch:version-release of the depenency */
 } LowPackageDependency;
 
+typedef struct _LowPackageDetails {
+	char *summary;
+	char *description;
+	char *url; /**< Optional URL for the package */
+	char *license;
+} LowPackageDetails;
+
 typedef struct _LowPackage LowPackage;
 
 typedef void * signature;
+
+typedef LowPackageDetails *	(*LowPackageGetDetails)	(LowPackage *);
 
 typedef char **	(*LowPackageGetDependency)	(LowPackage *);
 typedef char **	(*LowPackageGetFiles) 		(LowPackage *);
@@ -69,12 +78,10 @@ struct _LowPackage {
 	char *epoch;
 
 	size_t size;
-	LowRepo *repo;
-	char *summary;
-	char *description;
-	char *url; /**< Optional URL for the package */
-	char *license;
 	char *location_href;
+	LowRepo *repo;
+
+	LowPackageGetDetails get_details;
 
 	LowPackageGetDependency get_provides;
 	LowPackageGetDependency get_requires;
@@ -98,6 +105,8 @@ LowPackage * 		low_package_ref_init 	(LowPackage *pkg);
 LowPackage * 		low_package_ref 	(LowPackage *pkg);
 void 			low_package_unref 	(LowPackage *pkg);
 
+LowPackageDetails *	low_package_get_details 	(LowPackage *pkg);
+
 char **			low_package_get_provides 	(LowPackage *pkg);
 char **			low_package_get_requires 	(LowPackage *pkg);
 char **			low_package_get_conflicts 	(LowPackage *pkg);
@@ -112,6 +121,9 @@ LowPackageDependency *	low_package_dependency_new 		(const char *name,
 								 const char *evr);
 LowPackageDependency * 	low_package_dependency_new_from_string 	(const char *depstr);
 void 			low_package_dependency_free 		(LowPackageDependency *dependency);
+
+
+void 	low_package_details_free 	(LowPackageDetails *details);
 
 #endif /* _LOW_PACKAGE_H_ */
 

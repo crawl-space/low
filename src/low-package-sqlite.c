@@ -48,17 +48,10 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	pkg->size = sqlite3_column_int (pp_stmt, i++);
 	pkg->repo = repo;
 
-	/* We strdup these because rpm does not return const strings */
-	pkg->summary =
-		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-	pkg->description =
-		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-
-	pkg->url = g_strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-	pkg->license =
-		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
 	pkg->location_href =
 		strdup ((const char *) sqlite3_column_text(pp_stmt, i++));
+
+	pkg->get_details = low_sqlite_package_get_details;
 
 	pkg->get_provides = low_sqlite_package_get_provides;
 	pkg->get_requires = low_sqlite_package_get_requires;
@@ -85,6 +78,12 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 												 iter->repo);
 
 	return iter;
+}
+
+LowPackageDetails *
+low_sqlite_package_get_details (LowPackage *pkg)
+{
+	return low_repo_sqlite_get_details (pkg->repo, pkg);
 }
 
 char **

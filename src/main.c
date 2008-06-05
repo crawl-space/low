@@ -128,6 +128,8 @@ print_files (char **files)
 static void
 print_package (LowPackage *pkg, gboolean show_all)
 {
+	LowPackageDetails *details = low_package_get_details (pkg);
+
 	printf ("Name        : %s\n", pkg->name);
 	printf ("Arch        : %s\n", pkg->arch);
 	printf ("Version     : %s\n", pkg->version);
@@ -139,13 +141,15 @@ print_package (LowPackage *pkg, gboolean show_all)
 	printf ("Repo        : %s\n", pkg->repo->id);
 
 	printf ("Summary     : ");
-	wrap_and_print (pkg->summary);
+	wrap_and_print (details->summary);
 
-	printf ("URL         : %s\n", pkg->url ? pkg->url : "");
-	printf ("License     : %s\n", pkg->license);
+	printf ("URL         : %s\n", details->url ? details->url : "");
+	printf ("License     : %s\n", details->license);
 
 	printf ("Description : ");
-	wrap_and_print (pkg->description);
+	wrap_and_print (details->description);
+
+	low_package_details_free (details);
 
 	if (show_all) {
 		char **deps;

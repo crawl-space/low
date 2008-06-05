@@ -37,7 +37,7 @@ static LowPackage *
 low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 {
 	union rpm_entry id, name, epoch, version, release, arch;
-	union rpm_entry size, summary, description, url, license;
+	union rpm_entry size;
 	int_32 type, count;
 
 	rpmHeaderGetEntry(header, RPMTAG_NAME, &type, &name.p, &count);
@@ -54,11 +54,6 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	rpmHeaderGetEntry(header, RPMTAG_ARCH, &type, &arch.p, &count);
 
 	rpmHeaderGetEntry(header, RPMTAG_SIZE, &type, &size.p, &count);
-	rpmHeaderGetEntry(header, RPMTAG_SUMMARY, &type, &summary.p, &count);
-	rpmHeaderGetEntry(header, RPMTAG_DESCRIPTION, &type, &description.p,
-			  &count);
-	rpmHeaderGetEntry(header, RPMTAG_URL, &type, &url.p, &count);
-	rpmHeaderGetEntry(header, RPMTAG_LICENSE, &type, &license.p, &count);
 
 	LowPackage *pkg = malloc (sizeof (LowPackage));
 
@@ -74,14 +69,10 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	pkg->size = *size.integer;
 	pkg->repo = repo;
 
-	/* XXX need to confirm that we don't need to dup these */
-	pkg->summary = summary.string;
-	pkg->description = description.string;
-
-	pkg->url = g_strdup (url.string);
-	pkg->license = strdup (license.string);
 	/* installed packages can't be downloaded. */
 	pkg->location_href = NULL;
+
+	pkg->get_details = low_rpmdb_package_get_details;
 
 	pkg->get_provides = low_rpmdb_package_get_provides;
 	pkg->get_requires = low_rpmdb_package_get_requires;
@@ -122,6 +113,12 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 	}
 
 	return iter;
+}
+
+LowPackageDetails *
+low_rpmdb_package_get_details (LowPackage *pkg)
+{
+	return low_repo_rpmdb_get_details (pkg->repo, pkg);
 }
 
 char **
