@@ -10,10 +10,9 @@
 - depsolving
 - gpg key checking
 - globbing search for command line 'low search'
-- remove -lcurl from src/Makefile.am and add proper autotools macro
 - low dump [repo|all|PACKAGE] - output full package details in a format
   we can parse
-- unit tests for low-repo-set (using fake sqlite repos)
+- more unit tests for low-repo-set (using fake sqlite repos)
 - investigate using g_slice instead of malloc and friends
 - maybe lazy-load non-nevra package data
 - lazy load PRCO and file lists
