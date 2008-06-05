@@ -347,6 +347,33 @@ low_transaction_check_all_requires (LowTransaction *trans)
 	return LOW_TRANSACTION_NO_CHANGE;
 }
 
+static LowPackage *
+low_transaction_search_provides (GSList *list, char *query)
+{
+	/*
+	 * XXX would it be faster to search the repos then compare against
+	 *     our transaction?
+	 */
+	GSList *cur;
+
+	for (cur = list; cur != NULL; cur = cur->next) {
+		char **provides = low_package_get_provides (cur->data);
+		int i;
+
+		for (i = 0; provides[i] != NULL; i++) {
+			if (!strcmp (query, provides[i])) {
+				g_strfreev (provides);
+				return cur->data;
+			}
+		}
+
+		g_strfreev (provides);
+
+	}
+
+	return NULL;
+}
+
 static LowTransactionStatus
 low_transaction_check_all_conflicts (LowTransaction *trans)
 {
@@ -399,6 +426,37 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 				       iter != NULL) {
 					low_package_unref (iter->pkg);
 				}
+				status = LOW_TRANSACTION_UNRESOLVABLE;
+				break;
+			}
+
+		}
+
+		/*
+		 * We only need to search provides here, because we'll look
+		 * at the other pkg anyway.
+		 */
+		low_debug_pkg ("Checking for other installing pkgs that conflict",
+			       pkg);
+
+		for (i = 0; conflicts[i] != NULL; i++) {
+			LowPackage *conflicting =
+				low_transaction_search_provides (trans->install,
+								 conflicts[i]);
+			if (conflicting) {
+				low_debug_pkg ("Conflicted by installing",
+					   conflicting);
+
+				low_debug_pkg ("Adding to unresolved",
+					       conflicting);
+				trans->unresolved =
+					g_slist_append (trans->unresolved,
+							conflicting);
+				trans->install =
+					g_slist_remove (trans->install,
+							conflicting);
+
+
 				status = LOW_TRANSACTION_UNRESOLVABLE;
 				break;
 			}

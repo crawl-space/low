@@ -1,0 +1,16 @@
+test: Attempt to install two packages where one conflicts with the other.
+
+installed:
+    - package: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+
+available:
+    - package: { name: zsh, evr: 1.3.1-2, arch: i386 }
+      conflicts: [ fish ]
+    - package: { name: fish, evr: 1.0-1, arch: i386 }
+
+transaction:
+    - install: { name: zsh }
+    - install: { name: fish }
+
+results:
+    - unresolved: { name: zsh, evr: 1.3.1-2, arch: i386 }
