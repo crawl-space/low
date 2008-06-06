@@ -108,11 +108,11 @@ static gboolean
 low_fake_repo_search_provides_filter_fn (LowPackage *pkg, gpointer data)
 {
 	int i;
-	char **deps = low_package_get_provides (pkg);
+	LowPackageDependency **deps = low_package_get_provides (pkg);
 	const char *querystr = (const char *) data;
 
 	for (i = 0; deps[i] != NULL; i++) {
-		if (!strcmp (querystr, deps[i])) {
+		if (!strcmp (querystr, deps[i]->name)) {
 		    return TRUE;
 		}
 	}
@@ -139,11 +139,11 @@ static gboolean
 low_fake_repo_search_requires_filter_fn (LowPackage *pkg, gpointer data)
 {
 	int i;
-	char **deps = low_package_get_requires (pkg);
+	LowPackageDependency **deps = low_package_get_requires (pkg);
 	const char *querystr = (const char *) data;
 
 	for (i = 0; deps[i] != NULL; i++) {
-		if (!strcmp (querystr, deps[i])) {
+		if (!strcmp (querystr, deps[i]->name)) {
 		    return TRUE;
 		}
 	}
@@ -170,11 +170,11 @@ static gboolean
 low_fake_repo_search_conflicts_filter_fn (LowPackage *pkg, gpointer data)
 {
 	int i;
-	char **deps = low_package_get_conflicts (pkg);
+	LowPackageDependency **deps = low_package_get_conflicts (pkg);
 	const char *querystr = (const char *) data;
 
 	for (i = 0; deps[i] != NULL; i++) {
-		if (!strcmp (querystr, deps[i])) {
+		if (!strcmp (querystr, deps[i]->name)) {
 		    return TRUE;
 		}
 	}

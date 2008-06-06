@@ -142,31 +142,62 @@ parse_yaml (const char *file_name)
 typedef struct _LowFakePackage {
 	LowPackage super;
 
-	char **provides;
-	char **requires;
-	char **conflicts;
-	char **obsoletes;
+	LowPackageDependency **provides;
+	LowPackageDependency **requires;
+	LowPackageDependency **conflicts;
+	LowPackageDependency **obsoletes;
+
 	char **files;
 } LowFakePackage;
 
-static char **
+static size_t
+package_dependency_lenv (LowPackageDependency **dependencies)
+{
+	unsigned int i;
+
+	for (i = 0; dependencies[i] != NULL; i++) ;
+
+	return i;
+}
+static LowPackageDependency **
+package_dependency_dupv (LowPackageDependency **dependencies)
+{
+	int i;
+	LowPackageDependency **dep_copy;
+
+	for (i = 0; dependencies[i] != NULL; i++) ;
+
+	dep_copy = malloc (sizeof (LowPackageDependency *) * (i + 1));
+
+	for (i = 0; dependencies[i] != NULL; i++) {
+		dep_copy[i] =
+			low_package_dependency_new (dependencies[i]->name,
+						    dependencies[i]->sense,
+						    dependencies[i]->evr);
+	}
+	dep_copy[i] = NULL;
+
+	return dep_copy;
+}
+
+static LowPackageDependency **
 low_fake_package_get_provides (LowPackage *pkg) {
-	return g_strdupv (((LowFakePackage *) pkg)->provides);
+	return package_dependency_dupv (((LowFakePackage *) pkg)->provides);
 }
 
-static char **
+static LowPackageDependency **
 low_fake_package_get_requires (LowPackage *pkg) {
-	return g_strdupv (((LowFakePackage *) pkg)->requires);
+	return package_dependency_dupv (((LowFakePackage *) pkg)->requires);
 }
 
-static char **
+static LowPackageDependency **
 low_fake_package_get_conflicts (LowPackage *pkg) {
-	return g_strdupv (((LowFakePackage *) pkg)->conflicts);
+	return package_dependency_dupv (((LowFakePackage *) pkg)->conflicts);
 }
 
-static char **
+static LowPackageDependency **
 low_fake_package_get_obsoletes (LowPackage *pkg) {
-	return g_strdupv (((LowFakePackage *) pkg)->obsoletes);
+	return package_dependency_dupv (((LowFakePackage *) pkg)->obsoletes);
 }
 
 static char **
@@ -201,19 +232,37 @@ parse_evr (const char *evr, char **epoch, char **version, char **release)
 	}
 }
 
-static char **
+static LowPackageDependency **
 parse_package_dep (GHashTable *hash, const char *dep_type)
 {
 	GSList *dep = g_hash_table_lookup (hash, dep_type);
-	char **deps = malloc (sizeof (char *) * (g_slist_length (dep) + 1));
+	LowPackageDependency **deps = malloc (sizeof (LowPackageDependency *) *
+					      (g_slist_length (dep) + 1));
 	int i = 0;
 
 	for (; dep != NULL; dep = dep->next) {
-		deps[i++] = dep->data;
+		deps[i++] = low_package_dependency_new (dep->data,
+							DEPENDENCY_SENSE_NONE,
+							NULL);
 	}
 	deps[i] = NULL;
 
 	return deps;
+}
+
+static char **
+parse_package_files (GHashTable *hash)
+{
+	GSList *file = g_hash_table_lookup (hash, "files");
+	char **files = malloc (sizeof (char *) * (g_slist_length (file) + 1));
+	int i = 0;
+
+	for (; file != NULL; file = file->next) {
+		files[i++] = file->data;
+	}
+	files[i] = NULL;
+
+	return files;
 }
 
 static LowPackage *
@@ -242,17 +291,19 @@ low_package_from_hash (GHashTable *hash)
 	fake_pkg->provides = parse_package_dep (hash, "provides");
 	fake_pkg->provides =
 		realloc (fake_pkg->provides,
-			 (g_strv_length (fake_pkg->provides) + 1) *
+			 (package_dependency_lenv (fake_pkg->provides) + 1) *
 			 sizeof (char *));
 
-	fake_pkg->provides[g_strv_length (fake_pkg->provides) + 1] = NULL;
-	fake_pkg->provides[g_strv_length (fake_pkg->provides)] =
-		pkg->name;
+	fake_pkg->provides[package_dependency_lenv (fake_pkg->provides) + 1] =
+		NULL;
+	fake_pkg->provides[package_dependency_lenv (fake_pkg->provides)] =
+		low_package_dependency_new (pkg->name, DEPENDENCY_SENSE_NONE,
+					    NULL);
 
 	fake_pkg->requires = parse_package_dep (hash, "requires");
 	fake_pkg->conflicts = parse_package_dep (hash, "conflicts");
 	fake_pkg->obsoletes = parse_package_dep (hash, "obsoletes");
-	fake_pkg->files = parse_package_dep (hash, "files");
+	fake_pkg->files = parse_package_files (hash);
 
 	pkg->get_provides = low_fake_package_get_provides;
 	pkg->get_requires = low_fake_package_get_requires;

@@ -90,7 +90,7 @@ wrap_and_print (const char *text)
 }
 
 static void
-print_dependencies (const char *dep_name, char **deps)
+print_dependencies (const char *dep_name, LowPackageDependency **deps)
 {
 	int i;
 
@@ -101,9 +101,9 @@ print_dependencies (const char *dep_name, char **deps)
 		return;
 	}
 
-	printf (" %s\n", deps[0]);
+	printf (" %s\n", deps[0]->name);
 	for (i = 1; deps[i] != NULL; i++) {
-		printf ("              %s\n", deps[i]);
+		printf ("              %s\n", deps[i]->name);
 	}
 }
 
@@ -152,24 +152,24 @@ print_package (LowPackage *pkg, gboolean show_all)
 	low_package_details_free (details);
 
 	if (show_all) {
-		char **deps;
+		LowPackageDependency **deps;
 		char **files;
 
 		deps = low_package_get_provides (pkg);
 		print_dependencies ("Provides", deps);
-		g_strfreev (deps);
+		low_package_dependency_list_free (deps);
 
 		deps = low_package_get_requires (pkg);
 		print_dependencies ("Requires", deps);
-		g_strfreev (deps);
+		low_package_dependency_list_free (deps);
 
 		deps = low_package_get_conflicts (pkg);
 		print_dependencies ("Conflicts", deps);
-		g_strfreev (deps);
+		low_package_dependency_list_free (deps);
 
 		deps = low_package_get_obsoletes (pkg);
 		print_dependencies ("Obsoletes", deps);
-		g_strfreev (deps);
+		low_package_dependency_list_free (deps);
 
 		files = low_package_get_files (pkg);
 		print_files (files);

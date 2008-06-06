@@ -202,13 +202,13 @@ low_repo_rpmdb_get_details (LowRepo *repo, LowPackage *pkg)
 	return details;
 }
 
-static char **
+static LowPackageDependency **
 low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint_32 tag)
 {
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
 	rpmdbMatchIterator iter;
 	Header header;
-	char **deps;
+	LowPackageDependency **deps;
 	union rpm_entry entry;
 	int_32 type, count, i;
 
@@ -219,7 +219,10 @@ low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint_32 tag)
 
 	deps = malloc (sizeof (char *) * (count + 1));
 	for (i = 0; i < count; i++) {
-		deps[i] = g_strdup (entry.list[i]);
+		deps[i] =
+			low_package_dependency_new (entry.list[i],
+						    DEPENDENCY_SENSE_NONE,
+						    NULL);
 	}
 	deps[count] = NULL;
 
@@ -229,25 +232,25 @@ low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint_32 tag)
 	return deps;
 }
 
-char **
+LowPackageDependency **
 low_repo_rpmdb_get_provides (LowRepo *repo, LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_PROVIDES);
 }
 
-char **
+LowPackageDependency **
 low_repo_rpmdb_get_requires (LowRepo *repo, LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_REQUIRES);
 }
 
-char **
+LowPackageDependency **
 low_repo_rpmdb_get_conflicts (LowRepo *repo, LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_CONFLICTS);
 }
 
-char **
+LowPackageDependency **
 low_repo_rpmdb_get_obsoletes (LowRepo *repo, LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_OBSOLETES);

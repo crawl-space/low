@@ -134,7 +134,25 @@ low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove)
  * Check if a requires is in a list of provides
  */
 static gboolean
-low_transaction_string_in_list (const char *needle, char **haystack)
+low_transaction_dep_in_deplist (const LowPackageDependency *needle,
+				LowPackageDependency **haystack)
+{
+	int i;
+
+	for (i = 0; haystack[i] != NULL; i++) {
+		if (!strcmp (needle->name, haystack[i]->name)) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+/**
+ * Check if a requires is in a list of files
+ */
+static gboolean
+low_transaction_dep_in_filelist (const char *needle, char **haystack)
 {
 	int i;
 
@@ -151,7 +169,7 @@ static LowTransactionStatus
 low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
 {
 	LowTransactionStatus status = LOW_TRANSACTION_OK;
-	char **provides;
+	LowPackageDependency **provides;
 	char **files;
 	int i;
 
@@ -163,10 +181,10 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
 	for (i = 0; provides[i] != NULL; i++) {
 		LowPackageIter *iter;
 
-		low_debug ("Checking provides %s", provides[i]);
+		low_debug ("Checking provides %s", provides[i]->name);
 
 		iter = low_repo_rpmdb_search_requires (trans->rpmdb,
-						       provides[i]);
+						       provides[i]->name);
 		while (iter = low_package_iter_next (iter), iter != NULL) {
 			LowPackage *pkg = iter->pkg;
 
@@ -194,7 +212,7 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
 		}
 	}
 
-	g_strfreev (provides);
+	low_package_dependency_list_free (provides);
 	g_strfreev (files);
 
 	return status;
@@ -203,8 +221,8 @@ static LowTransactionStatus
 low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 {
 	LowTransactionStatus status;
-	char **requires;
-	char **provides;
+	LowPackageDependency **requires;
+	LowPackageDependency **provides;
 	char **files;
 	int i;
 
@@ -217,17 +235,18 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 	for (i = 0; requires[i] != NULL; i++) {
 		LowPackageIter *providing;
 
-		if (low_transaction_string_in_list (requires[i], provides)
-		    || low_transaction_string_in_list (requires[i], files)) {
+		if (low_transaction_dep_in_deplist (requires[i], provides)
+		    || low_transaction_dep_in_filelist (requires[i]->name,
+						        files)) {
 		    low_debug ("Self provided requires %s, skipping",
-			       requires[i]);
+			       requires[i]->name);
 		    continue;
 		}
-		low_debug ("Checking requires %s", requires[i]);
+		low_debug ("Checking requires %s", requires[i]->name);
 
 		providing =
 			low_repo_rpmdb_search_provides (trans->rpmdb,
-							requires[i]);
+							requires[i]->name);
 
 		providing = low_package_iter_next (providing);
 		if (providing != NULL) {
@@ -241,10 +260,10 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 			}
 			continue;
 		/* Check files if appropriate */
-		} else if (requires[i][0] == '/') {
+		} else if (requires[i]->name[0] == '/') {
 			providing =
 				low_repo_rpmdb_search_files (trans->rpmdb,
-							     requires[i]);
+							     requires[i]->name);
 
 			providing = low_package_iter_next (providing);
 			if (providing != NULL) {
@@ -262,7 +281,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 
 		/* Check available packages */
 		providing = low_repo_set_search_provides (trans->repos,
-							  requires[i]);
+							  requires[i]->name);
 
 		providing = low_package_iter_next (providing);
 		if (providing != NULL) {
@@ -280,9 +299,10 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 
 			continue;
 		/* Check files if appropriate */
-		} else if (requires[i][0] == '/') {
-			providing = low_repo_set_search_files (trans->repos,
-							       requires[i]);
+		} else if (requires[i]->name[0] == '/') {
+			providing =
+				low_repo_set_search_files (trans->repos,
+							   requires[i]->name);
 
 			providing = low_package_iter_next (providing);
 			if (providing != NULL) {
@@ -302,12 +322,12 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 		}
 
 		low_debug ("%s not provided by installed pkg",
-			   requires[i]);
+			   requires[i]->name);
 		return LOW_TRANSACTION_UNRESOLVABLE;
 	}
 
-	g_strfreev (provides);
-	g_strfreev (requires);
+	low_package_dependency_list_free (provides);
+	low_package_dependency_list_free (requires);
 	g_strfreev (files);
 
 	return LOW_TRANSACTION_OK;
@@ -357,17 +377,18 @@ low_transaction_search_provides (GSList *list, char *query)
 	GSList *cur;
 
 	for (cur = list; cur != NULL; cur = cur->next) {
-		char **provides = low_package_get_provides (cur->data);
+		LowPackageDependency **provides =
+			low_package_get_provides (cur->data);
 		int i;
 
 		for (i = 0; provides[i] != NULL; i++) {
-			if (!strcmp (query, provides[i])) {
-				g_strfreev (provides);
+			if (!strcmp (query, provides[i]->name)) {
+				low_package_dependency_list_free (provides);
 				return cur->data;
 			}
 		}
 
-		g_strfreev (provides);
+		low_package_dependency_list_free (provides);
 
 	}
 
@@ -382,17 +403,18 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 
 	while (cur != NULL) {
 		LowPackage *pkg = (LowPackage *) cur->data;
-		char **provides = low_package_get_provides (pkg);
-		char **conflicts = low_package_get_conflicts (pkg);
+		LowPackageDependency **provides =
+			low_package_get_provides (pkg);
+		LowPackageDependency **conflicts =
+			low_package_get_conflicts (pkg);
 		int i;
 
 		low_debug_pkg ("Checking for installed pkgs that conflict",
 			       pkg);
 		for (i = 0; provides[i] != NULL; i++) {
 			LowPackageIter *iter;
-			iter =
-				low_repo_rpmdb_search_conflicts (trans->rpmdb,
-								 provides[i]);
+			iter = low_repo_rpmdb_search_conflicts (trans->rpmdb,
+								provides[i]->name);
 
 			iter = low_package_iter_next (iter);
 			if (iter != NULL) {
@@ -412,9 +434,8 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 
 		for (i = 0; conflicts[i] != NULL; i++) {
 			LowPackageIter *iter;
-			iter =
-				low_repo_rpmdb_search_provides (trans->rpmdb,
-								conflicts[i]);
+			iter = low_repo_rpmdb_search_provides (trans->rpmdb,
+							       conflicts[i]->name);
 
 			iter = low_package_iter_next (iter);
 			if (iter != NULL) {
@@ -442,7 +463,7 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 		for (i = 0; conflicts[i] != NULL; i++) {
 			LowPackage *conflicting =
 				low_transaction_search_provides (trans->install,
-								 conflicts[i]);
+								 conflicts[i]->name);
 			if (conflicting) {
 				low_debug_pkg ("Conflicted by installing",
 					   conflicting);
@@ -463,8 +484,8 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 
 		}
 
-		g_strfreev (provides);
-		g_strfreev (conflicts);
+		low_package_dependency_list_free (provides);
+		low_package_dependency_list_free (conflicts);
 
 		if (status == LOW_TRANSACTION_UNRESOLVABLE) {
 			low_debug_pkg ("Adding to unresolved", pkg);

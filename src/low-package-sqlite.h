@@ -38,10 +38,10 @@ LowPackageIter * low_sqlite_package_iter_next	(LowPackageIter *iter);
 
 LowPackageDetails *	low_sqlite_package_get_details	(LowPackage *pkg);
 
-char **		low_sqlite_package_get_provides		(LowPackage *pkg);
-char **		low_sqlite_package_get_requires		(LowPackage *pkg);
-char **		low_sqlite_package_get_conflicts	(LowPackage *pkg);
-char **		low_sqlite_package_get_obsoletes	(LowPackage *pkg);
+LowPackageDependency **	low_sqlite_package_get_provides	 (LowPackage *pkg);
+LowPackageDependency **	low_sqlite_package_get_requires	 (LowPackage *pkg);
+LowPackageDependency **	low_sqlite_package_get_conflicts (LowPackage *pkg);
+LowPackageDependency **	low_sqlite_package_get_obsoletes (LowPackage *pkg);
 
 char **		low_sqlite_package_get_files		(LowPackage *pkg);
 

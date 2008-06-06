@@ -379,11 +379,12 @@ low_repo_sqlite_get_details (LowRepo *repo, LowPackage *pkg)
 	return details;
 }
 
-static char **
+static LowPackageDependency **
 low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 {
 	size_t deps_size = 5;
-	char **deps = malloc (sizeof (char *) * deps_size);
+	LowPackageDependency **deps =
+		malloc (sizeof (LowPackageDependency *) * deps_size);
 	unsigned int i = 0;
 
 	sqlite3_stmt *pp_stmt;
@@ -394,10 +395,12 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 	sqlite3_bind_int (pp_stmt, 1, *((int *) pkg->id));
 
 	while (sqlite3_step(pp_stmt) != SQLITE_DONE) {
+		const char *dep_name =
+			(const char *) sqlite3_column_text (pp_stmt, 0);
 		/* XXX Do we need to strdup this? */
-		deps[i++] =
-			g_strdup ((const char *) sqlite3_column_text (pp_stmt,
-								      0));
+		deps[i++] = low_package_dependency_new (dep_name,
+							DEPENDENCY_SENSE_NONE,
+							NULL);
 		if (i == deps_size - 1) {
 			deps_size *= 2;
 			deps = realloc (deps, sizeof (char *) * deps_size);
@@ -410,7 +413,7 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 	return deps;
 }
 
-char **
+LowPackageDependency **
 low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
 {
 	const char *stmt = "SELECT prov.name from provides prov "
@@ -418,21 +421,21 @@ low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
-char **
+LowPackageDependency **
 low_repo_sqlite_get_requires (LowRepo *repo, LowPackage *pkg)
 {
 	const char *stmt = "SELECT name FROM requires WHERE pkgKey = :pkgKey";
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
-char **
+LowPackageDependency **
 low_repo_sqlite_get_conflicts (LowRepo *repo, LowPackage *pkg)
 {
 	const char *stmt = "SELECT name FROM conflicts WHERE pkgKey = :pkgKey";
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
-char **
+LowPackageDependency **
 low_repo_sqlite_get_obsoletes (LowRepo *repo, LowPackage *pkg)
 {
 	const char *stmt = "SELECT name FROM obsoletes WHERE pkgKey = :pkgKey";

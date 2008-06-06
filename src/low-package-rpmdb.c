@@ -121,7 +121,7 @@ low_rpmdb_package_get_details (LowPackage *pkg)
 	return low_repo_rpmdb_get_details (pkg->repo, pkg);
 }
 
-char **
+LowPackageDependency **
 low_rpmdb_package_get_provides (LowPackage *pkg)
 {
 	/*
@@ -131,19 +131,19 @@ low_rpmdb_package_get_provides (LowPackage *pkg)
 	return low_repo_rpmdb_get_provides (pkg->repo, pkg);
 }
 
-char **
+LowPackageDependency **
 low_rpmdb_package_get_requires (LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_requires (pkg->repo, pkg);
 }
 
-char **
+LowPackageDependency **
 low_rpmdb_package_get_conflicts (LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_conflicts (pkg->repo, pkg);
 }
 
-char **
+LowPackageDependency **
 low_rpmdb_package_get_obsoletes (LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_obsoletes (pkg->repo, pkg);

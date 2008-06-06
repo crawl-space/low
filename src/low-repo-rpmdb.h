@@ -49,13 +49,13 @@ LowPackageIter *	low_repo_rpmdb_search_details 	(LowRepo *repo,
 LowPackageDetails *	low_repo_rpmdb_get_details 	(LowRepo *repo,
 							 LowPackage *pkg);
 
-char **			low_repo_rpmdb_get_provides 	(LowRepo *repo,
+LowPackageDependency **	low_repo_rpmdb_get_provides 	(LowRepo *repo,
 							 LowPackage *pkg);
-char **			low_repo_rpmdb_get_requires 	(LowRepo *repo,
+LowPackageDependency **	low_repo_rpmdb_get_requires 	(LowRepo *repo,
 							 LowPackage *pkg);
-char **			low_repo_rpmdb_get_conflicts 	(LowRepo *repo,
+LowPackageDependency **	low_repo_rpmdb_get_conflicts 	(LowRepo *repo,
 							 LowPackage *pkg);
-char **			low_repo_rpmdb_get_obsoletes 	(LowRepo *repo,
+LowPackageDependency **	low_repo_rpmdb_get_obsoletes 	(LowRepo *repo,
 							 LowPackage *pkg);
 
 char **			low_repo_rpmdb_get_files 	(LowRepo *repo,

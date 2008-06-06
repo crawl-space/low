@@ -81,25 +81,25 @@ low_package_get_details (LowPackage *pkg)
 	return (pkg->get_details) (pkg);
 }
 
-char **
+LowPackageDependency **
 low_package_get_provides (LowPackage *pkg)
 {
 	return (pkg->get_provides) (pkg);
 }
 
-char **
+LowPackageDependency **
 low_package_get_requires (LowPackage *pkg)
 {
 	return (pkg->get_requires) (pkg);
 }
 
-char **
+LowPackageDependency **
 low_package_get_conflicts (LowPackage *pkg)
 {
 	return (pkg->get_conflicts) (pkg);
 }
 
-char **
+LowPackageDependency **
 low_package_get_obsoletes (LowPackage *pkg)
 {
 	return (pkg->get_obsoletes) (pkg);
@@ -121,11 +121,13 @@ LowPackageDependency *
 low_package_dependency_new (const char *name, LowPackageDependencySense sense,
 							const char *evr)
 {
+	/* XXX should check that evr is empty iff sense is NONE */
 	LowPackageDependency *dep = malloc (sizeof (LowPackageDependency));
 
 	dep->name = strdup (name);
 	dep->sense = sense;
-	dep->evr = strdup (evr);
+	/* EVR can be empty */
+	dep->evr = evr ? strdup (evr) : NULL;
 
 	return dep;
 }
@@ -184,6 +186,18 @@ low_package_dependency_free (LowPackageDependency *dependency)
 	free (dependency->name);
 	free (dependency->evr);
 	free (dependency);
+}
+
+void
+low_package_dependency_list_free (LowPackageDependency **dependencies)
+{
+	int i;
+
+	for (i = 0; dependencies[i] != NULL; i++) {
+		low_package_dependency_free (dependencies[i]);
+	}
+
+	free (dependencies);
 }
 
 /* vim: set ts=8 sw=8 noet: */

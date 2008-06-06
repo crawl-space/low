@@ -60,7 +60,7 @@ typedef void * signature;
 
 typedef LowPackageDetails *	(*LowPackageGetDetails)	(LowPackage *);
 
-typedef char **	(*LowPackageGetDependency)	(LowPackage *);
+typedef LowPackageDependency **	(*LowPackageGetDependency)	(LowPackage *);
 typedef char **	(*LowPackageGetFiles) 		(LowPackage *);
 
 /**
@@ -107,10 +107,10 @@ void 			low_package_unref 	(LowPackage *pkg);
 
 LowPackageDetails *	low_package_get_details 	(LowPackage *pkg);
 
-char **			low_package_get_provides 	(LowPackage *pkg);
-char **			low_package_get_requires 	(LowPackage *pkg);
-char **			low_package_get_conflicts 	(LowPackage *pkg);
-char **			low_package_get_obsoletes	(LowPackage *pkg);
+LowPackageDependency **	low_package_get_provides 	(LowPackage *pkg);
+LowPackageDependency **	low_package_get_requires 	(LowPackage *pkg);
+LowPackageDependency **	low_package_get_conflicts 	(LowPackage *pkg);
+LowPackageDependency **	low_package_get_obsoletes	(LowPackage *pkg);
 
 char **			low_package_get_files 		(LowPackage *pkg);
 
@@ -121,7 +121,7 @@ LowPackageDependency *	low_package_dependency_new 		(const char *name,
 								 const char *evr);
 LowPackageDependency * 	low_package_dependency_new_from_string 	(const char *depstr);
 void 			low_package_dependency_free 		(LowPackageDependency *dependency);
-
+void 			low_package_dependency_list_free	(LowPackageDependency **dependencies);
 
 void 	low_package_details_free 	(LowPackageDetails *details);
 
