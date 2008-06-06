@@ -90,6 +90,36 @@ wrap_and_print (const char *text)
 }
 
 static void
+print_dependency (const LowPackageDependency * dep)
+{
+	fputs (dep->name, stdout);
+	if (dep->sense != DEPENDENCY_SENSE_NONE) {
+		switch (dep->sense) {
+			case DEPENDENCY_SENSE_EQ:
+				fputs (" = ", stdout);
+				break;
+			case DEPENDENCY_SENSE_LT:
+				fputs (" < ", stdout);
+				break;
+			case DEPENDENCY_SENSE_LE:
+				fputs (" <= ", stdout);
+				break;
+			case DEPENDENCY_SENSE_GT:
+				fputs (" > ", stdout);
+				break;
+			case DEPENDENCY_SENSE_GE:
+				fputs (" >= ", stdout);
+				break;
+			default:
+				break;
+		}
+
+		fputs (dep->evr, stdout);
+	}
+	putchar ('\n');
+}
+
+static void
 print_dependencies (const char *dep_name, LowPackageDependency **deps)
 {
 	int i;
@@ -97,13 +127,15 @@ print_dependencies (const char *dep_name, LowPackageDependency **deps)
 	printf ("%-12s:", dep_name);
 
 	if (deps[0] == NULL) {
-		printf ("\n");
+		putchar ('\n');
 		return;
 	}
 
-	printf (" %s\n", deps[0]->name);
+	putchar (' ');
+	print_dependency (deps[0]);
 	for (i = 1; deps[i] != NULL; i++) {
-		printf ("              %s\n", deps[i]->name);
+		fputs ("              ", stdout);
+		print_dependency (deps[i]);
 	}
 }
 

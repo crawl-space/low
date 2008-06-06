@@ -379,6 +379,46 @@ low_repo_sqlite_get_details (LowRepo *repo, LowPackage *pkg)
 	return details;
 }
 
+static LowPackageDependencySense
+low_package_dependency_sense_from_sqlite_flags (const unsigned char *flags)
+{
+	const char *sensestr = (const char *) flags;
+
+	if (sensestr == NULL) {
+		return DEPENDENCY_SENSE_NONE;
+	} else if (!strcmp ("EQ", sensestr)) {
+		return DEPENDENCY_SENSE_EQ;
+	} else if (!strcmp ("GT", sensestr)) {
+		return DEPENDENCY_SENSE_GT;
+	} else if (!strcmp ("GE", sensestr)) {
+		return DEPENDENCY_SENSE_GE;
+	} else if (!strcmp ("LT", sensestr)) {
+		return DEPENDENCY_SENSE_LT;
+	} else if (!strcmp ("LE", sensestr)) {
+		return DEPENDENCY_SENSE_LE;
+	} else {
+		/* XXX error here instead */
+		return DEPENDENCY_SENSE_NONE;
+	}
+}
+
+static char *
+build_evr (const unsigned char *epoch, const unsigned char *version,
+	   const unsigned char *release)
+{
+	char *evr;
+
+	if (epoch && version && release) {
+		evr = g_strdup_printf ("%s:%s-%s", epoch, version, release);
+	} else if (version && release) {
+		evr = g_strdup_printf ("%s-%s", version, release);
+	} else {
+		evr = g_strdup ((const char *) version);
+	}
+
+	return evr;
+}
+
 static LowPackageDependency **
 low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 {
@@ -397,10 +437,19 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 	while (sqlite3_step(pp_stmt) != SQLITE_DONE) {
 		const char *dep_name =
 			(const char *) sqlite3_column_text (pp_stmt, 0);
+		LowPackageDependencySense sense =
+			low_package_dependency_sense_from_sqlite_flags (sqlite3_column_text (pp_stmt, 1));
+		char *evr = build_evr (sqlite3_column_text (pp_stmt, 2),
+				       sqlite3_column_text (pp_stmt, 3),
+				       sqlite3_column_text (pp_stmt, 4));
+
 		/* XXX Do we need to strdup this? */
 		deps[i++] = low_package_dependency_new (dep_name,
-							DEPENDENCY_SENSE_NONE,
-							NULL);
+							sense,
+							evr);
+
+		free (evr);
+
 		if (i == deps_size - 1) {
 			deps_size *= 2;
 			deps = realloc (deps, sizeof (char *) * deps_size);
@@ -413,32 +462,34 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 	return deps;
 }
 
+#define DEP_QUERY(type) "SELECT name, flags, epoch, version, release from " \
+			type " WHERE pkgKey=:pkgkey"
+
 LowPackageDependency **
 low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
 {
-	const char *stmt = "SELECT prov.name from provides prov "
-			   "WHERE prov.pkgKey = :pkgKey";
+	const char *stmt = DEP_QUERY ("provides");
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
 LowPackageDependency **
 low_repo_sqlite_get_requires (LowRepo *repo, LowPackage *pkg)
 {
-	const char *stmt = "SELECT name FROM requires WHERE pkgKey = :pkgKey";
+	const char *stmt = DEP_QUERY ("requires");
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
 LowPackageDependency **
 low_repo_sqlite_get_conflicts (LowRepo *repo, LowPackage *pkg)
 {
-	const char *stmt = "SELECT name FROM conflicts WHERE pkgKey = :pkgKey";
+	const char *stmt = DEP_QUERY ("conflicts");
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
 LowPackageDependency **
 low_repo_sqlite_get_obsoletes (LowRepo *repo, LowPackage *pkg)
 {
-	const char *stmt = "SELECT name FROM obsoletes WHERE pkgKey = :pkgKey";
+	const char *stmt = DEP_QUERY ("obsoletes");
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
