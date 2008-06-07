@@ -116,6 +116,8 @@ char **			low_package_get_files 		(LowPackage *pkg);
 
 LowPackageIter * 	low_package_iter_next 	(LowPackageIter *iter);
 
+LowPackageDependencySense low_package_dependency_sense_from_string (const char *sensestr);
+
 LowPackageDependency *	low_package_dependency_new 		(const char *name,
 								 LowPackageDependencySense sense,
 								 const char *evr);

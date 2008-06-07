@@ -132,7 +132,7 @@ low_package_dependency_new (const char *name, LowPackageDependencySense sense,
 	return dep;
 }
 
-static LowPackageDependencySense
+LowPackageDependencySense
 low_package_dependency_sense_from_string (const char *sensestr)
 {
 	if (!strcmp ("=", sensestr)) {

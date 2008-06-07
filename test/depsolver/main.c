@@ -241,9 +241,18 @@ parse_package_dep (GHashTable *hash, const char *dep_type)
 	int i = 0;
 
 	for (; dep != NULL; dep = dep->next) {
-		deps[i++] = low_package_dependency_new (dep->data,
-							DEPENDENCY_SENSE_NONE,
-							NULL);
+		char **parts = g_strsplit (dep->data, " ", 0);
+		LowPackageDependencySense sense = DEPENDENCY_SENSE_NONE;
+		char *evr = NULL;
+
+		if (g_strv_length (parts) == 3) {
+			sense = low_package_dependency_sense_from_string (parts[1]);
+			evr = parts[2];
+		}
+
+		deps[i++] = low_package_dependency_new (parts[0],
+							sense,
+							evr);
 	}
 	deps[i] = NULL;
 
@@ -271,6 +280,7 @@ low_package_from_hash (GHashTable *hash)
 	LowFakePackage *fake_pkg = malloc (sizeof (LowFakePackage));
 	LowPackage *pkg = (LowPackage *) fake_pkg;
 	GHashTable *nevra_hash;
+	const char *evr;
 
 	// We always keep a ref to the test pkgs
 	low_package_ref_init (pkg);
@@ -280,12 +290,12 @@ low_package_from_hash (GHashTable *hash)
 	empty_dep[0] = NULL;
 
 	nevra_hash = g_hash_table_lookup (hash, "package");
+	evr = g_hash_table_lookup (nevra_hash, "evr");
 
 	pkg->name = g_hash_table_lookup (nevra_hash, "name");
 	pkg->arch = g_hash_table_lookup (nevra_hash, "arch");
 
-	parse_evr (g_hash_table_lookup (nevra_hash, "evr"), &pkg->epoch,
-		   &pkg->version, &pkg->release);
+	parse_evr (evr, &pkg->epoch, &pkg->version, &pkg->release);
 
 	/* Have to add the implicit provides on the pkg's name */
 	fake_pkg->provides = parse_package_dep (hash, "provides");
@@ -297,8 +307,8 @@ low_package_from_hash (GHashTable *hash)
 	fake_pkg->provides[package_dependency_lenv (fake_pkg->provides) + 1] =
 		NULL;
 	fake_pkg->provides[package_dependency_lenv (fake_pkg->provides)] =
-		low_package_dependency_new (pkg->name, DEPENDENCY_SENSE_NONE,
-					    NULL);
+		low_package_dependency_new (pkg->name, DEPENDENCY_SENSE_EQ,
+					    evr);
 
 	fake_pkg->requires = parse_package_dep (hash, "requires");
 	fake_pkg->conflicts = parse_package_dep (hash, "conflicts");
