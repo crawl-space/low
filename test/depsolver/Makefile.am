@@ -29,6 +29,7 @@ test_depsolver_SOURCES = main.c
 
 test_depsolver_LDADD = \
 		$(GLIB_LIBS) \
+		$(RPM_LIBS) \
 		$(SYCK_LIBS) \
 		${top_builddir}/src/low-debug.o \
 		${top_builddir}/src/low-package.o \

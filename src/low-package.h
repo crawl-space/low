@@ -28,11 +28,11 @@
  * Package dependency types.
  */
 typedef enum {
-	DEPENDENCY_SENSE_EQ, /**< == */
-	DEPENDENCY_SENSE_GT, /**< > */
-	DEPENDENCY_SENSE_GE, /**< >= */
 	DEPENDENCY_SENSE_LT, /**< < */
 	DEPENDENCY_SENSE_LE, /**< <= */
+	DEPENDENCY_SENSE_EQ, /**< == */
+	DEPENDENCY_SENSE_GE, /**< >= */
+	DEPENDENCY_SENSE_GT, /**< > */
 	DEPENDENCY_SENSE_NONE /**< An unversioned dependency */
 } LowPackageDependencySense;
 
@@ -124,6 +124,9 @@ LowPackageDependency *	low_package_dependency_new 		(const char *name,
 LowPackageDependency * 	low_package_dependency_new_from_string 	(const char *depstr);
 void 			low_package_dependency_free 		(LowPackageDependency *dependency);
 void 			low_package_dependency_list_free	(LowPackageDependency **dependencies);
+
+gboolean 		low_package_dependency_satisfies 	(LowPackageDependency *needs,
+								 LowPackageDependency *satisfies);
 
 void 	low_package_details_free 	(LowPackageDetails *details);
 

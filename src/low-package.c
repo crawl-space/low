@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
+#include <rpm/rpmlib.h>
+#include <rpm/rpmds.h>
 #include "low-package.h"
 
 static void
@@ -198,6 +200,47 @@ low_package_dependency_list_free (LowPackageDependency **dependencies)
 	}
 
 	free (dependencies);
+}
+
+static rpmsenseFlags
+low_dependency_sense_to_rpm (LowPackageDependencySense sense) {
+	switch (sense) {
+		case DEPENDENCY_SENSE_LT:
+			return RPMSENSE_LESS;
+		case DEPENDENCY_SENSE_LE:
+			return RPMSENSE_LESS | RPMSENSE_EQUAL;
+		case DEPENDENCY_SENSE_EQ:
+			return RPMSENSE_EQUAL;
+		case DEPENDENCY_SENSE_GE:
+			return RPMSENSE_GREATER | RPMSENSE_EQUAL;
+		case DEPENDENCY_SENSE_GT:
+			return RPMSENSE_GREATER;
+		default:
+			/* XXX handle better */
+			return 0;
+	}
+}
+
+gboolean
+low_package_dependency_satisfies (LowPackageDependency *needs G_GNUC_UNUSED,
+				  LowPackageDependency *satisfies G_GNUC_UNUSED)
+{
+	int res;
+
+	/* The tag type doesn't matter for comparison, so just use a default */
+	rpmds rpm_needs =
+		rpmdsSingle (RPMTAG_PROVIDES, needs->name, needs->evr,
+			     low_dependency_sense_to_rpm (needs->sense));
+	rpmds rpm_satisfies =
+		rpmdsSingle (RPMTAG_PROVIDES, satisfies->name, satisfies->evr,
+			     low_dependency_sense_to_rpm (satisfies->sense));
+
+	res = rpmdsCompare (rpm_needs, rpm_satisfies);
+
+	rpmdsFree (rpm_needs);
+	rpmdsFree (rpm_satisfies);
+
+	return res == 1 ? TRUE : FALSE;
 }
 
 /* vim: set ts=8 sw=8 noet: */

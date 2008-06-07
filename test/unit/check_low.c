@@ -80,6 +80,109 @@ START_TEST (test_low_package_dependency_new_from_string_unversioned)
 }
 END_TEST
 
+START_TEST (test_low_package_dependency_satisfies_unversioned)
+{
+	LowPackageDependency *dep =
+		low_package_dependency_new_from_string ("foo");
+	gboolean res = low_package_dependency_satisfies (dep, dep);
+	fail_unless (res, "Unversioned dep does not satisfy self");
+
+	low_package_dependency_free (dep);
+}
+END_TEST
+
+START_TEST (test_low_package_dependency_satisfies_unversioned_not_satisfied)
+{
+	LowPackageDependency *dep1 =
+		low_package_dependency_new_from_string ("foo");
+	LowPackageDependency *dep2 =
+		low_package_dependency_new_from_string ("bar");
+
+	gboolean res = low_package_dependency_satisfies (dep1, dep2);
+	fail_unless (!res, "Unversioned dep satisfied");
+
+	low_package_dependency_free (dep1);
+	low_package_dependency_free (dep2);
+}
+END_TEST
+
+START_TEST (test_low_package_dependency_satisfies_needs_versioned_satisfies_not)
+{
+	LowPackageDependency *dep1 =
+		low_package_dependency_new_from_string ("foo = 1.2.3");
+	LowPackageDependency *dep2 =
+		low_package_dependency_new_from_string ("foo");
+
+	gboolean res = low_package_dependency_satisfies (dep1, dep2);
+	fail_unless (res, "Versioned dep not satisfied by unversioned");
+
+	low_package_dependency_free (dep1);
+	low_package_dependency_free (dep2);
+}
+END_TEST
+
+START_TEST (test_low_package_dependency_satisfies_satisfies_versioned_needs_not)
+{
+	LowPackageDependency *dep1 =
+		low_package_dependency_new_from_string ("foo");
+	LowPackageDependency *dep2 =
+		low_package_dependency_new_from_string ("foo = 0.0.4");
+
+	gboolean res = low_package_dependency_satisfies (dep1, dep2);
+	fail_unless (res, "Unversioned dep not satisfied by versioned");
+
+	low_package_dependency_free (dep1);
+	low_package_dependency_free (dep2);
+}
+END_TEST
+
+START_TEST (test_low_package_dependency_satisfies_both_versioned_satisfied)
+{
+	const char *deps1[4] = {"foo > 0.1", "foo < 0.4", "foo < 1", NULL};
+	const char *deps2[4] = {"foo = 3.0.0", "foo = 0.2", "foo > 0.5", NULL};
+
+	int i;
+	LowPackageDependency *dep1;
+	LowPackageDependency *dep2;
+
+	for (i = 0; deps1[i] != NULL; i++) {
+		dep1 = low_package_dependency_new_from_string (deps1[i]);
+		dep2 = low_package_dependency_new_from_string (deps2[i]);
+
+		gboolean res = low_package_dependency_satisfies (dep1, dep2);
+		fail_unless (res, "Versioned dep not satisfied: %s - %s",
+			     deps1[i], deps2[i]);
+
+		low_package_dependency_free (dep1);
+		low_package_dependency_free (dep2);
+	}
+
+}
+END_TEST
+
+START_TEST (test_low_package_dependency_satisfies_both_versioned_not_satisfied)
+{
+	const char *deps1[4] = {"foo = 0.1", "foo < 0.4", "foo < 1", NULL};
+	const char *deps2[4] = {"foo = 3.0.0", "foo = 0.6", "foo > 2", NULL};
+
+	int i;
+	LowPackageDependency *dep1;
+	LowPackageDependency *dep2;
+
+	for (i = 0; deps1[i] != NULL; i++) {
+		dep1 = low_package_dependency_new_from_string (deps1[i]);
+		dep2 = low_package_dependency_new_from_string (deps2[i]);
+
+		gboolean res = low_package_dependency_satisfies (dep1, dep2);
+		fail_unless (!res, "Versioned dep satisfied: %s - %s",
+			     deps1[i], deps2[i]);
+
+		low_package_dependency_free (dep1);
+		low_package_dependency_free (dep2);
+	}
+}
+END_TEST
+
 START_TEST (test_low_util_word_wrap_no_wrap_needed)
 {
 	const char *input = "A small string";
@@ -281,6 +384,12 @@ low_suite(void)
 	tcase_add_test (tc, test_low_package_dependency_new);
 	tcase_add_test (tc, test_low_package_dependency_new_from_string);
 	tcase_add_test (tc, test_low_package_dependency_new_from_string_unversioned);
+	tcase_add_test (tc, test_low_package_dependency_satisfies_unversioned);
+	tcase_add_test (tc, test_low_package_dependency_satisfies_unversioned_not_satisfied);
+	tcase_add_test (tc, test_low_package_dependency_satisfies_needs_versioned_satisfies_not);
+	tcase_add_test (tc, test_low_package_dependency_satisfies_satisfies_versioned_needs_not);
+	tcase_add_test (tc, test_low_package_dependency_satisfies_both_versioned_satisfied);
+	tcase_add_test (tc, test_low_package_dependency_satisfies_both_versioned_not_satisfied);
 	suite_add_tcase (s, tc);
 
 	tc = tcase_create ("low-util");
