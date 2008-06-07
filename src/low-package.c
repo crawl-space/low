@@ -222,8 +222,8 @@ low_dependency_sense_to_rpm (LowPackageDependencySense sense) {
 }
 
 gboolean
-low_package_dependency_satisfies (LowPackageDependency *needs G_GNUC_UNUSED,
-				  LowPackageDependency *satisfies G_GNUC_UNUSED)
+low_package_dependency_satisfies (const LowPackageDependency *needs,
+				  const LowPackageDependency *satisfies)
 {
 	int res;
 

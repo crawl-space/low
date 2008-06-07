@@ -125,8 +125,8 @@ LowPackageDependency * 	low_package_dependency_new_from_string 	(const char *dep
 void 			low_package_dependency_free 		(LowPackageDependency *dependency);
 void 			low_package_dependency_list_free	(LowPackageDependency **dependencies);
 
-gboolean 		low_package_dependency_satisfies 	(LowPackageDependency *needs,
-								 LowPackageDependency *satisfies);
+gboolean 		low_package_dependency_satisfies 	(const LowPackageDependency *needs,
+								 const LowPackageDependency *satisfies);
 
 void 	low_package_details_free 	(LowPackageDetails *details);
 

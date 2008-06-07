@@ -88,29 +88,49 @@ low_repo_rpmdb_list_by_name (LowRepo *repo, const char *name)
 	return low_repo_rpmdb_search (repo, RPMTAG_NAME, name);
 }
 
-LowPackageIter *
-low_repo_rpmdb_search_provides (LowRepo *repo, const char *provides)
+static LowPackageIter *
+low_repo_rpmdb_search_dep (LowRepo *repo, int_32 tag,
+			   const LowPackageDependency *dep)
 {
-	return low_repo_rpmdb_search (repo, RPMTAG_PROVIDENAME, provides);
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
+	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
+	iter->super.repo = repo;
+	iter->super.next_func = low_package_iter_rpmdb_next;
+	iter->super.pkg = NULL;
+
+	iter->func = NULL;
+
+	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, tag, dep->name, 0);
+	return (LowPackageIter *) iter;
 }
 
 LowPackageIter *
-low_repo_rpmdb_search_requires (LowRepo *repo, const char *requires)
+low_repo_rpmdb_search_provides (LowRepo *repo,
+				const LowPackageDependency *provides)
 {
-	return low_repo_rpmdb_search (repo, RPMTAG_REQUIRENAME, requires);
+	return low_repo_rpmdb_search_dep (repo, RPMTAG_PROVIDENAME, provides);
 }
 
 LowPackageIter *
-low_repo_rpmdb_search_conflicts (LowRepo *repo, const char *conflicts)
+low_repo_rpmdb_search_requires (LowRepo *repo,
+				const LowPackageDependency *requires)
 {
-	return low_repo_rpmdb_search (repo, RPMTAG_CONFLICTNAME, conflicts);
+	return low_repo_rpmdb_search_dep (repo, RPMTAG_REQUIRENAME, requires);
 }
 
 LowPackageIter *
-low_repo_rpmdb_search_obsoletes (LowRepo *repo, const char *obsoletes)
+low_repo_rpmdb_search_conflicts (LowRepo *repo,
+				 const LowPackageDependency *conflicts)
+{
+	return low_repo_rpmdb_search_dep (repo, RPMTAG_CONFLICTNAME, conflicts);
+}
+
+LowPackageIter *
+low_repo_rpmdb_search_obsoletes (LowRepo *repo,
+				 const LowPackageDependency *obsoletes)
 {
 	/* XXX This seems to be broken in RPM itself. */
-	return low_repo_rpmdb_search (repo, RPMTAG_OBSOLETENAME, obsoletes);
+	return low_repo_rpmdb_search_dep (repo, RPMTAG_OBSOLETENAME, obsoletes);
 }
 
 LowPackageIter *

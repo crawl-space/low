@@ -184,7 +184,7 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
 		low_debug ("Checking provides %s", provides[i]->name);
 
 		iter = low_repo_rpmdb_search_requires (trans->rpmdb,
-						       provides[i]->name);
+						       provides[i]);
 		while (iter = low_package_iter_next (iter), iter != NULL) {
 			LowPackage *pkg = iter->pkg;
 
@@ -197,11 +197,15 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
 
 	for (i = 0; files[i] != NULL; i++) {
 		LowPackageIter *iter;
+		LowPackageDependency *file_dep =
+			low_package_dependency_new (files[i],
+						    DEPENDENCY_SENSE_NONE,
+						    NULL);
 
 		low_debug ("Checking file %s", files[i]);
 
 		iter = low_repo_rpmdb_search_requires (trans->rpmdb,
-						       files[i]);
+						       file_dep);
 		while (iter = low_package_iter_next (iter), iter != NULL) {
 			LowPackage *pkg = iter->pkg;
 
@@ -210,6 +214,7 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
 				status = LOW_TRANSACTION_PACKAGES_ADDED;
 			}
 		}
+		low_package_dependency_free (file_dep);
 	}
 
 	low_package_dependency_list_free (provides);
@@ -246,7 +251,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 
 		providing =
 			low_repo_rpmdb_search_provides (trans->rpmdb,
-							requires[i]->name);
+							requires[i]);
 
 		providing = low_package_iter_next (providing);
 		if (providing != NULL) {
@@ -281,7 +286,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 
 		/* Check available packages */
 		providing = low_repo_set_search_provides (trans->repos,
-							  requires[i]->name);
+							  requires[i]);
 
 		providing = low_package_iter_next (providing);
 		if (providing != NULL) {
@@ -414,7 +419,7 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 		for (i = 0; provides[i] != NULL; i++) {
 			LowPackageIter *iter;
 			iter = low_repo_rpmdb_search_conflicts (trans->rpmdb,
-								provides[i]->name);
+								provides[i]);
 
 			iter = low_package_iter_next (iter);
 			if (iter != NULL) {
@@ -435,7 +440,7 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 		for (i = 0; conflicts[i] != NULL; i++) {
 			LowPackageIter *iter;
 			iter = low_repo_rpmdb_search_provides (trans->rpmdb,
-							       conflicts[i]->name);
+							       conflicts[i]);
 
 			iter = low_package_iter_next (iter);
 			if (iter != NULL) {

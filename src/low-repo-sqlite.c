@@ -186,7 +186,8 @@ low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
 }
 
 LowPackageIter *
-low_repo_sqlite_search_provides (LowRepo *repo, const char *provides)
+low_repo_sqlite_search_provides (LowRepo *repo,
+				 const LowPackageDependency *provides)
 {
 	const char *stmt = SELECT_FIELDS_FROM "packages p, provides pr "
 			   "WHERE pr.pkgKey = p.pkgKey AND pr.name = :provides";
@@ -199,12 +200,13 @@ low_repo_sqlite_search_provides (LowRepo *repo, const char *provides)
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
 			 NULL);
-	sqlite3_bind_text (iter->pp_stmt, 1, provides, -1, SQLITE_STATIC);
+	sqlite3_bind_text (iter->pp_stmt, 1, provides->name, -1, SQLITE_STATIC);
 	return (LowPackageIter *) iter;
 }
 
 LowPackageIter *
-low_repo_sqlite_search_requires (LowRepo *repo, const char *requires)
+low_repo_sqlite_search_requires (LowRepo *repo,
+				 const LowPackageDependency *requires)
 {
 	const char *stmt = SELECT_FIELDS_FROM " packages p, requires req "
 			   "WHERE req.pkgKey = p.pkgKey "
@@ -218,12 +220,13 @@ low_repo_sqlite_search_requires (LowRepo *repo, const char *requires)
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
 			 NULL);
-	sqlite3_bind_text (iter->pp_stmt, 1, requires, -1, SQLITE_STATIC);
+	sqlite3_bind_text (iter->pp_stmt, 1, requires->name, -1, SQLITE_STATIC);
 	return (LowPackageIter *) iter;
 }
 
 LowPackageIter *
-low_repo_sqlite_search_conflicts (LowRepo *repo, const char *conflicts)
+low_repo_sqlite_search_conflicts (LowRepo *repo,
+				  const LowPackageDependency *conflicts)
 {
 	const char *stmt = SELECT_FIELDS_FROM "packages p, conflicts conf "
 			   "WHERE conf.pkgKey = p.pkgKey "
@@ -237,12 +240,14 @@ low_repo_sqlite_search_conflicts (LowRepo *repo, const char *conflicts)
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
 			 NULL);
-	sqlite3_bind_text (iter->pp_stmt, 1, conflicts, -1, SQLITE_STATIC);
+	sqlite3_bind_text (iter->pp_stmt, 1, conflicts->name, -1,
+			   SQLITE_STATIC);
 	return (LowPackageIter *) iter;
 }
 
 LowPackageIter *
-low_repo_sqlite_search_obsoletes (LowRepo *repo, const char *obsoletes)
+low_repo_sqlite_search_obsoletes (LowRepo *repo,
+				  const LowPackageDependency *obsoletes)
 {
 	const char *stmt = SELECT_FIELDS_FROM "packages p, obsoletes obs "
 			   "WHERE obs.pkgKey = p.pkgKey "
@@ -256,7 +261,8 @@ low_repo_sqlite_search_obsoletes (LowRepo *repo, const char *obsoletes)
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
 			 NULL);
-	sqlite3_bind_text (iter->pp_stmt, 1, obsoletes, -1, SQLITE_STATIC);
+	sqlite3_bind_text (iter->pp_stmt, 1, obsoletes->name, -1,
+			   SQLITE_STATIC);
 	return (LowPackageIter *) iter;
 }
 

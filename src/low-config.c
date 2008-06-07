@@ -145,11 +145,17 @@ low_config_replace_macros (LowConfig *config, const char *value)
 
 	struct utsname uts;
 	LowPackageIter *iter;
+	LowPackageDependency *release_rpm =
+		low_package_dependency_new (RELEASE_PKG, DEPENDENCY_SENSE_NONE,
+					    NULL);
 
 	uname(&uts);
 
 	/* XXX deal with no providing package, or more than one */
-	iter = low_repo_rpmdb_search_provides (config->rpmdb, RELEASE_PKG);
+	iter = low_repo_rpmdb_search_provides (config->rpmdb, release_rpm);
+
+	low_package_dependency_free (release_rpm);
+
 	iter = low_package_iter_next (iter);
 
 

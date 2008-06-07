@@ -35,13 +35,14 @@ LowPackageIter *    low_repo_sqlite_list_by_name (LowRepo *repo,
 						  const char *name);
 
 LowPackageIter *    low_repo_sqlite_search_provides     (LowRepo *repo,
-							 const char *provides);
+							 const LowPackageDependency *provides);
 LowPackageIter *    low_repo_sqlite_search_requires     (LowRepo *repo,
-							 const char *requires);
+							 const LowPackageDependency *requires);
 LowPackageIter *    low_repo_sqlite_search_conflicts 	(LowRepo *repo,
-							 const char *conflicts);
+							 const LowPackageDependency *conflicts);
 LowPackageIter *    low_repo_sqlite_search_obsoletes     (LowRepo *repo,
-							 const char *obsoletes);
+							 const LowPackageDependency *obsoletes);
+
 LowPackageIter *    low_repo_sqlite_search_files 	(LowRepo *repo,
 							 const char *file);
 

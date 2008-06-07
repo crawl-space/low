@@ -38,14 +38,16 @@ void 			low_fake_repo_shutdown 		(LowRepo *repo);
 LowPackageIter *	low_fake_repo_list_all 	(LowRepo *repo);
 LowPackageIter *	low_fake_repo_list_by_name 	(LowRepo *repo,
 							 const char *name);
+
 LowPackageIter *	low_fake_repo_search_provides 	(LowRepo *repo,
-							 const char *provides);
+							 const LowPackageDependency *provides);
 LowPackageIter * 	low_fake_repo_search_requires  (LowRepo *repo,
-							const char *requires);
+							const LowPackageDependency *requires);
 LowPackageIter * 	low_fake_repo_search_conflicts (LowRepo *repo,
-							const char *conflicts);
+							const LowPackageDependency *conflicts);
 LowPackageIter *	low_fake_repo_search_obsoletes (LowRepo *repo,
-							const char *obsoletes);
+							const LowPackageDependency *obsoletes);
+
 LowPackageIter *	low_fake_repo_search_files 	(LowRepo *repo,
 							 const char *file);
 
@@ -66,9 +68,16 @@ char **			low_fake_repo_get_files 	(LowRepo *repo,
 
 #define DELEGATE_SEARCH_FUNCTION(name, func) \
 	LowPackageIter * \
-	low_repo_ ## name ## _ ## func (LowRepo *repo, \
-					const char *searchstr) { \
-		return low_fake_repo_ ## func (repo, searchstr); \
+	low_repo_##name##_##func (LowRepo *repo, \
+				  const char *searchstr) { \
+		return low_fake_repo_##func (repo, searchstr); \
+	}
+
+#define DELEGATE_DEP_SEARCH_FUNCTION(name, func) \
+	LowPackageIter * \
+	low_repo_##name##_##func (LowRepo *repo, \
+				  const LowPackageDependency *searchstr) { \
+		return low_fake_repo_##func (repo, searchstr); \
 	}
 
 #define DELEGATE_GET_FUNCTION(name, func) \
@@ -95,10 +104,12 @@ char **			low_fake_repo_get_files 	(LowRepo *repo,
 	} \
 	\
 	DELEGATE_SEARCH_FUNCTION(name, list_by_name) \
-	DELEGATE_SEARCH_FUNCTION(name, search_provides) \
-	DELEGATE_SEARCH_FUNCTION(name, search_requires) \
-	DELEGATE_SEARCH_FUNCTION(name, search_conflicts) \
-	DELEGATE_SEARCH_FUNCTION(name, search_obsoletes) \
+	\
+	DELEGATE_DEP_SEARCH_FUNCTION(name, search_provides) \
+	DELEGATE_DEP_SEARCH_FUNCTION(name, search_requires) \
+	DELEGATE_DEP_SEARCH_FUNCTION(name, search_conflicts) \
+	DELEGATE_DEP_SEARCH_FUNCTION(name, search_obsoletes) \
+	\
 	DELEGATE_SEARCH_FUNCTION(name, search_files) \
 	DELEGATE_SEARCH_FUNCTION(name, search_details) \
 	\

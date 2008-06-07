@@ -104,7 +104,7 @@ low_repo_set_for_each (LowRepoSet *repo_set, LowRepoSetFilter filter,
 }
 
 typedef LowPackageIter * (*LowRepoSetIterSearchFunc) (LowRepo *repo,
-						      const gchar *searchstr);
+						      const void *search_data);
 
 typedef struct _LowRepoSetPackageIter {
 	LowPackageIter super;
@@ -168,7 +168,7 @@ low_repo_set_package_iter_next (LowPackageIter *iter)
 static LowPackageIter *
 low_repo_set_package_iter_new (LowRepoSet *repo_set,
 			       LowRepoSetIterSearchFunc search_func,
-			       const char *searchstr)
+			       const void *search_data)
 {
 	LowRepoSetPackageIter *iter = malloc (sizeof (LowRepoSetPackageIter));
 	iter->super.next_func = low_repo_set_package_iter_next;
@@ -183,13 +183,13 @@ low_repo_set_package_iter_new (LowRepoSet *repo_set,
 	} while (iter->current_repo != NULL && !iter->current_repo->enabled);
 
 	iter->search_func = search_func;
-	iter->search_data = searchstr;
+	iter->search_data = search_data;
 
 	/* XXX For an empty hashtable. kind of ugly. */
 	if (iter->current_repo != NULL) {
 		low_debug ("On repo '%s'", iter->current_repo->id);
 		iter->current_repo_iter =
-			(iter->search_func) (iter->current_repo, searchstr);
+			(iter->search_func) (iter->current_repo, search_data);
 	}
 
 	return (LowPackageIter *) iter;
@@ -212,38 +212,47 @@ LowPackageIter *
 low_repo_set_list_by_name (LowRepoSet *repo_set, const char *name)
 {
 	return low_repo_set_package_iter_new (repo_set,
+					      (LowRepoSetIterSearchFunc)
 					      low_repo_sqlite_list_by_name,
 					      name);
 }
 
 LowPackageIter *
-low_repo_set_search_provides (LowRepoSet *repo_set, const char *provides)
+low_repo_set_search_provides (LowRepoSet *repo_set,
+			      const LowPackageDependency *provides)
 {
 	return low_repo_set_package_iter_new (repo_set,
+					      (LowRepoSetIterSearchFunc)
 					      low_repo_sqlite_search_provides,
 					      provides);
 }
 
 LowPackageIter *
-low_repo_set_search_requires (LowRepoSet *repo_set, const char *requires)
+low_repo_set_search_requires (LowRepoSet *repo_set,
+			      const LowPackageDependency *requires)
 {
 	return low_repo_set_package_iter_new (repo_set,
+					      (LowRepoSetIterSearchFunc)
 					      low_repo_sqlite_search_requires,
 					      requires);
 }
 
 LowPackageIter *
-low_repo_set_search_conflicts (LowRepoSet *repo_set, const char *conflicts)
+low_repo_set_search_conflicts (LowRepoSet *repo_set,
+			       const LowPackageDependency *conflicts)
 {
 	return low_repo_set_package_iter_new (repo_set,
+					      (LowRepoSetIterSearchFunc)
 					      low_repo_sqlite_search_conflicts,
 					      conflicts);
 }
 
 LowPackageIter *
-low_repo_set_search_obsoletes (LowRepoSet *repo_set, const char *obsoletes)
+low_repo_set_search_obsoletes (LowRepoSet *repo_set,
+			       const LowPackageDependency *obsoletes)
 {
 	return low_repo_set_package_iter_new (repo_set,
+					      (LowRepoSetIterSearchFunc)
 					      low_repo_sqlite_search_obsoletes,
 					      obsoletes);
 }
@@ -252,6 +261,7 @@ LowPackageIter *
 low_repo_set_search_files (LowRepoSet *repo_set, const char *file)
 {
 	return low_repo_set_package_iter_new (repo_set,
+					      (LowRepoSetIterSearchFunc)
 					      low_repo_sqlite_search_files,
 					      file);
 }
@@ -260,6 +270,7 @@ LowPackageIter *
 low_repo_set_search_details (LowRepoSet *repo_set, const char *querystr)
 {
 	return low_repo_set_package_iter_new (repo_set,
+					      (LowRepoSetIterSearchFunc)
 					      low_repo_sqlite_search_details,
 					      querystr);
 }

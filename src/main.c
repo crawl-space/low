@@ -410,7 +410,8 @@ command_whatprovides (int argc G_GNUC_UNUSED, const char *argv[])
 	LowRepoSet *repos;
 	LowConfig *config;
 	LowPackageIter *iter;
-	gchar *provides = g_strdup (argv[0]);
+	LowPackageDependency *provides =
+		low_package_dependency_new_from_string (argv[0]);
 
 	rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (rpmdb);
@@ -418,8 +419,8 @@ command_whatprovides (int argc G_GNUC_UNUSED, const char *argv[])
 	iter = low_repo_rpmdb_search_provides (rpmdb, provides);
 	print_all_packages_short (iter);
 
-	if (provides[0] == '/') {
-		iter = low_repo_rpmdb_search_files (rpmdb, provides);
+	if (provides->name[0] == '/') {
+		iter = low_repo_rpmdb_search_files (rpmdb, provides->name);
 		print_all_packages_short (iter);
 	}
 
@@ -428,15 +429,15 @@ command_whatprovides (int argc G_GNUC_UNUSED, const char *argv[])
 	iter = low_repo_set_search_provides (repos, provides);
 	print_all_packages_short (iter);
 
-	if (provides[0] == '/') {
-		iter = low_repo_set_search_files (repos, provides);
+	if (provides->name[0] == '/') {
+		iter = low_repo_set_search_files (repos, provides->name);
 		print_all_packages_short (iter);
 	}
 
 	low_repo_set_free (repos);
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
-	g_free (provides);
+	low_package_dependency_free (provides);
 
 	return EXIT_SUCCESS;
 }
@@ -448,7 +449,8 @@ command_whatrequires (int argc G_GNUC_UNUSED, const char *argv[])
 	LowRepoSet *repos;
 	LowConfig *config;
 	LowPackageIter *iter;
-	gchar *requires = g_strdup (argv[0]);
+	LowPackageDependency *requires =
+		low_package_dependency_new_from_string (argv[0]);
 
 	rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (rpmdb);
@@ -464,7 +466,7 @@ command_whatrequires (int argc G_GNUC_UNUSED, const char *argv[])
 	low_repo_set_free (repos);
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
-	g_free (requires);
+	low_package_dependency_free (requires);
 
 	return EXIT_SUCCESS;
 }
@@ -476,7 +478,8 @@ command_whatconflicts (int argc G_GNUC_UNUSED, const char *argv[])
 	LowRepoSet *repos;
 	LowConfig *config;
 	LowPackageIter *iter;
-	gchar *conflicts = g_strdup (argv[0]);
+	LowPackageDependency *conflicts =
+		low_package_dependency_new_from_string (argv[0]);
 
 	rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (rpmdb);
@@ -492,7 +495,7 @@ command_whatconflicts (int argc G_GNUC_UNUSED, const char *argv[])
 	low_repo_set_free (repos);
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
-	g_free (conflicts);
+	low_package_dependency_free (conflicts);
 
 	return EXIT_SUCCESS;
 }
@@ -504,7 +507,8 @@ command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 	LowRepoSet *repos;
 	LowConfig *config;
 	LowPackageIter *iter;
-	gchar *obsoletes = g_strdup (argv[0]);
+	LowPackageDependency *obsoletes =
+		low_package_dependency_new_from_string (argv[0]);
 
 	rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (rpmdb);
@@ -520,7 +524,7 @@ command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 	low_repo_set_free (repos);
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
-	g_free (obsoletes);
+	low_package_dependency_free (obsoletes);
 
 	return EXIT_SUCCESS;
 }
@@ -592,7 +596,8 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 	LowPackageIter *iter;
 	LowConfig *config;
 	LowTransaction *trans;
-	const char *provides = argv[0];
+	LowPackageDependency *provides =
+		low_package_dependency_new_from_string (argv[0]);
 	GSList *install;
 
 	rpmdb = low_repo_rpmdb_initialize ();
@@ -627,6 +632,7 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 	low_repo_set_free (repos);
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
+	low_package_dependency_free (provides);
 
 	return EXIT_SUCCESS;
 }
@@ -639,7 +645,8 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 	LowPackageIter *iter;
 	LowConfig *config;
 	LowTransaction *trans;
-	const char *provides = argv[0];
+	LowPackageDependency *provides =
+		low_package_dependency_new_from_string (argv[0]);
 	GSList *remove;
 
 	rpmdb = low_repo_rpmdb_initialize ();
@@ -675,6 +682,7 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 		remove = remove->next;
 	}
 
+	low_package_dependency_free (provides);
 	low_transaction_free (trans);
 	low_repo_set_free (repos);
 	low_config_free (config);

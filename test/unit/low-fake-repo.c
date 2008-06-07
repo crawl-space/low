@@ -109,10 +109,11 @@ low_fake_repo_search_provides_filter_fn (LowPackage *pkg, gpointer data)
 {
 	int i;
 	LowPackageDependency **deps = low_package_get_provides (pkg);
-	const char *querystr = (const char *) data;
+	const LowPackageDependency *query_dep =
+		(const LowPackageDependency *) data;
 
 	for (i = 0; deps[i] != NULL; i++) {
-		if (!strcmp (querystr, deps[i]->name)) {
+		if (low_package_dependency_satisfies (query_dep, deps[i])) {
 		    return TRUE;
 		}
 	}
@@ -121,7 +122,8 @@ low_fake_repo_search_provides_filter_fn (LowPackage *pkg, gpointer data)
 }
 
 LowPackageIter *
-low_fake_repo_search_provides (LowRepo *repo, const char *provides)
+low_fake_repo_search_provides (LowRepo *repo,
+			       const LowPackageDependency *provides)
 {
 	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
 	iter->super.repo = repo;
@@ -130,7 +132,9 @@ low_fake_repo_search_provides (LowRepo *repo, const char *provides)
 
 	iter->position = 0;
 	iter->func = low_fake_repo_search_provides_filter_fn;
-	iter->data = g_strdup (provides);
+	iter->data = low_package_dependency_new (provides->name,
+						 provides->sense,
+						 provides->evr);
 
 	return (LowPackageIter *) iter;
 }
@@ -140,10 +144,11 @@ low_fake_repo_search_requires_filter_fn (LowPackage *pkg, gpointer data)
 {
 	int i;
 	LowPackageDependency **deps = low_package_get_requires (pkg);
-	const char *querystr = (const char *) data;
+	const LowPackageDependency *query_dep =
+		(const LowPackageDependency *) data;
 
 	for (i = 0; deps[i] != NULL; i++) {
-		if (!strcmp (querystr, deps[i]->name)) {
+		if (low_package_dependency_satisfies (query_dep, deps[i])) {
 		    return TRUE;
 		}
 	}
@@ -152,7 +157,8 @@ low_fake_repo_search_requires_filter_fn (LowPackage *pkg, gpointer data)
 }
 
 LowPackageIter *
-low_fake_repo_search_requires (LowRepo *repo, const char *requires)
+low_fake_repo_search_requires (LowRepo *repo,
+			       const LowPackageDependency *requires)
 {
 	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
 	iter->super.repo = repo;
@@ -161,7 +167,9 @@ low_fake_repo_search_requires (LowRepo *repo, const char *requires)
 
 	iter->position = 0;
 	iter->func = low_fake_repo_search_requires_filter_fn;
-	iter->data = g_strdup (requires);
+	iter->data = low_package_dependency_new (requires->name,
+						 requires->sense,
+						 requires->evr);
 
 	return (LowPackageIter *) iter;
 }
@@ -171,10 +179,11 @@ low_fake_repo_search_conflicts_filter_fn (LowPackage *pkg, gpointer data)
 {
 	int i;
 	LowPackageDependency **deps = low_package_get_conflicts (pkg);
-	const char *querystr = (const char *) data;
+	const LowPackageDependency *query_dep =
+		(const LowPackageDependency *) data;
 
 	for (i = 0; deps[i] != NULL; i++) {
-		if (!strcmp (querystr, deps[i]->name)) {
+		if (low_package_dependency_satisfies (query_dep, deps[i])) {
 		    return TRUE;
 		}
 	}
@@ -183,7 +192,8 @@ low_fake_repo_search_conflicts_filter_fn (LowPackage *pkg, gpointer data)
 }
 
 LowPackageIter *
-low_fake_repo_search_conflicts (LowRepo *repo, const char *conflicts)
+low_fake_repo_search_conflicts (LowRepo *repo,
+				const LowPackageDependency *conflicts)
 {
 	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
 	iter->super.repo = repo;
@@ -192,14 +202,16 @@ low_fake_repo_search_conflicts (LowRepo *repo, const char *conflicts)
 
 	iter->position = 0;
 	iter->func = low_fake_repo_search_conflicts_filter_fn;
-	iter->data = g_strdup (conflicts);
+	iter->data = low_package_dependency_new (conflicts->name,
+						 conflicts->sense,
+						 conflicts->evr);
 
 	return (LowPackageIter *) iter;
 }
 
 LowPackageIter *
 low_fake_repo_search_obsoletes (LowRepo *repo,
-				const char *obsoletes G_GNUC_UNUSED)
+				const LowPackageDependency *obsoletes G_GNUC_UNUSED)
 {
 	return low_fake_repo_list_all (repo);
 }

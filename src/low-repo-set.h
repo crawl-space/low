@@ -56,13 +56,13 @@ LowPackageIter * low_repo_set_list_by_name 		(LowRepoSet *repo_set,
 							 const char *name);
 
 LowPackageIter * low_repo_set_search_provides      	(LowRepoSet *repo_set,
-							 const char *provides);
+							 const LowPackageDependency *provides);
 LowPackageIter * low_repo_set_search_requires      	(LowRepoSet *repo_set,
-							 const char *requires);
+							 const LowPackageDependency *requires);
 LowPackageIter * low_repo_set_search_conflicts 		(LowRepoSet *repo_set,
-							 const char *conflicts);
+							 const LowPackageDependency *conflicts);
 LowPackageIter * low_repo_set_search_obsoletes 		(LowRepoSet *repo_set,
-							 const char *obsoletes);
+							 const LowPackageDependency *obsoletes);
 
 LowPackageIter * low_repo_set_search_files      	(LowRepoSet *repo_set,
 							 const char *file);
