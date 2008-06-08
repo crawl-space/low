@@ -35,13 +35,18 @@ typedef struct _LowTransaction {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
 
-	GSList *install;
-	GSList *update;
-	GSList *remove;
+	GHashTable *install;
+	GHashTable *update;
+	GHashTable *remove;
 
 	/* Should this be on the struct or returned? */
-	GSList *unresolved;
+	GHashTable *unresolved;
 } LowTransaction;
+
+typedef struct _LowTransactionMember {
+	LowPackage *pkg;
+	gboolean resolved;
+} LowTransactionMember;
 
 LowTransaction *	low_transaction_new 	(LowRepo *rpmdb,
 						 LowRepoSet *repos);

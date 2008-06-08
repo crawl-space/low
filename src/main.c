@@ -598,7 +598,7 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 	LowTransaction *trans;
 	LowPackageDependency *provides =
 		low_package_dependency_new_from_string (argv[0]);
-	GSList *install;
+	GList *install;
 
 	rpmdb = low_repo_rpmdb_initialize ();
 
@@ -622,9 +622,10 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	install = trans->install;
+	install = g_hash_table_get_values (trans->install);
 	while (install != NULL) {
-		print_package_short (install->data);
+		LowTransactionMember *member = install->data;
+		print_package_short (member->pkg);
 		install = install->next;
 	}
 
@@ -647,7 +648,7 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 	LowTransaction *trans;
 	LowPackageDependency *provides =
 		low_package_dependency_new_from_string (argv[0]);
-	GSList *remove;
+	GList *remove;
 
 	rpmdb = low_repo_rpmdb_initialize ();
 
@@ -676,9 +677,10 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	remove = trans->remove;
+	remove = g_hash_table_get_values (trans->remove);
 	while (remove != NULL) {
-		print_package_short (remove->data);
+		LowTransactionMember *member = remove->data;
+		print_package_short (member->pkg);
 		remove = remove->next;
 	}
 

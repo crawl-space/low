@@ -430,7 +430,7 @@ schedule_transactions (LowTransaction *trans, LowRepo *installed G_GNUC_UNUSED,
 }
 
 static int
-assert_package (GSList *list, GHashTable *hash)
+assert_package (GHashTable *pkgs, GHashTable *hash)
 {
 	char *name = g_hash_table_lookup (hash, "name");
 	char *arch = g_hash_table_lookup (hash, "arch");
@@ -444,10 +444,12 @@ assert_package (GSList *list, GHashTable *hash)
 		parse_evr (evr, &epoch, &version, &release);
 	}
 
-	GSList *cur;
+	GList *cur;
 
-	for (cur = list; cur != NULL; cur = cur->next) {
-		LowPackage *pkg = cur->data;
+	for (cur = g_hash_table_get_values (pkgs); cur != NULL;
+	     cur = cur->next) {
+		LowTransactionMember *member = cur->data;
+		LowPackage *pkg = member->pkg;
 		low_debug_pkg ("on package", pkg);
 		if (!strcmp (name, pkg->name) &&
 		    !strcmp (version, pkg->version) &&
@@ -505,15 +507,15 @@ compare_results (LowTransactionResult trans_res, LowTransaction *trans,
 		}
 	}
 
-	if (expected_installs != g_slist_length (trans->install)) {
+	if (expected_installs != g_hash_table_size (trans->install)) {
 		printf ("Unexpected number of packages marked for install\n");
 		return 1;
 	}
-	if (expected_removals != g_slist_length (trans->remove)) {
+	if (expected_removals != g_hash_table_size (trans->remove)) {
 		printf ("Unexpected number of packages marked for remove\n");
 		return 1;
 	}
-	if (expected_updates != g_slist_length (trans->update)) {
+	if (expected_updates != g_hash_table_size (trans->update)) {
 		printf ("Unexpected number of packages marked for update\n");
 		return 1;
 	}
