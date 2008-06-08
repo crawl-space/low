@@ -22,6 +22,7 @@
 #include <string.h>
 #include <rpm/rpmlib.h>
 #include <rpm/rpmdb.h>
+#include "low-debug.h"
 #include "low-package-rpmdb.h"
 #include "low-repo-rpmdb.h"
 
@@ -33,9 +34,34 @@ union rpm_entry {
 	uint_32 *integer;
 };
 
+/* XXX add this to the rpmdb repo struct */
+static GHashTable *table = NULL;
+
+static guint
+id_hash_func (gconstpointer key)
+{
+	return *((guint *) key);
+}
+
+static gboolean
+id_equal_func (gconstpointer key1, gconstpointer key2)
+{
+	if (!strncmp (key1, key2, 16)) {
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+}
+
 static LowPackage *
 low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 {
+	if (!table) {
+		low_debug ("initializing hash table\n");
+		table = g_hash_table_new (id_hash_func, id_equal_func);
+	}
+
+	LowPackage *pkg;
 	union rpm_entry id, name, epoch, version, release, arch;
 	union rpm_entry size;
 	int_32 type, count;
@@ -55,9 +81,18 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	rpmHeaderGetEntry(header, RPMTAG_SIZE, &type, &size.p, &count);
 
-	LowPackage *pkg = malloc (sizeof (LowPackage));
+	pkg = g_hash_table_lookup (table, id.p);
+	if (pkg) {
+		low_package_ref (pkg);
+		return pkg;
+	}
+	low_debug ("CACHE MISS - %s", name.string);
 
+	pkg = malloc (sizeof (LowPackage));
+
+	g_hash_table_insert (table, id.p, pkg);
 	low_package_ref_init (pkg);
+	low_package_ref (pkg);
 
 	pkg->id = id.p;
 	pkg->name = strdup (name.string);
@@ -71,6 +106,8 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	/* installed packages can't be downloaded. */
 	pkg->location_href = NULL;
+
+	pkg->requires = NULL;
 
 	pkg->get_details = low_rpmdb_package_get_details;
 

@@ -81,6 +81,8 @@ struct _LowPackage {
 	char *location_href;
 	LowRepo *repo;
 
+	LowPackageDependency **requires;
+
 	LowPackageGetDetails get_details;
 
 	LowPackageGetDependency get_provides;

@@ -117,7 +117,7 @@ low_repo_rpmdb_search_dep_filter_fn (LowPackage *pkg, gpointer data)
 		}
 	}
 
-	low_package_dependency_list_free (deps);
+//	low_package_dependency_list_free (deps);
 
 	return res;
 }
@@ -334,9 +334,14 @@ low_repo_rpmdb_get_provides (LowRepo *repo, LowPackage *pkg)
 LowPackageDependency **
 low_repo_rpmdb_get_requires (LowRepo *repo, LowPackage *pkg)
 {
-	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_REQUIRENAME,
-					RPMTAG_REQUIREFLAGS,
-					RPMTAG_REQUIREVERSION);
+	if (!pkg->requires) {
+		pkg->requires = low_repo_rpmdb_get_deps (repo, pkg,
+							 RPMTAG_REQUIRENAME,
+							 RPMTAG_REQUIREFLAGS,
+							 RPMTAG_REQUIREVERSION);
+	}
+
+	return pkg->requires;
 }
 
 LowPackageDependency **
