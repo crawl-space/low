@@ -22,6 +22,9 @@
 #include <sqlite3.h>
 #include "low-package.h"
 
+/* XXX for the filter stuff; will go away */
+#include "low-package-rpmdb.h"
+
 #ifndef _LOW_PACKAGE_SQLITE_H_
 #define _LOW_PACKAGE_SQLITE_H_
 
@@ -32,6 +35,9 @@ typedef struct _LowPackageSqlite {
 typedef struct _LowPackageIterSqlite {
 	LowPackageIter super;
 	sqlite3_stmt *pp_stmt;
+	LowPackageIterFilterFn func;
+	gpointer filter_data;
+	LowPackageIterFilterDataFree filter_data_free_func;
 } LowPackageIterSqlite;
 
 LowPackageIter * low_sqlite_package_iter_next	(LowPackageIter *iter);

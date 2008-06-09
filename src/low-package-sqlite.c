@@ -70,6 +70,11 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 
 	if (sqlite3_step(iter_sqlite->pp_stmt) == SQLITE_DONE) {
 		sqlite3_finalize (iter_sqlite->pp_stmt);
+
+		if (iter_sqlite->filter_data_free_func) {
+			(iter_sqlite->filter_data_free_func) (iter_sqlite->filter_data);
+		}
+
 		free (iter_sqlite);
 		return NULL;
 	}
@@ -77,6 +82,13 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 	iter->pkg = low_package_sqlite_new_from_row (iter_sqlite->pp_stmt,
 												 iter->repo);
 
+	if (iter_sqlite->func != NULL) {
+		/* move on to the next package if this one fails the filter */
+		if (!(iter_sqlite->func) (iter->pkg, iter_sqlite->filter_data)) {
+			low_package_unref (iter->pkg);
+			return low_package_iter_next (iter);
+		}
+	}
 	return iter;
 }
 
