@@ -129,7 +129,7 @@ low_transaction_add_to_hash (GHashTable *hash, LowPackage *pkg)
 		res = TRUE;
 	} else {
 		/* XXX not the right place for this */
-		low_package_unref (pkg);
+//		low_package_unref (pkg);
 		res = FALSE;
 	}
 
@@ -421,16 +421,20 @@ low_transaction_check_all_requires (LowTransaction *trans)
 			(LowTransactionMember *) cur->data;
 		LowPackage *pkg = member->pkg;
 
-		req_status = low_transaction_check_package_requires (trans,
-								     pkg);
+		if (!member->resolved) {
+			req_status = low_transaction_check_package_requires (trans,
+									     pkg);
 
-		if (req_status == LOW_TRANSACTION_UNRESOLVABLE) {
-			low_debug_pkg ("Adding to unresolved", pkg);
-			low_transaction_add_to_hash (trans->unresolved, pkg);
-			low_transaction_remove_from_hash (trans->install, pkg);
-			return req_status;
-		} else if (req_status == LOW_TRANSACTION_PACKAGES_ADDED) {
-			status = LOW_TRANSACTION_PACKAGES_ADDED;
+			if (req_status == LOW_TRANSACTION_UNRESOLVABLE) {
+				low_debug_pkg ("Adding to unresolved", pkg);
+				low_transaction_add_to_hash (trans->unresolved, pkg);
+				low_transaction_remove_from_hash (trans->install, pkg);
+				return req_status;
+			} else if (req_status == LOW_TRANSACTION_PACKAGES_ADDED) {
+				status = LOW_TRANSACTION_PACKAGES_ADDED;
+			}
+
+			member->resolved = TRUE;
 		}
 
 		cur = cur->next;
