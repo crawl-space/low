@@ -296,7 +296,7 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
 static LowTransactionStatus
 low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 {
-	LowTransactionStatus status;
+	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
 	LowPackageDependency **requires;
 	LowPackageDependency **provides;
 	char **files;
@@ -406,7 +406,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 	low_package_dependency_list_free (requires);
 	g_strfreev (files);
 
-	return LOW_TRANSACTION_OK;
+	return status;
 }
 
 static LowTransactionStatus
