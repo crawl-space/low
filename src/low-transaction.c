@@ -288,7 +288,7 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
 		low_package_dependency_free (file_dep);
 	}
 
-	low_package_dependency_list_free (provides);
+//	low_package_dependency_list_free (provides);
 	g_strfreev (files);
 
 	return status;
@@ -402,8 +402,8 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 		return LOW_TRANSACTION_UNRESOLVABLE;
 	}
 
-	low_package_dependency_list_free (provides);
-	low_package_dependency_list_free (requires);
+//	low_package_dependency_list_free (provides);
+//	low_package_dependency_list_free (requires);
 	g_strfreev (files);
 
 	return status;
@@ -482,12 +482,12 @@ low_transaction_search_provides (GHashTable *hash, char *query)
 
 		for (i = 0; provides[i] != NULL; i++) {
 			if (!strcmp (query, provides[i]->name)) {
-				low_package_dependency_list_free (provides);
+//				low_package_dependency_list_free (provides);
 				return member->pkg;
 			}
 		}
 
-		low_package_dependency_list_free (provides);
+//		low_package_dependency_list_free (provides);
 
 	}
 
@@ -584,7 +584,7 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 
 		}
 
-		low_package_dependency_list_free (provides);
+//		low_package_dependency_list_free (provides);
 		low_package_dependency_list_free (conflicts);
 
 		if (status == LOW_TRANSACTION_UNRESOLVABLE) {

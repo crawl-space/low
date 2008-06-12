@@ -21,8 +21,12 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "low-debug.h"
 #include "low-package-sqlite.h"
 #include "low-repo-sqlite.h"
+
+/* XXX add this to the rpmdb repo struct */
+static GHashTable *table = NULL;
 
 static LowPackage *
 low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
@@ -30,7 +34,23 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	int i = 0;
 	LowPackage *pkg = malloc (sizeof (LowPackage));
 
+	if (!table) {
+		low_debug ("initializing hash table\n");
+		table = g_hash_table_new (NULL, NULL);
+	}
+
+	pkg = g_hash_table_lookup (table, GINT_TO_POINTER (sqlite3_column_int (pp_stmt, 0)));
+	if (pkg) {
+		low_package_ref (pkg);
+		return pkg;
+	}
+	low_debug ("CACHE MISS");
+
+	pkg = malloc (sizeof (LowPackage));
 	low_package_ref_init (pkg);
+	low_package_ref (pkg);
+
+	g_hash_table_insert (table, GINT_TO_POINTER (sqlite3_column_int (pp_stmt, 0)), pkg);
 
 	/* XXX kind of hacky */
 	pkg->id = malloc (sizeof (int));
@@ -57,6 +77,9 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	pkg->get_requires = low_sqlite_package_get_requires;
 	pkg->get_conflicts = low_sqlite_package_get_conflicts;
 	pkg->get_obsoletes = low_sqlite_package_get_obsoletes;
+
+	pkg->provides = NULL;
+	pkg->requires = NULL;
 
 	pkg->get_files = low_sqlite_package_get_files;
 
@@ -105,7 +128,10 @@ low_sqlite_package_get_provides (LowPackage *pkg)
 	 * XXX maybe this should all be in the same file,
 	 *     or the sqlite repo struct should be in the header
 	 */
-	return low_repo_sqlite_get_provides (pkg->repo, pkg);
+	if (!pkg->provides)
+		pkg->provides = low_repo_sqlite_get_provides (pkg->repo, pkg);
+
+		return pkg->provides;
 }
 
 LowPackageDependency **

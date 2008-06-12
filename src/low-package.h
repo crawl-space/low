@@ -82,6 +82,7 @@ struct _LowPackage {
 	LowRepo *repo;
 
 	LowPackageDependency **requires;
+	LowPackageDependency **provides;
 
 	LowPackageGetDetails get_details;
 

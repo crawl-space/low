@@ -223,7 +223,7 @@ low_repo_sqlite_search_dep_filter_fn (LowPackage *pkg, gpointer data)
 		}
 	}
 
-	low_package_dependency_list_free (deps);
+//	low_package_dependency_list_free (deps);
 
 	return res;
 }
