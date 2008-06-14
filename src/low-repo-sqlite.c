@@ -26,12 +26,6 @@
 #include <unistd.h>
 #include "low-debug.h"
 #include "low-repo-sqlite.h"
-/*
-#define SELECT_FIELDS_FROM "SELECT p.pkgKey, p.name, p.arch, p.version, " \
-			   "p.release, p.epoch, p.size_package, p.summary, " \
-			   "p.description, p.url, p.rpm_license, " \
-			   "p.location_href FROM "
-*/
 
 #define SELECT_FIELDS_FROM "SELECT p.pkgKey, p.name, p.arch, p.version, " \
 			   "p.release, p.epoch, p.size_package, " \
