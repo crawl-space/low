@@ -261,159 +261,6 @@ union rpm_entry {
 	uint_32 *integer;
 };
 
-static LowPackageDetails *
-low_repo_rpmdb_get_details (LowRepo *repo, LowPackage *pkg)
-{
-	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
-	rpmdbMatchIterator iter;
-	Header header;
-	LowPackageDetails *details = malloc (sizeof (LowPackageDetails));
-	union rpm_entry summary, description, url, license;
-	int_32 type, count;
-
-	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
-	header = rpmdbNextIterator (iter);
-
-	rpmHeaderGetEntry(header, RPMTAG_SUMMARY, &type, &summary.p, &count);
-	rpmHeaderGetEntry(header, RPMTAG_DESCRIPTION, &type, &description.p,
-			  &count);
-	rpmHeaderGetEntry(header, RPMTAG_URL, &type, &url.p, &count);
-	rpmHeaderGetEntry(header, RPMTAG_LICENSE, &type, &license.p, &count);
-
-	/* XXX need to confirm that we don't need to dup these */
-	details->summary = summary.string;
-	details->description = description.string;
-
-	details->url = g_strdup (url.string);
-	details->license = strdup (license.string);
-
-	rpmdbFreeIterator (iter);
-
-	return details;
-}
-
-static LowPackageDependencySense
-rpm_to_low_dependency_sense (uint_32 flag)
-{
-	switch (flag & (RPMSENSE_LESS | RPMSENSE_EQUAL | RPMSENSE_GREATER)) {
-		case RPMSENSE_LESS:
-			return DEPENDENCY_SENSE_LT;
-		case RPMSENSE_LESS|RPMSENSE_EQUAL:
-			return DEPENDENCY_SENSE_LE;
-		case RPMSENSE_EQUAL:
-			return DEPENDENCY_SENSE_EQ;
-		case RPMSENSE_GREATER|RPMSENSE_EQUAL:
-			return DEPENDENCY_SENSE_GE;
-		case RPMSENSE_GREATER:
-			return DEPENDENCY_SENSE_GT;
-	}
-
-	return DEPENDENCY_SENSE_NONE;
-}
-
-static LowPackageDependency **
-low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint_32 name_tag,
-			 uint_32 flag_tag, uint_32 version_tag)
-{
-	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
-	rpmdbMatchIterator iter;
-	Header header;
-	LowPackageDependency **deps;
-	union rpm_entry name, flag, version;
-	int_32 type, count, i;
-
-	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
-	header = rpmdbNextIterator (iter);
-
-	rpmHeaderGetEntry (header, name_tag, &type, &name.p, &count);
-	rpmHeaderGetEntry (header, flag_tag, &type, &flag.p, &count);
-	rpmHeaderGetEntry (header, version_tag, &type, &version.p, &count);
-
-	deps = malloc (sizeof (char *) * (count + 1));
-	for (i = 0; i < count; i++) {
-		LowPackageDependencySense sense =
-			rpm_to_low_dependency_sense (flag.int_list[i]);
-		deps[i] = low_package_dependency_new (name.list[i],
-						      sense,
-						      version.list[i]);
-	}
-	deps[count] = NULL;
-
-	headerFreeTag (header, name.p, type);
-	headerFreeTag (header, version.p, type);
-	rpmdbFreeIterator (iter);
-
-	return deps;
-}
-
-static LowPackageDependency **
-low_repo_rpmdb_get_provides (LowRepo *repo, LowPackage *pkg)
-{
-	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_PROVIDENAME,
-					RPMTAG_PROVIDEFLAGS,
-					RPMTAG_PROVIDEVERSION);
-}
-
-static LowPackageDependency **
-low_repo_rpmdb_get_requires (LowRepo *repo, LowPackage *pkg)
-{
-	if (!pkg->requires) {
-		pkg->requires = low_repo_rpmdb_get_deps (repo, pkg,
-							 RPMTAG_REQUIRENAME,
-							 RPMTAG_REQUIREFLAGS,
-							 RPMTAG_REQUIREVERSION);
-	}
-
-	return pkg->requires;
-}
-
-static LowPackageDependency **
-low_repo_rpmdb_get_conflicts (LowRepo *repo, LowPackage *pkg)
-{
-	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_CONFLICTNAME,
-					RPMTAG_CONFLICTFLAGS,
-					RPMTAG_CONFLICTVERSION);
-}
-
-static LowPackageDependency **
-low_repo_rpmdb_get_obsoletes (LowRepo *repo, LowPackage *pkg)
-{
-	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_OBSOLETENAME,
-					RPMTAG_OBSOLETEFLAGS,
-					RPMTAG_OBSOLETEVERSION);
-}
-
-static char **
-low_repo_rpmdb_get_files (LowRepo *repo, LowPackage *pkg)
-{
-	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
-	rpmdbMatchIterator iter;
-	Header header;
-	char **files;
-	union rpm_entry index, dir, name;
-	int_32 type, count, i;
-
-	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
-	header = rpmdbNextIterator (iter);
-
-	rpmHeaderGetEntry (header, RPMTAG_DIRINDEXES, &type, &index.p, &count);
-	rpmHeaderGetEntry (header, RPMTAG_DIRNAMES, &type, &dir.p, &count);
-	rpmHeaderGetEntry (header, RPMTAG_BASENAMES, &type, &name.p, &count);
-
-	files = malloc (sizeof (char *) * (count + 1));
-	for (i = 0; i < count; i++) {
-		files[i] = g_strdup_printf ("%s%s", dir.list[index.int_list[i]],
-					    name.list[i]);
-	}
-	files[count] = NULL;
-
-	headerFreeTag (header, dir.p, type);
-	headerFreeTag (header, name.p, type);
-	rpmdbFreeIterator (iter);
-
-	return files;
-}
-
 /* XXX add this to the rpmdb repo struct */
 static GHashTable *table = NULL;
 
@@ -537,43 +384,156 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 	return iter;
 }
 
+static LowPackageDependencySense
+rpm_to_low_dependency_sense (uint_32 flag)
+{
+	switch (flag & (RPMSENSE_LESS | RPMSENSE_EQUAL | RPMSENSE_GREATER)) {
+		case RPMSENSE_LESS:
+			return DEPENDENCY_SENSE_LT;
+		case RPMSENSE_LESS|RPMSENSE_EQUAL:
+			return DEPENDENCY_SENSE_LE;
+		case RPMSENSE_EQUAL:
+			return DEPENDENCY_SENSE_EQ;
+		case RPMSENSE_GREATER|RPMSENSE_EQUAL:
+			return DEPENDENCY_SENSE_GE;
+		case RPMSENSE_GREATER:
+			return DEPENDENCY_SENSE_GT;
+	}
+
+	return DEPENDENCY_SENSE_NONE;
+}
+
+static LowPackageDependency **
+low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint_32 name_tag,
+			 uint_32 flag_tag, uint_32 version_tag)
+{
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
+	rpmdbMatchIterator iter;
+	Header header;
+	LowPackageDependency **deps;
+	union rpm_entry name, flag, version;
+	int_32 type, count, i;
+
+	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
+	header = rpmdbNextIterator (iter);
+
+	rpmHeaderGetEntry (header, name_tag, &type, &name.p, &count);
+	rpmHeaderGetEntry (header, flag_tag, &type, &flag.p, &count);
+	rpmHeaderGetEntry (header, version_tag, &type, &version.p, &count);
+
+	deps = malloc (sizeof (char *) * (count + 1));
+	for (i = 0; i < count; i++) {
+		LowPackageDependencySense sense =
+			rpm_to_low_dependency_sense (flag.int_list[i]);
+		deps[i] = low_package_dependency_new (name.list[i],
+						      sense,
+						      version.list[i]);
+	}
+	deps[count] = NULL;
+
+	headerFreeTag (header, name.p, type);
+	headerFreeTag (header, version.p, type);
+	rpmdbFreeIterator (iter);
+
+	return deps;
+}
+
 LowPackageDetails *
 low_rpmdb_package_get_details (LowPackage *pkg)
 {
-	return low_repo_rpmdb_get_details (pkg->repo, pkg);
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) pkg->repo;
+	rpmdbMatchIterator iter;
+	Header header;
+	LowPackageDetails *details = malloc (sizeof (LowPackageDetails));
+	union rpm_entry summary, description, url, license;
+	int_32 type, count;
+
+	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
+	header = rpmdbNextIterator (iter);
+
+	rpmHeaderGetEntry(header, RPMTAG_SUMMARY, &type, &summary.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_DESCRIPTION, &type, &description.p,
+			  &count);
+	rpmHeaderGetEntry(header, RPMTAG_URL, &type, &url.p, &count);
+	rpmHeaderGetEntry(header, RPMTAG_LICENSE, &type, &license.p, &count);
+
+	/* XXX need to confirm that we don't need to dup these */
+	details->summary = summary.string;
+	details->description = description.string;
+
+	details->url = g_strdup (url.string);
+	details->license = strdup (license.string);
+
+	rpmdbFreeIterator (iter);
+
+	return details;
 }
 
 LowPackageDependency **
 low_rpmdb_package_get_provides (LowPackage *pkg)
 {
-	/*
-	 * XXX maybe this should all be in the same file,
-	 *     or the rpmdb repo struct should be in the header
-	 */
-	return low_repo_rpmdb_get_provides (pkg->repo, pkg);
+	return low_repo_rpmdb_get_deps (pkg->repo, pkg, RPMTAG_PROVIDENAME,
+					RPMTAG_PROVIDEFLAGS,
+					RPMTAG_PROVIDEVERSION);
 }
 
 LowPackageDependency **
 low_rpmdb_package_get_requires (LowPackage *pkg)
 {
-	return low_repo_rpmdb_get_requires (pkg->repo, pkg);
+	if (!pkg->requires) {
+		pkg->requires = low_repo_rpmdb_get_deps (pkg->repo, pkg,
+							 RPMTAG_REQUIRENAME,
+							 RPMTAG_REQUIREFLAGS,
+							 RPMTAG_REQUIREVERSION);
+	}
+
+	return pkg->requires;
 }
 
 LowPackageDependency **
 low_rpmdb_package_get_conflicts (LowPackage *pkg)
 {
-	return low_repo_rpmdb_get_conflicts (pkg->repo, pkg);
+	return low_repo_rpmdb_get_deps (pkg->repo, pkg, RPMTAG_CONFLICTNAME,
+					RPMTAG_CONFLICTFLAGS,
+					RPMTAG_CONFLICTVERSION);
 }
 
 LowPackageDependency **
 low_rpmdb_package_get_obsoletes (LowPackage *pkg)
 {
-	return low_repo_rpmdb_get_obsoletes (pkg->repo, pkg);
+	return low_repo_rpmdb_get_deps (pkg->repo, pkg, RPMTAG_OBSOLETENAME,
+					RPMTAG_OBSOLETEFLAGS,
+					RPMTAG_OBSOLETEVERSION);
 }
 
 char **
 low_rpmdb_package_get_files (LowPackage *pkg)
 {
-	return low_repo_rpmdb_get_files (pkg->repo, pkg);
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) pkg->repo;
+	rpmdbMatchIterator iter;
+	Header header;
+	char **files;
+	union rpm_entry index, dir, name;
+	int_32 type, count, i;
+
+	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
+	header = rpmdbNextIterator (iter);
+
+	rpmHeaderGetEntry (header, RPMTAG_DIRINDEXES, &type, &index.p, &count);
+	rpmHeaderGetEntry (header, RPMTAG_DIRNAMES, &type, &dir.p, &count);
+	rpmHeaderGetEntry (header, RPMTAG_BASENAMES, &type, &name.p, &count);
+
+	files = malloc (sizeof (char *) * (count + 1));
+	for (i = 0; i < count; i++) {
+		files[i] = g_strdup_printf ("%s%s", dir.list[index.int_list[i]],
+					    name.list[i]);
+	}
+	files[count] = NULL;
+
+	headerFreeTag (header, dir.p, type);
+	headerFreeTag (header, name.p, type);
+	rpmdbFreeIterator (iter);
+
+	return files;
 }
 /* vim: set ts=8 sw=8 noet: */

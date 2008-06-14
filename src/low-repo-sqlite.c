@@ -463,39 +463,6 @@ low_repo_sqlite_search_details (LowRepo *repo, const char *querystr)
 	return (LowPackageIter *) iter;
 }
 
-static LowPackageDetails *
-low_repo_sqlite_get_details (LowRepo *repo, LowPackage *pkg)
-{
-	const char *stmt = "SELECT summary, description, url, rpm_license "
-			   "FROM packages where pkgKey=:pkgKey";
-
-	LowPackageDetails *details = malloc (sizeof (LowPackageDetails));
-	int i = 0;
-
-	sqlite3_stmt *pp_stmt;
-	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-
-	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
-			 NULL);
-	sqlite3_bind_int (pp_stmt, 1, *((int *) pkg->id));
-
-	sqlite3_step(pp_stmt);
-
-	details->summary =
-		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-	details->description =
-		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-
-	details->url =
-		g_strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-	details->license =
-		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-
-	sqlite3_finalize (pp_stmt);
-
-	return details;
-}
-
 static LowPackageDependencySense
 low_package_dependency_sense_from_sqlite_flags (const unsigned char *flags)
 {
@@ -579,78 +546,7 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 	return deps;
 }
 
-#define DEP_QUERY(type) "SELECT name, flags, epoch, version, release from " \
-			type " WHERE pkgKey=:pkgkey"
 
-static LowPackageDependency **
-low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
-{
-	const char *stmt = DEP_QUERY ("provides");
-	return low_repo_sqlite_get_deps (repo, stmt, pkg);
-}
-
-static LowPackageDependency **
-low_repo_sqlite_get_requires (LowRepo *repo, LowPackage *pkg)
-{
-	const char *stmt = DEP_QUERY ("requires");
-	return low_repo_sqlite_get_deps (repo, stmt, pkg);
-}
-
-static LowPackageDependency **
-low_repo_sqlite_get_conflicts (LowRepo *repo, LowPackage *pkg)
-{
-	const char *stmt = DEP_QUERY ("conflicts");
-	return low_repo_sqlite_get_deps (repo, stmt, pkg);
-}
-
-static LowPackageDependency **
-low_repo_sqlite_get_obsoletes (LowRepo *repo, LowPackage *pkg)
-{
-	const char *stmt = DEP_QUERY ("obsoletes");
-	return low_repo_sqlite_get_deps (repo, stmt, pkg);
-}
-
-static char **
-low_repo_sqlite_get_files (LowRepo *repo, LowPackage *pkg)
-{
-	const char *stmt = "SELECT dirname, filenames FROM filelist "
-			   "WHERE pkgKey = :pkgKey";
-
-	size_t files_size = 5;
-	char **files = malloc (sizeof (char *) * files_size);
-	unsigned int i = 0;
-
-	sqlite3_stmt *pp_stmt;
-	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-
-	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
-			 NULL);
-	sqlite3_bind_int (pp_stmt, 1, *((int *) pkg->id));
-
-	while (sqlite3_step(pp_stmt) != SQLITE_DONE) {
-		int j;
-		const unsigned char *dir = sqlite3_column_text (pp_stmt, 0);
-		const unsigned char *names = sqlite3_column_text (pp_stmt, 1);
-		char **names_split = g_strsplit ((const char *) names, "/", -1);
-
-		for (j = 0; names_split[j] != NULL; j++) {
-			files[i++] = g_strdup_printf ("%s/%s", dir,
-						      names_split[j]);
-			if (i == files_size - 1) {
-				files_size *= 2;
-				files = realloc (files,
-						 sizeof (char *) * files_size);
-			}
-		}
-
-		g_strfreev (names_split);
-	}
-
-	sqlite3_finalize (pp_stmt);
-
-	files[i] = NULL;
-	return files;
-}
 
 /* XXX add this to the rpmdb repo struct */
 static GHashTable *table = NULL;
@@ -745,43 +641,110 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 LowPackageDetails *
 low_sqlite_package_get_details (LowPackage *pkg)
 {
-	return low_repo_sqlite_get_details (pkg->repo, pkg);
+	const char *stmt = "SELECT summary, description, url, rpm_license "
+			   "FROM packages where pkgKey=:pkgKey";
+
+	LowPackageDetails *details = malloc (sizeof (LowPackageDetails));
+	int i = 0;
+
+	sqlite3_stmt *pp_stmt;
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) pkg->repo;
+
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
+			 NULL);
+	sqlite3_bind_int (pp_stmt, 1, *((int *) pkg->id));
+
+	sqlite3_step(pp_stmt);
+
+	details->summary =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	details->description =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+
+	details->url =
+		g_strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	details->license =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+
+	sqlite3_finalize (pp_stmt);
+
+	return details;
 }
+
+#define DEP_QUERY(type) "SELECT name, flags, epoch, version, release from " \
+			type " WHERE pkgKey=:pkgkey"
 
 LowPackageDependency **
 low_sqlite_package_get_provides (LowPackage *pkg)
 {
-	/*
-	 * XXX maybe this should all be in the same file,
-	 *     or the sqlite repo struct should be in the header
-	 */
-	if (!pkg->provides)
-		pkg->provides = low_repo_sqlite_get_provides (pkg->repo, pkg);
-
-		return pkg->provides;
+	if (!pkg->provides) {
+		const char *stmt = DEP_QUERY ("provides");
+		pkg->provides = low_repo_sqlite_get_deps (pkg->repo, stmt, pkg);
+	}
+	return pkg->provides;
 }
 
 LowPackageDependency **
 low_sqlite_package_get_requires (LowPackage *pkg)
 {
-	return low_repo_sqlite_get_requires (pkg->repo, pkg);
+	const char *stmt = DEP_QUERY ("requires");
+	return low_repo_sqlite_get_deps (pkg->repo, stmt, pkg);
 }
 
 LowPackageDependency **
 low_sqlite_package_get_conflicts (LowPackage *pkg)
 {
-	return low_repo_sqlite_get_conflicts (pkg->repo, pkg);
+	const char *stmt = DEP_QUERY ("conflicts");
+	return low_repo_sqlite_get_deps (pkg->repo, stmt, pkg);
 }
 
 LowPackageDependency **
 low_sqlite_package_get_obsoletes (LowPackage *pkg)
 {
-	return low_repo_sqlite_get_obsoletes (pkg->repo, pkg);
+	const char *stmt = DEP_QUERY ("obsoletes");
+	return low_repo_sqlite_get_deps (pkg->repo, stmt, pkg);
 }
 
 char **
 low_sqlite_package_get_files(LowPackage *pkg)
 {
-	return low_repo_sqlite_get_files (pkg->repo, pkg);
+	const char *stmt = "SELECT dirname, filenames FROM filelist "
+			   "WHERE pkgKey = :pkgKey";
+
+	size_t files_size = 5;
+	char **files = malloc (sizeof (char *) * files_size);
+	unsigned int i = 0;
+
+	sqlite3_stmt *pp_stmt;
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) pkg->repo;
+
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
+			 NULL);
+	sqlite3_bind_int (pp_stmt, 1, *((int *) pkg->id));
+
+	while (sqlite3_step(pp_stmt) != SQLITE_DONE) {
+		int j;
+		const unsigned char *dir = sqlite3_column_text (pp_stmt, 0);
+		const unsigned char *names = sqlite3_column_text (pp_stmt, 1);
+		char **names_split = g_strsplit ((const char *) names, "/", -1);
+
+		for (j = 0; names_split[j] != NULL; j++) {
+			files[i++] = g_strdup_printf ("%s/%s", dir,
+						      names_split[j]);
+			if (i == files_size - 1) {
+				files_size *= 2;
+				files = realloc (files,
+						 sizeof (char *) * files_size);
+			}
+		}
+
+		g_strfreev (names_split);
+	}
+
+	sqlite3_finalize (pp_stmt);
+
+	files[i] = NULL;
+	return files;
 }
+
 /* vim: set ts=8 sw=8 noet: */
