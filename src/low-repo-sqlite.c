@@ -43,6 +43,30 @@ typedef struct _LowRepoSqlite {
 	sqlite3 *filelists_db;
 } LowRepoSqlite;
 
+/* XXX clean these up */
+typedef gboolean (*LowPackageIterFilterFn) (LowPackage *pkg, gpointer data);
+typedef void 	 (*LowPackageIterFilterDataFree) (gpointer data);
+
+typedef struct _LowPackageIterSqlite {
+	LowPackageIter super;
+	sqlite3_stmt *pp_stmt;
+	LowPackageIterFilterFn func;
+	gpointer filter_data;
+	LowPackageIterFilterDataFree filter_data_free_func;
+} LowPackageIterSqlite;
+
+LowPackageIter * low_sqlite_package_iter_next	(LowPackageIter *iter);
+
+LowPackageDetails *	low_sqlite_package_get_details	(LowPackage *pkg);
+
+LowPackageDependency **	low_sqlite_package_get_provides	 (LowPackage *pkg);
+LowPackageDependency **	low_sqlite_package_get_requires	 (LowPackage *pkg);
+LowPackageDependency **	low_sqlite_package_get_conflicts (LowPackage *pkg);
+LowPackageDependency **	low_sqlite_package_get_obsoletes (LowPackage *pkg);
+
+char **		low_sqlite_package_get_files		(LowPackage *pkg);
+
+
 static void
 low_repo_sqlite_open_db (const char *db_file, sqlite3 **db)
 {
@@ -445,7 +469,7 @@ low_repo_sqlite_search_details (LowRepo *repo, const char *querystr)
 	return (LowPackageIter *) iter;
 }
 
-LowPackageDetails *
+static LowPackageDetails *
 low_repo_sqlite_get_details (LowRepo *repo, LowPackage *pkg)
 {
 	const char *stmt = "SELECT summary, description, url, rpm_license "
@@ -564,35 +588,35 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 #define DEP_QUERY(type) "SELECT name, flags, epoch, version, release from " \
 			type " WHERE pkgKey=:pkgkey"
 
-LowPackageDependency **
+static LowPackageDependency **
 low_repo_sqlite_get_provides (LowRepo *repo, LowPackage *pkg)
 {
 	const char *stmt = DEP_QUERY ("provides");
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
-LowPackageDependency **
+static LowPackageDependency **
 low_repo_sqlite_get_requires (LowRepo *repo, LowPackage *pkg)
 {
 	const char *stmt = DEP_QUERY ("requires");
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
-LowPackageDependency **
+static LowPackageDependency **
 low_repo_sqlite_get_conflicts (LowRepo *repo, LowPackage *pkg)
 {
 	const char *stmt = DEP_QUERY ("conflicts");
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
-LowPackageDependency **
+static LowPackageDependency **
 low_repo_sqlite_get_obsoletes (LowRepo *repo, LowPackage *pkg)
 {
 	const char *stmt = DEP_QUERY ("obsoletes");
 	return low_repo_sqlite_get_deps (repo, stmt, pkg);
 }
 
-char **
+static char **
 low_repo_sqlite_get_files (LowRepo *repo, LowPackage *pkg)
 {
 	const char *stmt = "SELECT dirname, filenames FROM filelist "

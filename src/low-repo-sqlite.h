@@ -53,44 +53,6 @@ LowPackageIter *    low_repo_sqlite_search_files 	(LowRepo *repo,
 LowPackageIter *	low_repo_sqlite_search_details 	(LowRepo *repo,
 							 const char *querystr);
 
-LowPackageDetails *	low_repo_sqlite_get_details 	(LowRepo *repo,
-							 LowPackage *pkg);
-
-LowPackageDependency **	low_repo_sqlite_get_provides 	(LowRepo *repo,
-							 LowPackage *pkg);
-LowPackageDependency **	low_repo_sqlite_get_requires 	(LowRepo *repo,
-							 LowPackage *pkg);
-LowPackageDependency **	low_repo_sqlite_get_conflicts 	(LowRepo *repo,
-							 LowPackage *pkg);
-LowPackageDependency **	low_repo_sqlite_get_obsoletes 	(LowRepo *repo,
-							 LowPackage *pkg);
-
-char **		low_repo_sqlite_get_files 		(LowRepo *repo,
-							 LowPackage *pkg);
-
-typedef struct _LowPackageSqlite {
-	LowPackage pkg;
-} LowPackageSqlite;
-
-typedef struct _LowPackageIterSqlite {
-	LowPackageIter super;
-	sqlite3_stmt *pp_stmt;
-	LowPackageIterFilterFn func;
-	gpointer filter_data;
-	LowPackageIterFilterDataFree filter_data_free_func;
-} LowPackageIterSqlite;
-
-LowPackageIter * low_sqlite_package_iter_next	(LowPackageIter *iter);
-
-LowPackageDetails *	low_sqlite_package_get_details	(LowPackage *pkg);
-
-LowPackageDependency **	low_sqlite_package_get_provides	 (LowPackage *pkg);
-LowPackageDependency **	low_sqlite_package_get_requires	 (LowPackage *pkg);
-LowPackageDependency **	low_sqlite_package_get_conflicts (LowPackage *pkg);
-LowPackageDependency **	low_sqlite_package_get_obsoletes (LowPackage *pkg);
-
-char **		low_sqlite_package_get_files		(LowPackage *pkg);
-
 #endif /* _LOW_REPO_SQLITE_H_ */
 
 /* vim: set ts=8 sw=8 noet: */

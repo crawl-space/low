@@ -50,47 +50,6 @@ LowPackageIter *	low_repo_rpmdb_search_files 	(LowRepo *repo,
 LowPackageIter *	low_repo_rpmdb_search_details 	(LowRepo *repo,
 							 const char *querystr);
 
-LowPackageDetails *	low_repo_rpmdb_get_details 	(LowRepo *repo,
-							 LowPackage *pkg);
-
-LowPackageDependency **	low_repo_rpmdb_get_provides 	(LowRepo *repo,
-							 LowPackage *pkg);
-LowPackageDependency **	low_repo_rpmdb_get_requires 	(LowRepo *repo,
-							 LowPackage *pkg);
-LowPackageDependency **	low_repo_rpmdb_get_conflicts 	(LowRepo *repo,
-							 LowPackage *pkg);
-LowPackageDependency **	low_repo_rpmdb_get_obsoletes 	(LowRepo *repo,
-							 LowPackage *pkg);
-
-char **			low_repo_rpmdb_get_files 	(LowRepo *repo,
-							 LowPackage *pkg);
-
-typedef struct _LowPackageRpmdb {
-	LowPackage pkg;
-} LowPackageRpmdb;
-
-typedef gboolean (*LowPackageIterFilterFn) (LowPackage *pkg, gpointer data);
-typedef void 	 (*LowPackageIterFilterDataFree) (gpointer data);
-
-typedef struct _LowPackageIterRpmdb {
-	LowPackageIter super;
-	rpmdbMatchIterator rpm_iter;
-	LowPackageIterFilterFn func;
-	gpointer filter_data;
-	LowPackageIterFilterDataFree filter_data_free_func;
-} LowPackageIterRpmdb;
-
-LowPackageIter * low_package_iter_rpmdb_next (LowPackageIter *iter);
-
-LowPackageDetails *	low_rpmdb_package_get_details	(LowPackage *pkg);
-
-LowPackageDependency **	low_rpmdb_package_get_provides	(LowPackage *pkg);
-LowPackageDependency **	low_rpmdb_package_get_requires	(LowPackage *pkg);
-LowPackageDependency **	low_rpmdb_package_get_conflicts	(LowPackage *pkg);
-LowPackageDependency **	low_rpmdb_package_get_obsoletes	(LowPackage *pkg);
-
-char **		low_rpmdb_package_get_files 		(LowPackage *pkg);
-
 #endif /* _LOW_REPO_RPMDB_H_ */
 
 /* vim: set ts=8 sw=8 noet: */

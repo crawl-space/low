@@ -32,6 +32,29 @@ typedef struct _LowRepoRpmdb {
 	rpmdb db;
 } LowRepoRpmdb;
 
+/* XXX clean these up */
+typedef gboolean (*LowPackageIterFilterFn) (LowPackage *pkg, gpointer data);
+typedef void 	 (*LowPackageIterFilterDataFree) (gpointer data);
+
+typedef struct _LowPackageIterRpmdb {
+	LowPackageIter super;
+	rpmdbMatchIterator rpm_iter;
+	LowPackageIterFilterFn func;
+	gpointer filter_data;
+	LowPackageIterFilterDataFree filter_data_free_func;
+} LowPackageIterRpmdb;
+
+LowPackageIter * low_package_iter_rpmdb_next (LowPackageIter *iter);
+
+LowPackageDetails *	low_rpmdb_package_get_details	(LowPackage *pkg);
+
+LowPackageDependency **	low_rpmdb_package_get_provides	(LowPackage *pkg);
+LowPackageDependency **	low_rpmdb_package_get_requires	(LowPackage *pkg);
+LowPackageDependency **	low_rpmdb_package_get_conflicts	(LowPackage *pkg);
+LowPackageDependency **	low_rpmdb_package_get_obsoletes	(LowPackage *pkg);
+
+char **		low_rpmdb_package_get_files 		(LowPackage *pkg);
+
 LowRepo *
 low_repo_rpmdb_initialize ()
 {
@@ -238,7 +261,7 @@ union rpm_entry {
 	uint_32 *integer;
 };
 
-LowPackageDetails *
+static LowPackageDetails *
 low_repo_rpmdb_get_details (LowRepo *repo, LowPackage *pkg)
 {
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
@@ -323,7 +346,7 @@ low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint_32 name_tag,
 	return deps;
 }
 
-LowPackageDependency **
+static LowPackageDependency **
 low_repo_rpmdb_get_provides (LowRepo *repo, LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_PROVIDENAME,
@@ -331,7 +354,7 @@ low_repo_rpmdb_get_provides (LowRepo *repo, LowPackage *pkg)
 					RPMTAG_PROVIDEVERSION);
 }
 
-LowPackageDependency **
+static LowPackageDependency **
 low_repo_rpmdb_get_requires (LowRepo *repo, LowPackage *pkg)
 {
 	if (!pkg->requires) {
@@ -344,7 +367,7 @@ low_repo_rpmdb_get_requires (LowRepo *repo, LowPackage *pkg)
 	return pkg->requires;
 }
 
-LowPackageDependency **
+static LowPackageDependency **
 low_repo_rpmdb_get_conflicts (LowRepo *repo, LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_CONFLICTNAME,
@@ -352,7 +375,7 @@ low_repo_rpmdb_get_conflicts (LowRepo *repo, LowPackage *pkg)
 					RPMTAG_CONFLICTVERSION);
 }
 
-LowPackageDependency **
+static LowPackageDependency **
 low_repo_rpmdb_get_obsoletes (LowRepo *repo, LowPackage *pkg)
 {
 	return low_repo_rpmdb_get_deps (repo, pkg, RPMTAG_OBSOLETENAME,
@@ -360,7 +383,7 @@ low_repo_rpmdb_get_obsoletes (LowRepo *repo, LowPackage *pkg)
 					RPMTAG_OBSOLETEVERSION);
 }
 
-char **
+static char **
 low_repo_rpmdb_get_files (LowRepo *repo, LowPackage *pkg)
 {
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
