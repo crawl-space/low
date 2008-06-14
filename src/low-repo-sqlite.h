@@ -19,8 +19,12 @@
  *  02110-1301  USA
  */
 
+#include <sqlite3.h>
 #include "low-repo.h"
 #include "low-package.h"
+
+/* XXX for the filter stuff; will go away */
+#include "low-repo-rpmdb.h"
 
 #ifndef _LOW_REPO_SQLITE_H_
 #define _LOW_REPO_SQLITE_H_
@@ -63,6 +67,29 @@ LowPackageDependency **	low_repo_sqlite_get_obsoletes 	(LowRepo *repo,
 
 char **		low_repo_sqlite_get_files 		(LowRepo *repo,
 							 LowPackage *pkg);
+
+typedef struct _LowPackageSqlite {
+	LowPackage pkg;
+} LowPackageSqlite;
+
+typedef struct _LowPackageIterSqlite {
+	LowPackageIter super;
+	sqlite3_stmt *pp_stmt;
+	LowPackageIterFilterFn func;
+	gpointer filter_data;
+	LowPackageIterFilterDataFree filter_data_free_func;
+} LowPackageIterSqlite;
+
+LowPackageIter * low_sqlite_package_iter_next	(LowPackageIter *iter);
+
+LowPackageDetails *	low_sqlite_package_get_details	(LowPackage *pkg);
+
+LowPackageDependency **	low_sqlite_package_get_provides	 (LowPackage *pkg);
+LowPackageDependency **	low_sqlite_package_get_requires	 (LowPackage *pkg);
+LowPackageDependency **	low_sqlite_package_get_conflicts (LowPackage *pkg);
+LowPackageDependency **	low_sqlite_package_get_obsoletes (LowPackage *pkg);
+
+char **		low_sqlite_package_get_files		(LowPackage *pkg);
 
 #endif /* _LOW_REPO_SQLITE_H_ */
 

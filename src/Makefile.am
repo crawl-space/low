@@ -32,10 +32,6 @@ low_SOURCES = \
 	low-debug.h \
 	low-package.c \
 	low-package.h \
-	low-package-rpmdb.c \
-	low-package-rpmdb.h \
-	low-package-sqlite.c \
-	low-package-sqlite.h \
 	low-repo.h \
 	low-repo-rpmdb.c \
 	low-repo-rpmdb.h \
