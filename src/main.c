@@ -595,6 +595,30 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	return EXIT_SUCCESS;
 }
 
+static void
+print_transaction_part (GHashTable *hash)
+{
+	GList *list = g_hash_table_get_values (hash);
+	while (list != NULL) {
+		LowTransactionMember *member = list->data;
+		print_package_short (member->pkg);
+		list = list->next;
+	}
+}
+
+static void
+print_transaction (LowTransaction *trans)
+{
+	printf ("Update:\n");
+	print_transaction_part (trans->update);
+
+	printf ("\nInstall:\n");
+	print_transaction_part (trans->install);
+
+	printf ("\nRemove:\n");
+	print_transaction_part (trans->remove);
+}
+
 static int
 command_install (int argc G_GNUC_UNUSED, const char *argv[])
 {
@@ -605,7 +629,6 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 	LowTransaction *trans;
 	LowPackageDependency *provides =
 		low_package_dependency_new_from_string (argv[0]);
-	GList *install;
 
 	rpmdb = low_repo_rpmdb_initialize ();
 
@@ -629,12 +652,7 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	install = g_hash_table_get_values (trans->install);
-	while (install != NULL) {
-		LowTransactionMember *member = install->data;
-		print_package_short (member->pkg);
-		install = install->next;
-	}
+	print_transaction (trans);
 
 	low_transaction_free (trans);
 	low_repo_set_free (repos);
@@ -655,7 +673,6 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 	LowTransaction *trans;
 	LowPackageDependency *provides =
 		low_package_dependency_new_from_string (argv[0]);
-	GList *remove;
 
 	rpmdb = low_repo_rpmdb_initialize ();
 
@@ -684,12 +701,7 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	remove = g_hash_table_get_values (trans->remove);
-	while (remove != NULL) {
-		LowTransactionMember *member = remove->data;
-		print_package_short (member->pkg);
-		remove = remove->next;
-	}
+	print_transaction (trans);
 
 	low_package_dependency_free (provides);
 	low_transaction_free (trans);
@@ -699,6 +711,7 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 
 	return EXIT_SUCCESS;
 }
+
 /**
  * Display the program version as specified in configure.ac
  */
