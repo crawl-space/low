@@ -408,7 +408,7 @@ schedule_transactions (LowTransaction *trans, LowRepo *installed G_GNUC_UNUSED,
 		char *op = keys->data;
 		if (!strcmp (op, "update")) {
 			low_debug ("scheduling update");
-			pkg = find_package (available,
+			pkg = find_package (installed,
 					    g_hash_table_lookup (table, op));
 			low_transaction_add_update (trans, pkg);
 		} else if (!strcmp (op, "install")) {

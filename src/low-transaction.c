@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <rpm/rpmlib.h>
 
 #include "low-debug.h"
 #include "low-transaction.h"
@@ -175,15 +176,66 @@ low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
 	}
 }
 
+static LowPackage *
+choose_best_for_update (LowRepoSet *repos G_GNUC_UNUSED, LowPackage *to_update)
+{
+	LowPackage *best = NULL;
+	LowPackageIter *iter;
+	char *evr = g_strdup_printf ("%s:%s-%s", to_update->epoch,
+				     to_update->version, to_update->release);
+	LowPackageDependency *provides =
+		low_package_dependency_new (to_update->name,
+					    DEPENDENCY_SENSE_GT,
+					    evr);
+
+	iter = low_repo_set_search_provides (repos, provides);
+
+	iter = low_package_iter_next (iter);
+	if (iter != NULL) {
+		best = iter->pkg;
+	} else {
+		return best;
+	}
+
+	char *best_evr = g_strdup_printf("%s:%s-%s", best->epoch, best->version,
+					 best->release);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		char *new_evr = g_strdup_printf("%s:%s-%s", iter->pkg->epoch,
+						iter->pkg->version,
+						iter->pkg->release);
+
+		if (rpmvercmp (new_evr, best_evr) > 0) {
+			low_package_unref (best);
+			best = iter->pkg;
+
+			g_free (best_evr);
+			best_evr = new_evr;
+		} else {
+			low_package_unref (iter->pkg);
+			g_free (new_evr);
+		}
+
+	}
+
+	low_package_dependency_free (provides);
+	g_free (evr);
+	g_free (best_evr);
+
+	return best;
+}
+
 void
 low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
 {
-	if (low_transaction_add_to_hash (trans->update, to_update)) {
-		low_debug_pkg ("Adding for update", to_update);
+	LowPackage *updating_to = choose_best_for_update (trans->repos,
+							  to_update);
+	if (low_transaction_add_to_hash (trans->update, updating_to)) {
+		low_debug_pkg ("Adding for update", updating_to);
 //		return TRUE;
 	} else {
 		low_debug_pkg ("Not adding already added pkg for update",
-			       to_update);
+			       updating_to);
 //		return FALSE;
 	}
 }
@@ -408,13 +460,10 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 
 	return status;
 }
-
 static LowTransactionStatus
-low_transaction_check_all_requires (LowTransaction *trans)
+low_transaction_check_requires_for_added(LowTransactionStatus status,
+					 LowTransaction *trans, GList *cur)
 {
-	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
-	GList *cur = g_hash_table_get_values (trans->install);
-
 	while (cur != NULL) {
 		LowTransactionStatus req_status;
 		LowTransactionMember *member =
@@ -440,7 +489,20 @@ low_transaction_check_all_requires (LowTransaction *trans)
 		cur = cur->next;
 	}
 
-	cur = g_hash_table_get_values (trans->remove);
+	return status;
+}
+
+static LowTransactionStatus
+low_transaction_check_all_requires (LowTransaction *trans)
+{
+	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
+
+	status = low_transaction_check_requires_for_added (status, trans,
+							   g_hash_table_get_values (trans->install));
+	status = low_transaction_check_requires_for_added (status, trans,
+							   g_hash_table_get_values (trans->update));
+
+	GList *cur = g_hash_table_get_values (trans->remove);
 	while (cur != NULL) {
 		LowTransactionMember *member =
 			(LowTransactionMember *) cur->data;
