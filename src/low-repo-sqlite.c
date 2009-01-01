@@ -24,6 +24,7 @@
 #include <string.h>
 #include <sqlite3.h>
 #include <unistd.h>
+#include <glob.h>
 #include "low-debug.h"
 #include "low-repo-sqlite.h"
 
@@ -115,6 +116,25 @@ low_repo_sqlite_regexp (sqlite3_context *ctx, int argc G_GNUC_UNUSED,
 	sqlite3_result_int (ctx, matched);
 }
 
+static char *
+find_sqlite_file(const char *pattern)
+{
+	char *match;
+	glob_t pglob;
+
+	glob(pattern, 0, NULL, &pglob);
+
+	if (pglob.gl_pathc == 0) {
+		match = g_strdup ("/");
+	} else {
+		match = g_strdup (pglob.gl_pathv[0]);
+	}
+
+	globfree(&pglob);
+
+	return match;
+}
+
 typedef void (*sqlFunc) (sqlite3_context *, int, sqlite3_value **);
 typedef void (*sqlFinal) (sqlite3_context *);
 
@@ -122,10 +142,18 @@ LowRepo *
 low_repo_sqlite_initialize (const char *id, const char *name, gboolean enabled)
 {
 	LowRepoSqlite *repo = malloc (sizeof (LowRepoSqlite));
-	char *primary_db =
-		g_strdup_printf ("/var/cache/yum/%s/primary.sqlite", id);
-	char *filelists_db =
-		g_strdup_printf ("/var/cache/yum/%s/filelists.sqlite", id);
+
+	/* XXX read this from repomd.xml */
+	char *primary_db_glob =
+		g_strdup_printf ("/var/cache/yum/%s/*primary.sqlite", id);
+	char *filelists_db_glob =
+		g_strdup_printf ("/var/cache/yum/%s/*filelists.sqlite", id);
+
+	char *primary_db = find_sqlite_file (primary_db_glob);
+	char *filelists_db = find_sqlite_file (filelists_db_glob);
+
+	g_free (primary_db_glob);
+	g_free (filelists_db_glob);
 
 	/* Will need a way to flick this on later */
 	if (enabled) {

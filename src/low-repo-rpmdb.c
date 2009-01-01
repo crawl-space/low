@@ -458,10 +458,8 @@ low_rpmdb_package_get_details (LowPackage *pkg)
 	headerGetEntry(header, RPMTAG_URL, &type, &url.p, &count);
 	headerGetEntry(header, RPMTAG_LICENSE, &type, &license.p, &count);
 
-	/* XXX need to confirm that we don't need to dup these */
-	details->summary = summary.string;
-	details->description = description.string;
-
+	details->summary = g_strdup (summary.string);
+	details->description = g_strdup (description.string);
 	details->url = g_strdup (url.string);
 	details->license = strdup (license.string);
 
