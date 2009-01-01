@@ -72,6 +72,10 @@ low_transaction_new (LowRepo *rpmdb, LowRepoSet *repos) {
 					       g_free,
 					       (GDestroyNotify)
 					       low_transaction_member_free);
+	trans->updated = g_hash_table_new_full (g_str_hash, g_str_equal,
+						g_free,
+						(GDestroyNotify)
+						low_transaction_member_free);
 	trans->remove = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free,
 					       (GDestroyNotify)
@@ -105,7 +109,8 @@ low_transaction_pkg_compare_func (gconstpointer data1, gconstpointer data2)
 }
 */
 static gboolean
-low_transaction_add_to_hash (GHashTable *hash, LowPackage *pkg)
+low_transaction_add_to_hash (GHashTable *hash, LowPackage *pkg,
+			     LowPackage *related_pkg)
 {
 	gboolean res;
 	char *key;
@@ -124,6 +129,7 @@ low_transaction_add_to_hash (GHashTable *hash, LowPackage *pkg)
 	if (!g_hash_table_lookup (hash, key)) {
 		member = malloc (sizeof (LowTransactionMember));
 		member->pkg = pkg;
+		member->related_pkg = related_pkg;
 		member->resolved = FALSE;
 
 		g_hash_table_insert (hash, key, member);
@@ -166,7 +172,7 @@ low_transaction_remove_from_hash (GHashTable *hash, LowPackage *pkg)
 gboolean
 low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
 {
-	if (low_transaction_add_to_hash (trans->install, to_install)) {
+	if (low_transaction_add_to_hash (trans->install, to_install, NULL)) {
 		low_debug_pkg ("Adding for install", to_install);
 		return TRUE;
 	} else {
@@ -230,7 +236,10 @@ low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
 {
 	LowPackage *updating_to = choose_best_for_update (trans->repos,
 							  to_update);
-	if (low_transaction_add_to_hash (trans->update, updating_to)) {
+	if (low_transaction_add_to_hash (trans->update, updating_to,
+					 to_update)) {
+		low_transaction_add_to_hash (trans->updated, to_update,
+					     updating_to);
 		low_debug_pkg ("Adding for update", updating_to);
 //		return TRUE;
 	} else {
@@ -243,7 +252,7 @@ low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
 gboolean
 low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove)
 {
-	if (low_transaction_add_to_hash (trans->remove, to_remove)) {
+	if (low_transaction_add_to_hash (trans->remove, to_remove, NULL)) {
 		low_debug_pkg ("Adding for remove", to_remove);
 		return TRUE;
 	} else {
@@ -289,7 +298,8 @@ low_transaction_dep_in_filelist (const char *needle, char **haystack)
 }
 
 static LowTransactionStatus
-low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
+low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg,
+			       gboolean from_update)
 {
 	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
 	LowPackageDependency **provides;
@@ -310,6 +320,10 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg)
 						       provides[i]);
 		while (iter = low_package_iter_next (iter), iter != NULL) {
 			LowPackage *pkg = iter->pkg;
+
+			if (from_update) {
+				return LOW_TRANSACTION_UNRESOLVABLE;
+			}
 
 			low_debug_pkg ("Adding for removal", pkg);
 			if (low_transaction_add_remove (trans, pkg)) {
@@ -460,10 +474,14 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 
 	return status;
 }
+
 static LowTransactionStatus
 low_transaction_check_requires_for_added(LowTransactionStatus status,
-					 LowTransaction *trans, GList *cur)
+					 LowTransaction *trans,
+					 GHashTable *hash)
 {
+	GList *cur = g_hash_table_get_values (hash);
+
 	while (cur != NULL) {
 		LowTransactionStatus req_status;
 		LowTransactionMember *member =
@@ -476,10 +494,52 @@ low_transaction_check_requires_for_added(LowTransactionStatus status,
 
 			if (req_status == LOW_TRANSACTION_UNRESOLVABLE) {
 				low_debug_pkg ("Adding to unresolved", pkg);
-				low_transaction_add_to_hash (trans->unresolved, pkg);
-				low_transaction_remove_from_hash (trans->install, pkg);
+				low_transaction_add_to_hash (trans->unresolved, pkg, NULL);
+				low_transaction_remove_from_hash (hash, pkg);
 				return req_status;
 			} else if (req_status == LOW_TRANSACTION_PACKAGES_ADDED) {
+				status = LOW_TRANSACTION_PACKAGES_ADDED;
+			}
+
+			member->resolved = TRUE;
+		}
+
+		cur = cur->next;
+	}
+
+	return status;
+}
+
+static LowTransactionStatus
+low_transaction_check_requires_for_removing(LowTransactionStatus status,
+					    LowTransaction *trans,
+					    GHashTable *hash,
+					    gboolean from_update)
+{
+	GList *cur = g_hash_table_get_values (hash);
+
+	while (cur != NULL) {
+		LowTransactionMember *member =
+			(LowTransactionMember *) cur->data;
+		LowPackage *pkg = member->pkg;
+
+		if (!member->resolved) {
+			LowTransactionStatus rm_status;
+			rm_status = low_transaction_check_removal (trans, pkg,
+								   from_update);
+
+			/* Only unresolvable for an update */
+			if (rm_status == LOW_TRANSACTION_UNRESOLVABLE) {
+				low_debug_pkg ("Adding to unresolved", pkg);
+				low_transaction_add_to_hash (trans->unresolved,
+							     member->related_pkg,
+							     NULL);
+				low_transaction_remove_from_hash (hash, pkg);
+				low_transaction_remove_from_hash (trans->update,
+								  member->related_pkg);
+				return rm_status;
+
+			} else if (rm_status == LOW_TRANSACTION_PACKAGES_ADDED) {
 				status = LOW_TRANSACTION_PACKAGES_ADDED;
 			}
 
@@ -498,29 +558,16 @@ low_transaction_check_all_requires (LowTransaction *trans)
 	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
 
 	status = low_transaction_check_requires_for_added (status, trans,
-							   g_hash_table_get_values (trans->install));
+							   trans->install);
 	status = low_transaction_check_requires_for_added (status, trans,
-							   g_hash_table_get_values (trans->update));
+							   trans->update);
 
-	GList *cur = g_hash_table_get_values (trans->remove);
-	while (cur != NULL) {
-		LowTransactionMember *member =
-			(LowTransactionMember *) cur->data;
-		LowPackage *pkg = member->pkg;
-
-		if (!member->resolved) {
-			LowTransactionStatus rm_status;
-			rm_status = low_transaction_check_removal (trans, pkg);
-
-			if (rm_status == LOW_TRANSACTION_PACKAGES_ADDED) {
-				status = LOW_TRANSACTION_PACKAGES_ADDED;
-			}
-
-			member->resolved = TRUE;
-		}
-
-		cur = cur->next;
-	}
+	status = low_transaction_check_requires_for_removing (status, trans,
+							      trans->remove,
+							      FALSE);
+	status = low_transaction_check_requires_for_removing (status, trans,
+							     trans->updated,
+							     TRUE);
 
 	return status;
 }
@@ -635,7 +682,7 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 				low_debug_pkg ("Adding to unresolved",
 					       conflicting);
 				low_transaction_add_to_hash (trans->unresolved,
-							     conflicting);
+							     conflicting, NULL);
 				low_transaction_remove_from_hash (trans->install,
 								  conflicting);
 
@@ -651,7 +698,8 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 
 		if (status == LOW_TRANSACTION_UNRESOLVABLE) {
 			low_debug_pkg ("Adding to unresolved", pkg);
-			low_transaction_add_to_hash (trans->unresolved, pkg);
+			low_transaction_add_to_hash (trans->unresolved, pkg,
+						     NULL);
 			low_transaction_remove_from_hash (trans->install, pkg);
 			return status;
 		}
@@ -711,6 +759,7 @@ low_transaction_free (LowTransaction *trans)
 {
 	g_hash_table_unref (trans->install);
 	g_hash_table_unref (trans->update);
+	g_hash_table_unref (trans->updated);
 	g_hash_table_unref (trans->remove);
 
 	g_hash_table_unref (trans->unresolved);

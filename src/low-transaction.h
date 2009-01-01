@@ -37,6 +37,7 @@ typedef struct _LowTransaction {
 
 	GHashTable *install;
 	GHashTable *update;
+	GHashTable *updated;
 	GHashTable *remove;
 
 	/* Should this be on the struct or returned? */
@@ -46,6 +47,9 @@ typedef struct _LowTransaction {
 typedef struct _LowTransactionMember {
 	LowPackage *pkg;
 	gboolean resolved;
+
+	/* Overloaded for either updated or updating */
+	LowPackage *related_pkg;
 } LowTransactionMember;
 
 LowTransaction *	low_transaction_new 	(LowRepo *rpmdb,

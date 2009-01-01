@@ -1,0 +1,17 @@
+test: Update a single package, with the old version having a provides required
+      by another installed package.
+
+installed:
+    - package: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+      requires: [ zsh-oldstyle ]
+    - package: { name: zsh, evr: 1.0.0-1, arch: i386 }
+      provides: [ zsh-oldstyle ]
+
+available:
+    - package: { name: zsh, evr: 1.3.1-2, arch: i386 }
+
+transaction:
+    - update: { name: zsh }
+
+results:
+    - unresolved: { name: zsh, evr: 1.3.1-2, arch: i386 }
