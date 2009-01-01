@@ -294,11 +294,12 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 	rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (rpmdb);
 
-	if (!strcmp(argv[0], "installed") || !strcmp(argv[0], "all")) {
+	if (argc == 0 || !strcmp(argv[0], "installed") ||
+	    !strcmp(argv[0], "all")) {
 		iter = low_repo_rpmdb_list_all (rpmdb);
 		print_all_packages_short (iter);
 	}
-	if (!strcmp(argv[0], "all")) {
+	if (argc == 0 || !strcmp(argv[0], "all")) {
 		LowRepoSet *repos =
 			low_repo_set_initialize_from_config (config);
 
