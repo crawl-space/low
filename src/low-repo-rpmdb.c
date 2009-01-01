@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
+#include <rpm/rpmlegacy.h>
 #include <rpm/rpmlib.h>
 #include <rpm/rpmdb.h>
 #include "low-debug.h"
@@ -85,7 +86,7 @@ low_repo_rpmdb_shutdown (LowRepo *repo)
 }
 
 static LowPackageIter *
-low_repo_rpmdb_search (LowRepo *repo, int_32 tag, const char *querystr)
+low_repo_rpmdb_search (LowRepo *repo, int32_t tag, const char *querystr)
 {
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
 	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
@@ -146,7 +147,7 @@ low_repo_rpmdb_search_dep_filter_fn (LowPackage *pkg, gpointer data)
 }
 
 static LowPackageIter *
-low_repo_rpmdb_search_dep (LowRepo *repo, int_32 tag,
+low_repo_rpmdb_search_dep (LowRepo *repo, int32_t tag,
 			   const LowPackageDependency *dep,
 			   LowPackageGetDependency dep_func)
 {
@@ -256,9 +257,9 @@ union rpm_entry {
 	void *p;
 	char *string;
 	char **list;
-	uint_32 *int_list;
-	uint_32 *flags;
-	uint_32 *integer;
+	uint32_t *int_list;
+	uint32_t *flags;
+	uint32_t *integer;
 };
 
 /* XXX add this to the rpmdb repo struct */
@@ -291,22 +292,22 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	LowPackage *pkg;
 	union rpm_entry id, name, epoch, version, release, arch;
 	union rpm_entry size;
-	int_32 type, count;
+	int32_t type, count;
 
-	rpmHeaderGetEntry(header, RPMTAG_NAME, &type, &name.p, &count);
+	headerGetEntry(header, RPMTAG_NAME, &type, &name.p, &count);
 
 	/* We don't care about the gpg keys (plus they have missing fields */
 	if (!strcmp (name.string, "gpg-pubkey")) {
 		return NULL;
 	}
 
-	rpmHeaderGetEntry(header, RPMTAG_PKGID, &type, &id.p, &count);
-	rpmHeaderGetEntry(header, RPMTAG_EPOCH, &type, &epoch.p, &count);
-	rpmHeaderGetEntry(header, RPMTAG_VERSION, &type, &version.p, &count);
-	rpmHeaderGetEntry(header, RPMTAG_RELEASE, &type, &release.p, &count);
-	rpmHeaderGetEntry(header, RPMTAG_ARCH, &type, &arch.p, &count);
+	headerGetEntry(header, RPMTAG_PKGID, &type, &id.p, &count);
+	headerGetEntry(header, RPMTAG_EPOCH, &type, &epoch.p, &count);
+	headerGetEntry(header, RPMTAG_VERSION, &type, &version.p, &count);
+	headerGetEntry(header, RPMTAG_RELEASE, &type, &release.p, &count);
+	headerGetEntry(header, RPMTAG_ARCH, &type, &arch.p, &count);
 
-	rpmHeaderGetEntry(header, RPMTAG_SIZE, &type, &size.p, &count);
+	headerGetEntry(header, RPMTAG_SIZE, &type, &size.p, &count);
 
 	pkg = g_hash_table_lookup (table, id.p);
 	if (pkg) {
@@ -385,7 +386,7 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 }
 
 static LowPackageDependencySense
-rpm_to_low_dependency_sense (uint_32 flag)
+rpm_to_low_dependency_sense (uint32_t flag)
 {
 	switch (flag & (RPMSENSE_LESS | RPMSENSE_EQUAL | RPMSENSE_GREATER)) {
 		case RPMSENSE_LESS:
@@ -404,22 +405,22 @@ rpm_to_low_dependency_sense (uint_32 flag)
 }
 
 static LowPackageDependency **
-low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint_32 name_tag,
-			 uint_32 flag_tag, uint_32 version_tag)
+low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint32_t name_tag,
+			 uint32_t flag_tag, uint32_t version_tag)
 {
 	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
 	rpmdbMatchIterator iter;
 	Header header;
 	LowPackageDependency **deps;
 	union rpm_entry name, flag, version;
-	int_32 type, count, i;
+	int32_t type, count, i;
 
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator (iter);
 
-	rpmHeaderGetEntry (header, name_tag, &type, &name.p, &count);
-	rpmHeaderGetEntry (header, flag_tag, &type, &flag.p, &count);
-	rpmHeaderGetEntry (header, version_tag, &type, &version.p, &count);
+	headerGetEntry (header, name_tag, &type, &name.p, &count);
+	headerGetEntry (header, flag_tag, &type, &flag.p, &count);
+	headerGetEntry (header, version_tag, &type, &version.p, &count);
 
 	deps = malloc (sizeof (char *) * (count + 1));
 	for (i = 0; i < count; i++) {
@@ -446,16 +447,16 @@ low_rpmdb_package_get_details (LowPackage *pkg)
 	Header header;
 	LowPackageDetails *details = malloc (sizeof (LowPackageDetails));
 	union rpm_entry summary, description, url, license;
-	int_32 type, count;
+	int32_t type, count;
 
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator (iter);
 
-	rpmHeaderGetEntry(header, RPMTAG_SUMMARY, &type, &summary.p, &count);
-	rpmHeaderGetEntry(header, RPMTAG_DESCRIPTION, &type, &description.p,
+	headerGetEntry(header, RPMTAG_SUMMARY, &type, &summary.p, &count);
+	headerGetEntry(header, RPMTAG_DESCRIPTION, &type, &description.p,
 			  &count);
-	rpmHeaderGetEntry(header, RPMTAG_URL, &type, &url.p, &count);
-	rpmHeaderGetEntry(header, RPMTAG_LICENSE, &type, &license.p, &count);
+	headerGetEntry(header, RPMTAG_URL, &type, &url.p, &count);
+	headerGetEntry(header, RPMTAG_LICENSE, &type, &license.p, &count);
 
 	/* XXX need to confirm that we don't need to dup these */
 	details->summary = summary.string;
@@ -514,14 +515,14 @@ low_rpmdb_package_get_files (LowPackage *pkg)
 	Header header;
 	char **files;
 	union rpm_entry index, dir, name;
-	int_32 type, count, i;
+	int32_t type, count, i;
 
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator (iter);
 
-	rpmHeaderGetEntry (header, RPMTAG_DIRINDEXES, &type, &index.p, &count);
-	rpmHeaderGetEntry (header, RPMTAG_DIRNAMES, &type, &dir.p, &count);
-	rpmHeaderGetEntry (header, RPMTAG_BASENAMES, &type, &name.p, &count);
+	headerGetEntry (header, RPMTAG_DIRINDEXES, &type, &index.p, &count);
+	headerGetEntry (header, RPMTAG_DIRNAMES, &type, &dir.p, &count);
+	headerGetEntry (header, RPMTAG_BASENAMES, &type, &name.p, &count);
 
 	files = malloc (sizeof (char *) * (count + 1));
 	for (i = 0; i < count; i++) {
