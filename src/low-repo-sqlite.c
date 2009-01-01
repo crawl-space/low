@@ -139,7 +139,8 @@ typedef void (*sqlFunc) (sqlite3_context *, int, sqlite3_value **);
 typedef void (*sqlFinal) (sqlite3_context *);
 
 LowRepo *
-low_repo_sqlite_initialize (const char *id, const char *name, gboolean enabled)
+low_repo_sqlite_initialize (const char *id, const char *name,
+			    const char *baseurl, gboolean enabled)
 {
 	LowRepoSqlite *repo = malloc (sizeof (LowRepoSqlite));
 
@@ -174,6 +175,7 @@ low_repo_sqlite_initialize (const char *id, const char *name, gboolean enabled)
 
 	repo->super.id = g_strdup (id);
 	repo->super.name = g_strdup (name);
+	repo->super.baseurl = g_strdup (baseurl);
 	repo->super.enabled = enabled;
 
 	free (primary_db);

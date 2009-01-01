@@ -31,6 +31,7 @@
 
 LowRepo *           low_repo_sqlite_initialize   (const char *id,
 						  const char *name,
+						  const char *baseurl,
 						  gboolean enabled);
 void                low_repo_sqlite_shutdown     (LowRepo *repo);
 

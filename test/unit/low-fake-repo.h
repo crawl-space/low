@@ -124,6 +124,7 @@ char **			low_fake_repo_get_files 	(LowRepo *repo,
 	\
 	LowRepo * \
 	low_repo_sqlite_initialize (const char *name, const char *id, \
+				    const char *baseurl G_GNUC_UNUSED, \
 				    gboolean enabled) { \
 		return low_fake_repo_initialize (name, id, enabled); \
 	}

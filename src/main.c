@@ -39,7 +39,7 @@
 
 #define YUM_REPO "http://download.fedora.redhat.com/pub/fedora/linux/releases" \
                  "/9/Everything/x86_64/os/"
-#define LOCAL_CACHE "/var/cache/yum/fedora/packages/"
+#define LOCAL_CACHE "/var/cache/yum"
 
 static void show_help (const char *command);
 static int usage (void);
@@ -560,14 +560,22 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 			i++;
 		}
 
-		char *full_url = g_strdup_printf ("%s%s", YUM_REPO, pkg->location_href);
-		char *local_file = g_strdup_printf ("%s%s", LOCAL_CACHE, filename);
+		/* XXX might be null for mirrorlist repos */
+		char *baseurl = pkg->repo->baseurl;
+		if (!baseurl) {
+			baseurl = YUM_REPO;
+		}
+
+		char *full_url = g_strdup_printf ("%s%s", baseurl, pkg->location_href);
+		char *local_file = g_strdup_printf ("%s/%s/packages/%s",
+						    LOCAL_CACHE, pkg->repo->id,
+						    filename);
 
 		printf ("Downloading %s...\n", pkg->name);
 		printf ("URL: %s\n", full_url);
 		printf ("Saving as: %s\n", local_file);
 
-		low_download_if_missing (full_url, local_file);
+		low_download_if_missing (full_url, local_file, filename);
 		free (full_url);
 		free (local_file);
 

@@ -180,7 +180,13 @@ char *
 low_config_get_string (LowConfig *config, const char *group, const char *key)
 {
 	char *value = g_key_file_get_string (config->config, group, key, NULL);
-	char *value_subbed = low_config_replace_macros (config, value);
+	char *value_subbed;
+
+	if (!value) {
+		return NULL;
+	}
+
+	value_subbed = low_config_replace_macros (config, value);
 
 	free (value);
 	return value_subbed;

@@ -254,6 +254,7 @@ START_TEST (test_low_repo_set_search_single_repo_no_packages)
 
 	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test",
 								 "test repo",
+								 "test url",
 								 TRUE);
 	packages[0] = NULL;
 	repo->packages = packages;
@@ -284,12 +285,14 @@ START_TEST (test_low_repo_set_search_two_repos_no_packages)
 
 	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test1",
 								 "test repo",
+								 "test url",
 								 TRUE);
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
 	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test2",
 								 "test repo",
+								 "test url",
 								 TRUE);
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
@@ -318,6 +321,7 @@ START_TEST (test_low_repo_set_search_single_repo_one_package)
 
 	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test",
 								 "test repo",
+								 "test url",
 								 TRUE);
 	packages[0] = &package;
 	packages[1] = NULL;
@@ -351,12 +355,14 @@ START_TEST (test_low_repo_set_search_two_repos_two_packages)
 
 	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test1",
 								 "test repo",
+								 "test url",
 								 TRUE);
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
 	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test2",
 								 "test repo",
+								 "test url",
 								 TRUE);
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);

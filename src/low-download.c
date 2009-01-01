@@ -45,7 +45,7 @@ low_download_show_progress(void *clientp, double dltotal, double dlnow,
 }
 
 int
-low_download_if_missing(const char *url, const char *file)
+low_download_if_missing(const char *url, const char *file, const char *basename)
 {
 	CURL *curl;
 	struct stat buf;
@@ -59,11 +59,12 @@ low_download_if_missing(const char *url, const char *file)
 		return 1;
 	}
 
+	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error);
 	curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
 	curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION,
 			 low_download_show_progress);
-	curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, file);
+	curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, basename);
 
 	if (stat(file, &buf) < 0) {
 		fp = fopen(file, "w");
