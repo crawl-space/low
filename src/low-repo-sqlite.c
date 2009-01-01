@@ -146,9 +146,9 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 
 	/* XXX read this from repomd.xml */
 	char *primary_db_glob =
-		g_strdup_printf ("/var/cache/yum/%s/*primary.sqlite", id);
+		g_strdup_printf ("/var/cache/yum/%s/*primary*.sqlite", id);
 	char *filelists_db_glob =
-		g_strdup_printf ("/var/cache/yum/%s/*filelists.sqlite", id);
+		g_strdup_printf ("/var/cache/yum/%s/*filelists*.sqlite", id);
 
 	char *primary_db = find_sqlite_file (primary_db_glob);
 	char *filelists_db = find_sqlite_file (filelists_db_glob);
