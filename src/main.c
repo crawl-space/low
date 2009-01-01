@@ -266,7 +266,7 @@ print_package_short (LowPackage *pkg)
 	gchar *version_release = g_strdup_printf ("%s-%s", pkg->version,
 						  pkg->release);
 
-	printf ("%-41.41s%-23.23s%s\n", name_arch, version_release,
+	printf ("%-41.41s %-23.23s %s\n", name_arch, version_release,
 		pkg->repo->id);
 
 	free (name_arch);
