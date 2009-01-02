@@ -887,6 +887,51 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 	return EXIT_SUCCESS;
 }
 
+static void
+refresh_repo (LowRepo *repo)
+{
+	if (!repo->baseurl)
+		return;
+
+	char *full_url = g_strdup_printf ("%s%s", repo->baseurl,
+					  "repodata/repomd.xml");
+	char *local_file = g_strdup_printf ("%s/%s/%s",
+					    LOCAL_CACHE, repo->id,
+					    "repomd.xml");
+	/* Just something nice to display */
+	char *basename = g_strdup_printf ("%s - %s", repo->id, "repomd.xml");
+
+	low_download (full_url, local_file, basename);
+
+	g_free (basename);
+	g_free (local_file);
+	g_free (full_url);
+}
+
+static int
+command_refresh (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
+{
+	LowRepo *rpmdb;
+	LowRepoSet *repos;
+	LowConfig *config;
+	LowRepoSetFilter filter = ENABLED;
+
+	rpmdb = low_repo_rpmdb_initialize ();
+
+	config = low_config_initialize (rpmdb);
+	repos = low_repo_set_initialize_from_config (config);
+
+	low_repo_set_for_each (repos, filter, (LowRepoSetFunc) refresh_repo,
+			       NULL);
+
+	low_repo_set_free (repos);
+	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
+
+	return EXIT_SUCCESS;
+}
+
+
 /**
  * Display the program version as specified in configure.ac
  */
@@ -929,6 +974,7 @@ typedef struct _SubCommand {
 } SubCommand;
 
 const SubCommand commands[] = {
+	{ "refresh", NULL, "Download new metadata", command_refresh },
 	{ "install", "PACKAGE", "Install a package", command_install },
 	{ "update", "[PACKAGE]", "Update or install a package",
 	  command_update },

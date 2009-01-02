@@ -24,6 +24,10 @@
 #ifndef _LOW_DOWNLOAD_H_
 #define _LOW_DOWNLOAD_H_
 
+int      low_download 		     (const char *url,
+				      const char *file,
+				      const char *basename);
+
 int      low_download_if_missing     (const char *url,
 				      const char *file,
 				      const char *basename);
