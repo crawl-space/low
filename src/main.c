@@ -531,10 +531,23 @@ command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 	return EXIT_SUCCESS;
 }
 
+static const char *
+get_package_basename (LowPackage *pkg)
+{
+	char *filename = rindex (pkg->location_href, '/');
+	if (filename == NULL) {
+		filename = pkg->location_href;
+	} else {
+		filename++;
+	}
+
+	return filename;
+}
+
 static char *
 create_package_filepath (LowPackage *pkg)
 {
-	char *filename = rindex (pkg->location_href, '/') + 1;
+	const char *filename = get_package_basename (pkg);
 	char *local_file = g_strdup_printf ("%s/%s/packages/%s",
 					    LOCAL_CACHE, pkg->repo->id,
 					    filename);
@@ -553,7 +566,7 @@ download_package (LowPackage *pkg)
 
 	char *full_url = g_strdup_printf ("%s%s", baseurl, pkg->location_href);
 	char *local_file = create_package_filepath (pkg);
-	char *filename = rindex (pkg->location_href, '/') + 1;
+	const char *filename = get_package_basename (pkg);
 
 	low_download_if_missing (full_url, local_file, filename);
 	free (full_url);
@@ -712,6 +725,7 @@ low_transaction_to_rpmts (LowTransaction *trans)
 	add_installs_to_transaction (trans->update, ts);
 
 	add_removes_to_transaction (trans->remove, ts);
+	add_removes_to_transaction (trans->updated, ts);
 
 	return ts;
 }
@@ -758,6 +772,50 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 	iter = low_repo_set_search_provides (repos, provides);
 	iter = low_package_iter_next (iter);
 	low_transaction_add_install (trans, iter->pkg);
+
+	/* XXX get rid of this nastiness somehow */
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		low_package_unref (iter->pkg);
+	}
+
+	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
+		printf ("Error resolving transaction\n");
+		return EXIT_FAILURE;
+	}
+
+	run_transaction (trans);
+
+	low_transaction_free (trans);
+	low_repo_set_free (repos);
+	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
+	low_package_dependency_free (provides);
+
+	return EXIT_SUCCESS;
+}
+
+static int
+command_update (int argc G_GNUC_UNUSED, const char *argv[])
+{
+	LowRepo *rpmdb;
+	LowRepoSet *repos;
+	LowPackageIter *iter;
+	LowConfig *config;
+	LowTransaction *trans;
+	LowPackageDependency *provides =
+		low_package_dependency_new_from_string (argv[0]);
+
+	rpmdb = low_repo_rpmdb_initialize ();
+
+	config = low_config_initialize (rpmdb);
+	repos = low_repo_set_initialize_from_config (config);
+
+	trans = low_transaction_new (rpmdb, repos);
+
+	/* XXX just do the most EVR newest */
+	iter = low_repo_rpmdb_search_provides (rpmdb, provides);
+	iter = low_package_iter_next (iter);
+	low_transaction_add_update (trans, iter->pkg);
 
 	/* XXX get rid of this nastiness somehow */
 	while (iter = low_package_iter_next (iter), iter != NULL) {
@@ -873,7 +931,7 @@ typedef struct _SubCommand {
 const SubCommand commands[] = {
 	{ "install", "PACKAGE", "Install a package", command_install },
 	{ "update", "[PACKAGE]", "Update or install a package",
-	  NOT_IMPLEMENTED },
+	  command_update },
 	{ "remove", "PACKAGE", "Remove a package", command_remove },
 	{ "clean", NULL, "Remove cached data", NOT_IMPLEMENTED },
 	{ "info", "PACKAGE", "Display package details", command_info },
