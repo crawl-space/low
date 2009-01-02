@@ -22,7 +22,9 @@
 
 #include <stdio.h>
 #include <string.h>
-
+#include <fcntl.h>
+#include <rpm/rpmlog.h>
+#include <rpm/rpmcli.h>
 #include "config.h"
 
 #include "low-debug.h"
@@ -528,21 +530,20 @@ command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 	return EXIT_SUCCESS;
 }
 
+static char *
+create_package_filepath (LowPackage *pkg)
+{
+	char *filename = rindex (pkg->location_href, '/') + 1;
+	char *local_file = g_strdup_printf ("%s/%s/packages/%s",
+					    LOCAL_CACHE, pkg->repo->id,
+					    filename);
+
+	return local_file;
+}
+
 static void
 download_package (LowPackage *pkg)
 {
-	/* Grab the package name by splitting the location_href on / */
-	char **tokens = g_strsplit (pkg->location_href, "/", 20);
-	int i = 0;
-	char *filename;
-	while (1) {
-		if (tokens[i + 1] == NULL) {
-			filename = tokens[i];
-			break;
-		}
-		i++;
-	}
-
 	/* XXX might be null for mirrorlist repos */
 	char *baseurl = pkg->repo->baseurl;
 	if (!baseurl) {
@@ -550,9 +551,8 @@ download_package (LowPackage *pkg)
 	}
 
 	char *full_url = g_strdup_printf ("%s%s", baseurl, pkg->location_href);
-	char *local_file = g_strdup_printf ("%s/%s/packages/%s",
-					    LOCAL_CACHE, pkg->repo->id,
-					    filename);
+	char *local_file = create_package_filepath (pkg);
+	char *filename = rindex (pkg->location_href, '/') + 1;
 
 	low_download_if_missing (full_url, local_file, filename);
 	free (full_url);
@@ -651,6 +651,43 @@ download_required_packages (LowTransaction *trans)
 	}
 }
 
+static void
+add_installs_to_transaction (GHashTable *hash, rpmts ts)
+{
+	GList *list = g_hash_table_get_values (hash);
+	while (list != NULL) {
+		LowTransactionMember *member = list->data;
+
+		/* XXX RPM needs this around during the transaction */
+		char *filepath = create_package_filepath (member->pkg);
+		FD_t fd = Fopen (filepath, "r.ufdio");
+		Header hdr;
+		int res = rpmReadPackageFile (ts, fd, NULL, &hdr);
+		Fclose(fd);
+		if (res != RPMRC_OK) {
+			/* XXX do something better here */
+			printf ("Unable to read %s, skipping\n", filepath);
+		} else {
+			rpmtsAddInstallElement (ts, hdr, (fnpyKey) filepath,
+						0, 0);
+		}
+		list = list->next;
+	}
+}
+
+static rpmts
+low_transaction_to_rpmts (LowTransaction *trans)
+{
+	rpmts ts = rpmtsCreate();
+	rpmtsSetRootDir(ts, "/");
+	rpmtsSetNotifyCallback(ts, rpmShowProgress, NULL);
+
+	add_installs_to_transaction (trans->install, ts);
+	add_installs_to_transaction (trans->update, ts);
+
+	return ts;
+}
+
 static int
 command_install (int argc G_GNUC_UNUSED, const char *argv[])
 {
@@ -689,6 +726,15 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 	if (prompt_confirmed()) {
 		printf ("Running\n");
 		download_required_packages(trans);
+
+//		rpmSetVerbosity(RPMLOG_DEBUG);
+		rpmts ts = low_transaction_to_rpmts (trans);
+		rpmtsSetFlags(ts, RPMTRANS_FLAG_NONE);
+
+		int rc = rpmtsRun(ts, NULL, RPMPROB_FILTER_NONE);
+		if (rc != 0) {
+			printf ("Error running transaction\n");
+		}
 	}
 
 	low_transaction_free (trans);
