@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <rpm/rpmlog.h>
 #include <rpm/rpmcli.h>
+#include <rpm/rpmdb.h>
 #include "config.h"
 
 #include "low-debug.h"
@@ -675,6 +676,31 @@ add_installs_to_transaction (GHashTable *hash, rpmts ts)
 	}
 }
 
+static void
+add_removes_to_transaction (GHashTable *hash, rpmts ts)
+{
+	GList *list = g_hash_table_get_values (hash);
+	while (list != NULL) {
+		LowTransactionMember *member = list->data;
+		LowPackage *pkg = member->pkg;
+
+		rpmdbMatchIterator iter;
+		Header hdr;
+		unsigned int offset;
+
+		iter = rpmdbInitIterator (low_repo_rpmdb_get_db (pkg->repo),
+					  RPMTAG_PKGID,
+					  pkg->id, 16);
+		hdr = rpmdbNextIterator (iter);
+		offset = rpmdbGetIteratorOffset (iter);
+
+		rpmtsAddEraseElement (ts, hdr, offset);
+		list = list->next;
+
+		rpmdbFreeIterator (iter);
+	}
+}
+
 static rpmts
 low_transaction_to_rpmts (LowTransaction *trans)
 {
@@ -685,7 +711,29 @@ low_transaction_to_rpmts (LowTransaction *trans)
 	add_installs_to_transaction (trans->install, ts);
 	add_installs_to_transaction (trans->update, ts);
 
+	add_removes_to_transaction (trans->remove, ts);
+
 	return ts;
+}
+
+static void
+run_transaction (LowTransaction *trans)
+{
+	print_transaction (trans);
+
+	if (prompt_confirmed()) {
+		printf ("Running\n");
+		download_required_packages(trans);
+
+//		rpmSetVerbosity(RPMLOG_DEBUG);
+		rpmts ts = low_transaction_to_rpmts (trans);
+		rpmtsSetFlags(ts, RPMTRANS_FLAG_NONE);
+
+		int rc = rpmtsRun(ts, NULL, RPMPROB_FILTER_NONE);
+		if (rc != 0) {
+			printf ("Error running transaction\n");
+		}
+	}
 }
 
 static int
@@ -721,21 +769,7 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	print_transaction (trans);
-
-	if (prompt_confirmed()) {
-		printf ("Running\n");
-		download_required_packages(trans);
-
-//		rpmSetVerbosity(RPMLOG_DEBUG);
-		rpmts ts = low_transaction_to_rpmts (trans);
-		rpmtsSetFlags(ts, RPMTRANS_FLAG_NONE);
-
-		int rc = rpmtsRun(ts, NULL, RPMPROB_FILTER_NONE);
-		if (rc != 0) {
-			printf ("Error running transaction\n");
-		}
-	}
+	run_transaction (trans);
 
 	low_transaction_free (trans);
 	low_repo_set_free (repos);
@@ -784,7 +818,7 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	print_transaction (trans);
+	run_transaction (trans);
 
 	low_package_dependency_free (provides);
 	low_transaction_free (trans);

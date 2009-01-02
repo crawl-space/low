@@ -535,4 +535,13 @@ low_rpmdb_package_get_files (LowPackage *pkg)
 
 	return files;
 }
+
+/* XXX hack */
+rpmdb
+low_repo_rpmdb_get_db (LowRepo *repo)
+{
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *)repo;
+	return repo_rpmdb->db;
+}
+
 /* vim: set ts=8 sw=8 noet: */

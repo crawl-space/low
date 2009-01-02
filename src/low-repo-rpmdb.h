@@ -50,6 +50,9 @@ LowPackageIter *	low_repo_rpmdb_search_files 	(LowRepo *repo,
 LowPackageIter *	low_repo_rpmdb_search_details 	(LowRepo *repo,
 							 const char *querystr);
 
+
+rpmdb 			low_repo_rpmdb_get_db 		(LowRepo *repo);
+
 #endif /* _LOW_REPO_RPMDB_H_ */
 
 /* vim: set ts=8 sw=8 noet: */
