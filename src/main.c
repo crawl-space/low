@@ -528,6 +528,37 @@ command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 	return EXIT_SUCCESS;
 }
 
+static void
+download_package (LowPackage *pkg)
+{
+	/* Grab the package name by splitting the location_href on / */
+	char **tokens = g_strsplit (pkg->location_href, "/", 20);
+	int i = 0;
+	char *filename;
+	while (1) {
+		if (tokens[i + 1] == NULL) {
+			filename = tokens[i];
+			break;
+		}
+		i++;
+	}
+
+	/* XXX might be null for mirrorlist repos */
+	char *baseurl = pkg->repo->baseurl;
+	if (!baseurl) {
+		baseurl = YUM_REPO;
+	}
+
+	char *full_url = g_strdup_printf ("%s%s", baseurl, pkg->location_href);
+	char *local_file = g_strdup_printf ("%s/%s/packages/%s",
+					    LOCAL_CACHE, pkg->repo->id,
+					    filename);
+
+	low_download_if_missing (full_url, local_file, filename);
+	free (full_url);
+	free (local_file);
+}
+
 static int
 command_download (int argc G_GNUC_UNUSED, const char *argv[])
 {
@@ -547,38 +578,7 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		found_pkg = 1;
 		LowPackage *pkg = iter->pkg;
-
-		/* Grab the package name by splitting the location_href on / */
-		char **tokens = g_strsplit (pkg->location_href, "/", 20);
-		int i = 0;
-		char *filename;
-		while (1) {
-			if (tokens[i + 1] == NULL) {
-				filename = tokens[i];
-				break;
-			}
-			i++;
-		}
-
-		/* XXX might be null for mirrorlist repos */
-		char *baseurl = pkg->repo->baseurl;
-		if (!baseurl) {
-			baseurl = YUM_REPO;
-		}
-
-		char *full_url = g_strdup_printf ("%s%s", baseurl, pkg->location_href);
-		char *local_file = g_strdup_printf ("%s/%s/packages/%s",
-						    LOCAL_CACHE, pkg->repo->id,
-						    filename);
-
-		printf ("Downloading %s...\n", pkg->name);
-		printf ("URL: %s\n", full_url);
-		printf ("Saving as: %s\n", local_file);
-
-		low_download_if_missing (full_url, local_file, filename);
-		free (full_url);
-		free (local_file);
-
+		download_package (pkg);
 		low_package_unref (pkg);
 	}
 
@@ -619,6 +619,38 @@ print_transaction (LowTransaction *trans)
 	print_transaction_part (trans->remove);
 }
 
+static gboolean
+prompt_confirmed ()
+{
+	printf("\nRun transaction? [y/N] ");
+
+	char input = getchar();
+
+	if (input == 'y' || input == 'Y') {
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+static void
+download_required_packages (LowTransaction *trans)
+{
+	GList *list = g_hash_table_get_values (trans->install);
+	while (list != NULL) {
+		LowTransactionMember *member = list->data;
+		download_package (member->pkg);
+		list = list->next;
+	}
+
+	list = g_hash_table_get_values (trans->update);
+	while (list != NULL) {
+		LowTransactionMember *member = list->data;
+		download_package (member->pkg);
+		list = list->next;
+	}
+}
+
 static int
 command_install (int argc G_GNUC_UNUSED, const char *argv[])
 {
@@ -653,6 +685,11 @@ command_install (int argc G_GNUC_UNUSED, const char *argv[])
 	}
 
 	print_transaction (trans);
+
+	if (prompt_confirmed()) {
+		printf ("Running\n");
+		download_required_packages(trans);
+	}
 
 	low_transaction_free (trans);
 	low_repo_set_free (repos);
