@@ -34,6 +34,7 @@
 #include "low-repo-rpmdb.h"
 #include "low-repo-set.h"
 #include "low-repo-sqlite.h"
+#include "low-repomd-parser.h"
 #include "low-transaction.h"
 #include "low-util.h"
 #include "low-download.h"
@@ -532,11 +533,11 @@ command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 }
 
 static const char *
-get_package_basename (LowPackage *pkg)
+get_file_basename (const char *location_href)
 {
-	char *filename = rindex (pkg->location_href, '/');
+	const char *filename = rindex (location_href, '/');
 	if (filename == NULL) {
-		filename = pkg->location_href;
+		filename = location_href;
 	} else {
 		filename++;
 	}
@@ -547,7 +548,7 @@ get_package_basename (LowPackage *pkg)
 static char *
 create_package_filepath (LowPackage *pkg)
 {
-	const char *filename = get_package_basename (pkg);
+	const char *filename = get_file_basename (pkg->location_href);
 	char *local_file = g_strdup_printf ("%s/%s/packages/%s",
 					    LOCAL_CACHE, pkg->repo->id,
 					    filename);
@@ -566,7 +567,7 @@ download_package (LowPackage *pkg)
 
 	char *full_url = g_strdup_printf ("%s%s", baseurl, pkg->location_href);
 	char *local_file = create_package_filepath (pkg);
-	const char *filename = get_package_basename (pkg);
+	const char *filename = get_file_basename (pkg->location_href);
 
 	low_download_if_missing (full_url, local_file, filename);
 	free (full_url);
@@ -887,25 +888,53 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 	return EXIT_SUCCESS;
 }
 
+static char *
+download_repodata_file (LowRepo *repo, const char *relative_name)
+{
+
+	const char *basename = get_file_basename (relative_name);
+	char *full_url = g_strdup_printf ("%s%s", repo->baseurl,
+					  relative_name);
+	char *local_file = g_strdup_printf ("%s/%s/%s",
+					    LOCAL_CACHE, repo->id,
+					    basename);
+
+	/* Just something nice to display */
+	char *displayed_basename;
+	if (strlen (basename) > 24) {
+		int offset = strlen(basename) - 24;
+		displayed_basename =
+			g_strdup_printf ("%s - ...%s", repo->id,
+					 basename + offset);
+	} else {
+		displayed_basename = g_strdup_printf ("%s - %s", repo->id,
+						      basename);
+	}
+
+	low_download (full_url, local_file, displayed_basename);
+
+	g_free (full_url);
+	g_free (displayed_basename);
+
+	return local_file;
+}
+
 static void
 refresh_repo (LowRepo *repo)
 {
 	if (!repo->baseurl)
 		return;
 
-	char *full_url = g_strdup_printf ("%s%s", repo->baseurl,
-					  "repodata/repomd.xml");
-	char *local_file = g_strdup_printf ("%s/%s/%s",
-					    LOCAL_CACHE, repo->id,
-					    "repomd.xml");
-	/* Just something nice to display */
-	char *basename = g_strdup_printf ("%s - %s", repo->id, "repomd.xml");
-
-	low_download (full_url, local_file, basename);
-
-	g_free (basename);
+	char *local_file = download_repodata_file (repo,
+						   "repodata/repomd.xml");
+	LowRepomd *repomd = low_repomd_parse (local_file);
 	g_free (local_file);
-	g_free (full_url);
+
+	local_file = download_repodata_file (repo, repomd->primary_db);
+	g_free (local_file);
+
+	local_file = download_repodata_file (repo, repomd->filelists_db);
+	g_free (local_file);
 }
 
 static int
