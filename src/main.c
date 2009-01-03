@@ -23,8 +23,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <time.h>
 
 #include <bzlib.h>
+#include <glib.h>
 #include <rpm/rpmlog.h>
 #include <rpm/rpmcli.h>
 #include <rpm/rpmdb.h>
@@ -44,8 +47,6 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
-#define YUM_REPO "http://download.fedora.redhat.com/pub/fedora/linux/releases" \
-                 "/9/Everything/x86_64/os/"
 #define LOCAL_CACHE "/var/cache/yum"
 
 static void show_help (const char *command);
@@ -559,16 +560,110 @@ create_package_filepath (LowPackage *pkg)
 	return local_file;
 }
 
-static void
-download_package (LowPackage *pkg)
+/* Generate a random integer between 0 and upper bound. (inclusive) */
+static int
+random_int(int upper)
 {
-	/* XXX might be null for mirrorlist repos */
-	char *baseurl = pkg->repo->baseurl;
-	if (!baseurl) {
-		baseurl = YUM_REPO;
+	/* Not the most random thing in the world but do we care? */
+	unsigned int iseed = (unsigned int)time (NULL);
+	srand (iseed);
+	return rand () % (upper + 1);
+}
+
+static void
+free_g_list_node(gpointer data_ptr, gpointer ignored)
+{
+	g_string_free ((GString *) data_ptr, TRUE);
+}
+
+static char *
+lookup_random_mirror (char *repo_id)
+{
+	char *mirrors_file =
+		g_strdup_printf ("/var/cache/yum/%s/mirrorlist.txt",
+				 repo_id);
+
+	/* List of all mirrors as GString's. */
+	GList *all_mirrors = NULL;
+
+	FILE *file = fopen(mirrors_file, "r");
+	if (file == 0)
+	{
+		printf("Error opening file: %s\n", mirrors_file);
+		return NULL;
 	}
 
-	char *full_url = g_strdup_printf ("%s%s", baseurl, pkg->location_href);
+	gchar x;
+	GString *url;
+	url = g_string_new("");
+	while ((x = fgetc (file)) != EOF)
+	{
+		if (x == '\n')
+		{
+			/* g_print ("Final string: %s\n", url->str); */
+			/* Ignore lines commented out: */
+			if (url->str[0] != '#')
+			{
+				all_mirrors = g_list_append (all_mirrors,
+							     (gpointer) url);
+			}
+			url = g_string_new("");
+			continue;
+		}
+		url = g_string_append_c (url, x);
+	}
+	fclose (file);
+	int random = random_int (g_list_length (all_mirrors) - 1);
+	GString *random_url = (GString *) g_list_nth_data(all_mirrors,
+							  random);
+	/* Copy so we can free the entire list: */
+	gchar * return_val = g_strdup (random_url->str);
+
+	g_list_foreach(all_mirrors, free_g_list_node, NULL);
+	g_list_free (all_mirrors);
+	free (mirrors_file);
+
+	return return_val;
+}
+
+/* Repo mirrors hash is optional. */
+static void
+download_package (LowPackage *pkg, GHashTable *repo_mirrors)
+{
+	char *baseurl = pkg->repo->baseurl;
+	/* baseurl will be NULL if repo is configured to use a mirror list. */
+	if (!baseurl)
+	{
+		if (repo_mirrors)
+		{
+			baseurl = (char *) g_hash_table_lookup (repo_mirrors,
+								pkg->repo->id);
+		}
+
+		/* Have we already looked up a mirror for this repo? */
+		if (!baseurl)
+		{
+			baseurl = lookup_random_mirror (pkg->repo->id);
+			printf ("Using %s mirror: %s\n", pkg->repo->id,
+				baseurl);
+			if (repo_mirrors)
+			{
+				g_hash_table_replace(repo_mirrors,
+						     pkg->repo->id,
+						     baseurl);
+			}
+		}
+	}
+
+	static const char *url_template = "%s%s";
+	if (baseurl[strlen (baseurl) - 1] != '/')
+	{
+		url_template = "%s/%s";
+
+	}
+
+	char *full_url = g_strdup_printf (url_template, baseurl,
+					  pkg->location_href);
 	char *local_file = create_package_filepath (pkg);
 	const char *filename = get_file_basename (pkg->location_href);
 
@@ -596,7 +691,7 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		found_pkg = 1;
 		LowPackage *pkg = iter->pkg;
-		download_package (pkg);
+		download_package (pkg, NULL);
 		low_package_unref (pkg);
 	}
 
@@ -654,17 +749,22 @@ prompt_confirmed ()
 static void
 download_required_packages (LowTransaction *trans)
 {
+	/* Maintain a running list of mirror URLs to use for each
+	 * repository encountered. */
+	GHashTable *repo_mirrors;
+	repo_mirrors = g_hash_table_new(g_str_hash, g_str_equal);
+
 	GList *list = g_hash_table_get_values (trans->install);
 	while (list != NULL) {
 		LowTransactionMember *member = list->data;
-		download_package (member->pkg);
+		download_package (member->pkg, repo_mirrors);
 		list = list->next;
 	}
 
 	list = g_hash_table_get_values (trans->update);
 	while (list != NULL) {
 		LowTransactionMember *member = list->data;
-		download_package (member->pkg);
+		download_package (member->pkg, repo_mirrors);
 		list = list->next;
 	}
 }
