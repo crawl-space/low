@@ -25,7 +25,10 @@
 
 typedef struct _LowRepomd {
 	char *primary_db;
+	time_t primary_db_time;
+
 	char *filelists_db;
+	time_t filelists_db_time;
 } LowRepomd;
 
 LowRepomd * low_repomd_parse(const char *repodata);

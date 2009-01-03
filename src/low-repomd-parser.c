@@ -33,7 +33,9 @@
 enum {
 	REPODATA_STATE_BEGIN,
 	REPODATA_STATE_PRIMARY,
-	REPODATA_STATE_FILELISTS
+	REPODATA_STATE_FILELISTS,
+	REPODATA_STATE_PRIMARY_TIMESTAMP,
+	REPODATA_STATE_FILELISTS_TIMESTAMP,
 };
 
 struct repodata_context {
@@ -71,7 +73,16 @@ low_repomd_start_element(void *data, const char *name, const char **atts)
 
 			}
 		}
+	} else if (strcmp(name, "timestamp") == 0) {
+		switch (ctx->state) {
+		case REPODATA_STATE_PRIMARY:
+			ctx->state = REPODATA_STATE_PRIMARY_TIMESTAMP;
+			break;
+		case REPODATA_STATE_FILELISTS:
+			ctx->state = REPODATA_STATE_FILELISTS_TIMESTAMP;
+		}
 	}
+
 }
 
 static void
@@ -81,6 +92,23 @@ low_repomd_end_element (void *data, const char *name)
 
 	if (strcmp(name, "data") == 0) {
 		ctx->state = REPODATA_STATE_BEGIN;
+	}
+}
+
+static void
+low_repomd_character_data (void *data, const XML_Char *s,
+			   int len G_GNUC_UNUSED)
+{
+	struct repodata_context *ctx = data;
+
+	switch (ctx->state) {
+	case REPODATA_STATE_PRIMARY_TIMESTAMP:
+		ctx->repomd->primary_db_time = strtoul (s, NULL, 10);
+		ctx->state = REPODATA_STATE_PRIMARY;
+		break;
+	case REPODATA_STATE_FILELISTS_TIMESTAMP:
+		ctx->repomd->filelists_db_time = strtoul (s, NULL, 10);
+		ctx->state = REPODATA_STATE_FILELISTS;
 	}
 }
 
@@ -104,10 +132,12 @@ low_repomd_parse(const char *repodata)
 	XML_SetElementHandler(parser,
 			      low_repomd_start_element,
 			      low_repomd_end_element);
+	XML_SetCharacterDataHandler (parser, low_repomd_character_data);
 
 	repodata_file = open(repodata, O_RDONLY);
-	if (repodata_file < 0)
+	if (repodata_file < 0) {
 		return NULL;
+	}
 
 	do {
 		XML_GetParsingStatus(parser, &status);

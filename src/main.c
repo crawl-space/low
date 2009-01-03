@@ -898,7 +898,7 @@ download_repodata_file (LowRepo *repo, const char *relative_name)
 	const char *basename = get_file_basename (relative_name);
 	char *full_url = g_strdup_printf ("%s%s", repo->baseurl,
 					  relative_name);
-	char *local_file = g_strdup_printf ("%s/%s/%s",
+	char *local_file = g_strdup_printf ("%s/%s/%s.tmp",
 					    LOCAL_CACHE, repo->id,
 					    basename);
 
@@ -950,24 +950,60 @@ uncompress_file (const char *filename)
 	close (fd);
 }
 
+static char *
+create_repodata_filename (LowRepo *repo, const char *relative_name)
+{
+	const char *basename = get_file_basename (relative_name);
+	return g_strdup_printf ("%s/%s/%s", LOCAL_CACHE, repo->id, basename);
+
+}
+
 static void
 refresh_repo (LowRepo *repo)
 {
+	char *local_file;
+	char *tmp_file;
+
 	if (!repo->baseurl)
 		return;
 
-	char *local_file = download_repodata_file (repo,
-						   "repodata/repomd.xml");
-	LowRepomd *repomd = low_repomd_parse (local_file);
-	g_free (local_file);
+	local_file = create_repodata_filename (repo, "repodata/repomd.xml");
 
-	local_file = download_repodata_file (repo, repomd->primary_db);
-	uncompress_file (local_file);
-	g_free (local_file);
+	LowRepomd *old_repomd = low_repomd_parse (local_file);
 
-	local_file = download_repodata_file (repo, repomd->filelists_db);
-	uncompress_file (local_file);
+	tmp_file = download_repodata_file (repo, "repodata/repomd.xml");
+	LowRepomd *new_repomd = low_repomd_parse (tmp_file);
+
+	if (old_repomd != NULL &&
+	    old_repomd->primary_db_time >= new_repomd->primary_db_time &&
+	    old_repomd->filelists_db_time >= new_repomd->filelists_db_time) {
+		g_free (local_file);
+		g_free (tmp_file);
+
+		return;
+	}
+	return;
+
+	rename (tmp_file, local_file);
 	g_free (local_file);
+	g_free (tmp_file);
+
+	tmp_file = download_repodata_file (repo, new_repomd->primary_db);
+	local_file = create_repodata_filename (repo, new_repomd->primary_db);
+	rename (tmp_file, local_file);
+	uncompress_file (local_file);
+
+	g_free (local_file);
+	g_free (tmp_file);
+
+	tmp_file = download_repodata_file (repo, new_repomd->filelists_db);
+	local_file = create_repodata_filename (repo,
+					       new_repomd->filelists_db);
+	rename (tmp_file, local_file);
+	uncompress_file (local_file);
+
+	g_free (local_file);
+	g_free (tmp_file);
 }
 
 static int
