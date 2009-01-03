@@ -843,15 +843,14 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 }
 
 static int
-command_remove (int argc G_GNUC_UNUSED, const char *argv[])
+command_remove (int argc, const char *argv[])
 {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
 	LowPackageIter *iter;
 	LowConfig *config;
 	LowTransaction *trans;
-	LowPackageDependency *provides =
-		low_package_dependency_new_from_string (argv[0]);
+	int i;
 
 	rpmdb = low_repo_rpmdb_initialize ();
 
@@ -860,19 +859,26 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 
 	trans = low_transaction_new (rpmdb, repos);
 
-	/* XXX just do the most EVR newest */
-	iter = low_repo_rpmdb_search_provides (rpmdb, provides);
-	iter = low_package_iter_next (iter);
+	for (i = 0; i < argc; i++) {
+		LowPackageDependency *provides =
+			low_package_dependency_new_from_string (argv[i]);
 
-	if (iter == NULL) {
-		printf ("No such package to remove\n");
-		return EXIT_FAILURE;
-	}
+		/* XXX just do the most EVR newest */
+		iter = low_repo_rpmdb_search_provides (rpmdb, provides);
+		iter = low_package_iter_next (iter);
 
-	low_transaction_add_remove (trans, iter->pkg);
+		if (iter == NULL) {
+			printf ("No such package to remove\n");
+			return EXIT_FAILURE;
+		}
 
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		low_package_unref (iter->pkg);
+		low_transaction_add_remove (trans, iter->pkg);
+
+		while (iter = low_package_iter_next (iter), iter != NULL) {
+			low_package_unref (iter->pkg);
+		}
+
+		low_package_dependency_free (provides);
 	}
 
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
@@ -882,7 +888,6 @@ command_remove (int argc G_GNUC_UNUSED, const char *argv[])
 
 	run_transaction (trans);
 
-	low_package_dependency_free (provides);
 	low_transaction_free (trans);
 	low_repo_set_free (repos);
 	low_config_free (config);
