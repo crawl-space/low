@@ -102,6 +102,21 @@ AC_CHECK_LIB(expat, XML_ParserCreate, [EXPAT_LIBS="-lexpat"],
 	     [AC_MSG_ERROR([Can't find expat library. Please install expat.])])
 AC_SUBST(EXPAT_LIBS)
 
+dnl Check for bzip2 (required)
+BZIP2_LIB=""
+AC_ARG_WITH(bzip2, [  --with-bzip2=<dir>      Use bzip2 from here],
+                      [
+                      bzlib2=$withval
+                      CPPFLAGS="$CPPFLAGS -I$withval/include"
+                      LDFLAGS="$LDFLAGS -L$withval/lib"
+                      ]
+                      )
+AC_CHECK_HEADERS(bzlib.h, [AC_DEFINE(HAVE_BZLIB_H)],
+		 [AC_MSG_ERROR([Can't find bzlib.h. Please install bzip2.])])
+AC_CHECK_LIB(bz2, BZ2_bzReadOpen, [BZIP2_LIBS="-lbz2"],
+	     [AC_MSG_ERROR([Can't find bz2 library. Please install bzip2.])])
+AC_SUBST(BZIP2_LIBS)
+
 dnl Check for check (unit testing library, optional)
 PKG_CHECK_MODULES(CHECK, check >= $CHECK_REQUIRED, HAVE_CHECK=yes,
                   HAVE_CHECK=no)

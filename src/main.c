@@ -23,9 +23,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+
+#include <bzlib.h>
 #include <rpm/rpmlog.h>
 #include <rpm/rpmcli.h>
 #include <rpm/rpmdb.h>
+
 #include "config.h"
 
 #include "low-debug.h"
@@ -919,6 +922,34 @@ download_repodata_file (LowRepo *repo, const char *relative_name)
 	return local_file;
 }
 
+#define BUF_SIZE 1024
+
+/* XXX should do this while downloading */
+static void
+uncompress_file (const char *filename)
+{
+	int error;
+	int read;
+	int fd;
+	char buf[BUF_SIZE];
+	char *uncompressed_name = malloc (strlen (filename) - 3);
+	strncpy (uncompressed_name, filename, strlen (filename) - 4);
+	uncompressed_name[strlen (uncompressed_name)] = '\0';
+
+	FILE *file = fopen (filename, "r");
+	BZFILE *compressed = BZ2_bzReadOpen (&error, file, 0, 0, NULL, 0);
+
+	fd = open (uncompressed_name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+
+	printf ("Uncompressing...\n");
+	while (read = BZ2_bzRead (&error, compressed, &buf, BUF_SIZE),
+	       read != 0) {
+		write (fd, buf, read);
+	}
+
+	close (fd);
+}
+
 static void
 refresh_repo (LowRepo *repo)
 {
@@ -931,9 +962,11 @@ refresh_repo (LowRepo *repo)
 	g_free (local_file);
 
 	local_file = download_repodata_file (repo, repomd->primary_db);
+	uncompress_file (local_file);
 	g_free (local_file);
 
 	local_file = download_repodata_file (repo, repomd->filelists_db);
+	uncompress_file (local_file);
 	g_free (local_file);
 }
 

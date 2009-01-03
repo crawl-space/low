@@ -56,4 +56,5 @@ low_LDADD = \
 	$(RPM_LIBS) \
 	$(CURL_LIBS) \
 	$(EXPAT_LIBS) \
+	$(BZIP2_LIBS) \
 	$(NULL)
