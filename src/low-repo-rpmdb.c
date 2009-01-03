@@ -324,7 +324,12 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	pkg->id = id.p;
 	pkg->name = strdup (name.string);
-	pkg->epoch = g_strdup (epoch.string);
+
+	pkg->epoch = NULL;
+	if (epoch.string) {
+		pkg->epoch = g_strdup_printf ("%d", *epoch.integer);
+	}
+
 	pkg->version = strdup (version.string);
 	pkg->release = strdup (release.string);
 	pkg->arch = strdup (arch.string);

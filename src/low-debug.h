@@ -31,6 +31,17 @@
 					  (pkg)->name, (pkg)->version, \
 					  (pkg)->release, (pkg)->arch)
 
+#define low_debug_update(msg, pkg1, pkg2) low_debug("%s : %s-%s-%s.%s to %s-%s-%s.%s", \
+						    (msg), \
+						    (pkg1)->name, \
+						    (pkg1)->version, \
+						    (pkg1)->release, \
+						    (pkg1)->arch, \
+						    (pkg2)->name, \
+						    (pkg2)->version, \
+						    (pkg2)->release, \
+						    (pkg2)->arch)
+
 void 	low_debug_impl 	(const char *file, const char *func, const int line,
 			 const char *format, ...)
 			 __attribute__ ((format (printf, 4, 5)));

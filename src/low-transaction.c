@@ -183,33 +183,21 @@ low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
 }
 
 static LowPackage *
-choose_best_for_update (LowRepoSet *repos G_GNUC_UNUSED, LowPackage *to_update)
+choose_best_for_update (LowRepoSet *repos, LowPackage *to_update)
 {
-	LowPackage *best = NULL;
+	LowPackage *best = to_update;
 	LowPackageIter *iter;
-	char *evr = g_strdup_printf ("%s:%s-%s", to_update->epoch,
-				     to_update->version, to_update->release);
+	char *best_evr = low_package_evr_as_string(to_update);
+
 	LowPackageDependency *provides =
 		low_package_dependency_new (to_update->name,
 					    DEPENDENCY_SENSE_GT,
-					    evr);
+					    best_evr);
 
 	iter = low_repo_set_search_provides (repos, provides);
 
-	iter = low_package_iter_next (iter);
-	if (iter != NULL) {
-		best = iter->pkg;
-	} else {
-		return best;
-	}
-
-	char *best_evr = g_strdup_printf("%s:%s-%s", best->epoch, best->version,
-					 best->release);
-
 	while (iter = low_package_iter_next (iter), iter != NULL) {
-		char *new_evr = g_strdup_printf("%s:%s-%s", iter->pkg->epoch,
-						iter->pkg->version,
-						iter->pkg->release);
+		char *new_evr = low_package_evr_as_string (iter->pkg);
 
 		if (rpmvercmp (new_evr, best_evr) > 0) {
 			low_package_unref (best);
@@ -225,27 +213,39 @@ choose_best_for_update (LowRepoSet *repos G_GNUC_UNUSED, LowPackage *to_update)
 	}
 
 	low_package_dependency_free (provides);
-	g_free (evr);
 	g_free (best_evr);
+
+	/* We haven't found anything better */
+	if (to_update == best) {
+		return NULL;
+	}
 
 	return best;
 }
 
-void
+gboolean
 low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
 {
 	LowPackage *updating_to = choose_best_for_update (trans->repos,
 							  to_update);
+
+	if (updating_to == NULL) {
+		low_debug_pkg ("No available update for", to_update);
+		return FALSE;
+	}
+
+	low_debug_update ("Update found", to_update, updating_to);
+
 	if (low_transaction_add_to_hash (trans->update, updating_to,
 					 to_update)) {
 		low_transaction_add_to_hash (trans->updated, to_update,
 					     updating_to);
 		low_debug_pkg ("Adding for update", updating_to);
-//		return TRUE;
+		return TRUE;
 	} else {
 		low_debug_pkg ("Not adding already added pkg for update",
 			       updating_to);
-//		return FALSE;
+		return FALSE;
 	}
 }
 

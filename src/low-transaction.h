@@ -65,8 +65,8 @@ void			low_transaction_free 	(LowTransaction *trans);
 
 gboolean 	low_transaction_add_install 	(LowTransaction *trans,
 						 LowPackage *to_install);
-void 	low_transaction_add_update 	(LowTransaction *trans,
-					 LowPackage *to_update);
+gboolean 	low_transaction_add_update 	(LowTransaction *trans,
+						 LowPackage *to_update);
 gboolean 	low_transaction_add_remove 	(LowTransaction *trans,
 						 LowPackage *to_remove);
 

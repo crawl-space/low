@@ -834,6 +834,17 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 
 		low_package_dependency_free (provides);
 	}
+
+	if (argc == 0) {
+		iter = low_repo_rpmdb_list_all (rpmdb);
+
+		while (iter = low_package_iter_next (iter), iter != NULL) {
+			low_transaction_add_update (trans, iter->pkg);
+		}
+	}
+
+	print_transaction (trans);
+
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		printf ("Error resolving transaction\n");
 		return EXIT_FAILURE;

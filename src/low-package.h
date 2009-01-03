@@ -133,6 +133,8 @@ gboolean 		low_package_dependency_satisfies 	(const LowPackageDependency *needs,
 
 void 	low_package_details_free 	(LowPackageDetails *details);
 
+char *	low_package_evr_as_string 	(LowPackage *pkg);
+
 #endif /* _LOW_PACKAGE_H_ */
 
 /* vim: set ts=8 sw=8 noet: */

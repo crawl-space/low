@@ -243,4 +243,11 @@ low_package_dependency_satisfies (const LowPackageDependency *needs,
 	return res == 1 ? TRUE : FALSE;
 }
 
+char *
+low_package_evr_as_string (LowPackage *pkg)
+{
+	return g_strdup_printf ("%s:%s-%s", pkg->epoch ? pkg->epoch : "0",
+				pkg->version, pkg->release);
+}
+
 /* vim: set ts=8 sw=8 noet: */
