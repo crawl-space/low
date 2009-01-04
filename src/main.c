@@ -958,8 +958,6 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 		}
 	}
 
-	print_transaction (trans);
-
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		printf ("Error resolving transaction\n");
 		return EXIT_FAILURE;

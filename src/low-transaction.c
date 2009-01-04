@@ -183,7 +183,8 @@ low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
 }
 
 static LowPackage *
-choose_best_for_update (LowRepoSet *repos, LowPackage *to_update)
+choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
+			LowPackage *to_update)
 {
 	LowPackage *best = to_update;
 	LowPackageIter *iter;
@@ -213,10 +214,34 @@ choose_best_for_update (LowRepoSet *repos, LowPackage *to_update)
 	}
 
 	low_package_dependency_free (provides);
-	g_free (best_evr);
 
 	/* We haven't found anything better */
 	if (to_update == best) {
+		g_free (best_evr);
+		return NULL;
+	}
+
+	/* Ensure we don't already have it */
+	gboolean found = FALSE;
+	iter = low_repo_rpmdb_list_by_name (repo_rpmdb, best->name);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		if (!found) {
+			char *this_evr = low_package_evr_as_string(iter->pkg);
+
+			if (rpmvercmp (best_evr, this_evr) == 0) {
+				found = TRUE;
+			}
+
+			g_free (this_evr);
+		}
+
+		low_package_unref (iter->pkg);
+	}
+
+	g_free (best_evr);
+
+	if (found) {
 		return NULL;
 	}
 
@@ -226,7 +251,8 @@ choose_best_for_update (LowRepoSet *repos, LowPackage *to_update)
 gboolean
 low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
 {
-	LowPackage *updating_to = choose_best_for_update (trans->repos,
+	LowPackage *updating_to = choose_best_for_update (trans->rpmdb,
+							  trans->repos,
 							  to_update);
 
 	if (updating_to == NULL) {
