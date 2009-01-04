@@ -4,17 +4,12 @@
 - test info description word wrapping.
 - all of yum's macro substitution for config files
 - doxygen code documentation
-- LowPackageDependency struct (name, sense, evr).
-  - get search_provides etc using this instead of just a string
-- calculate list of updating packages
-- depsolving
+- calculate list of updating packages, being mindful of kernel
 - gpg key checking
 - globbing search for command line 'low search'
 - low dump [repo|all|PACKAGE] - output full package details in a format
   we can parse
 - more unit tests for low-repo-set (using fake sqlite repos)
-- investigate using g_slice instead of malloc and friends
-- maybe lazy-load non-nevra package data
 - lazy load PRCO and file lists
 - Add a function to iterate over provides and files, rather than having
   to call both. Still provide the old ones though.
