@@ -140,7 +140,8 @@ typedef void (*sqlFinal) (sqlite3_context *);
 
 LowRepo *
 low_repo_sqlite_initialize (const char *id, const char *name,
-			    const char *baseurl, gboolean enabled)
+			    const char *baseurl, const char *mirror_list,
+			    gboolean enabled)
 {
 	LowRepoSqlite *repo = malloc (sizeof (LowRepoSqlite));
 
@@ -176,6 +177,7 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 	repo->super.id = g_strdup (id);
 	repo->super.name = g_strdup (name);
 	repo->super.baseurl = g_strdup (baseurl);
+	repo->super.mirror_list = g_strdup (mirror_list);
 	repo->super.enabled = enabled;
 
 	free (primary_db);

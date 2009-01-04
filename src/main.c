@@ -571,7 +571,7 @@ random_int(int upper)
 }
 
 static void
-free_g_list_node(gpointer data_ptr, gpointer ignored)
+free_g_list_node(gpointer data_ptr, gpointer ignored G_GNUC_UNUSED)
 {
 	g_string_free ((GString *) data_ptr, TRUE);
 }
@@ -1086,6 +1086,15 @@ refresh_repo (LowRepo *repo)
 {
 	char *local_file;
 	char *tmp_file;
+
+	if (repo->mirror_list) {
+		local_file = create_repodata_filename (repo,
+						       "mirrorlist.txt");
+		low_download (repo->mirror_list, local_file,
+			      "mirrorlist.txt");
+
+		g_free (local_file);
+	}
 
 	if (!repo->baseurl)
 		return;

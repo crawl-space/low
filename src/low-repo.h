@@ -28,6 +28,7 @@ typedef struct _LowRepo {
 	char * id;
 	char * name;
 	char * baseurl;
+	char * mirror_list;
 	gboolean enabled;
 } LowRepo;
 

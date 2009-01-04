@@ -41,14 +41,19 @@ low_repo_set_initialize_from_config (LowConfig *config)
 			low_config_get_string (config, repo_names[i], "name");
 		char *baseurl = low_config_get_string (config, repo_names[i],
 						       "baseurl");
+		char *mirror_list = low_config_get_string (config,
+							   repo_names[i],
+							   "mirrorlist");
 		gboolean enabled = low_config_get_boolean (config,
 							   repo_names[i],
 							   "enabled");
 		LowRepo *repo = low_repo_sqlite_initialize (id, name, baseurl,
+							    mirror_list,
 							    enabled);
 
 		g_free (name);
 		g_free (baseurl);
+		g_free (mirror_list);
 
 		g_hash_table_insert (repo_set->repos, id, repo);
 	}
