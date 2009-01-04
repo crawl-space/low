@@ -1072,7 +1072,7 @@ uncompress_file (const char *filename)
 	char buf[BUF_SIZE];
 	char *uncompressed_name = malloc (strlen (filename) - 3);
 	strncpy (uncompressed_name, filename, strlen (filename) - 4);
-	uncompressed_name[strlen (uncompressed_name)] = '\0';
+	uncompressed_name[strlen (filename) - 4] = '\0';
 
 	FILE *file = fopen (filename, "r");
 	BZFILE *compressed = BZ2_bzReadOpen (&error, file, 0, 0, NULL, 0);
