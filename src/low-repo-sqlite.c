@@ -125,7 +125,7 @@ find_sqlite_file(const char *pattern)
 	glob(pattern, 0, NULL, &pglob);
 
 	if (pglob.gl_pathc == 0) {
-		match = g_strdup ("/");
+		match = g_strdup ("");
 	} else {
 		match = g_strdup (pglob.gl_pathv[0]);
 	}
@@ -141,7 +141,7 @@ typedef void (*sqlFinal) (sqlite3_context *);
 LowRepo *
 low_repo_sqlite_initialize (const char *id, const char *name,
 			    const char *baseurl, const char *mirror_list,
-			    gboolean enabled)
+			    gboolean enabled, gboolean bind_dbs)
 {
 	LowRepoSqlite *repo = malloc (sizeof (LowRepoSqlite));
 
@@ -158,7 +158,7 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 	g_free (filelists_db_glob);
 
 	/* Will need a way to flick this on later */
-	if (enabled) {
+	if (enabled && bind_dbs) {
 		if (access (primary_db, R_OK) || access (filelists_db, R_OK)) {
 			printf ("Can't open db files for repo '%s'! (try running 'yum makecache')\n", id);
 			exit (1);
@@ -169,7 +169,6 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 					 SQLITE_ANY, NULL,
 					 low_repo_sqlite_regexp,
 					 (sqlFunc) NULL, (sqlFinal) NULL);
-	//	low_repo_sqlite_open_db (filelists_db, &repo->filelists_db);
 	} else {
 		repo->primary_db = NULL;
 	}

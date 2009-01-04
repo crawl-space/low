@@ -254,7 +254,7 @@ command_info (int argc, const char *argv[])
 	iter = low_repo_rpmdb_list_by_name (rpmdb, name);
 	print_all_packages (iter, show_all);
 
-	repos = low_repo_set_initialize_from_config (config);
+	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	iter = low_repo_set_list_by_name (repos, name);
 	print_all_packages (iter, show_all);
@@ -309,7 +309,7 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 	}
 	if (argc == 0 || !strcmp(argv[0], "all")) {
 		LowRepoSet *repos =
-			low_repo_set_initialize_from_config (config);
+			low_repo_set_initialize_from_config (config, TRUE);
 
 		iter = low_repo_set_list_all (repos);
 		print_all_packages_short (iter);
@@ -320,7 +320,7 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 		print_all_packages_short (iter);
 
 		LowRepoSet *repos =
-			low_repo_set_initialize_from_config (config);
+			low_repo_set_initialize_from_config (config, TRUE);
 
 		iter = low_repo_set_list_by_name (repos, argv[0]);
 		print_all_packages_short (iter);
@@ -350,7 +350,7 @@ command_search (int argc G_GNUC_UNUSED, const char *argv[])
 	iter = low_repo_rpmdb_search_details (rpmdb, querystr);
 	print_all_packages_short (iter);
 
-	repos = low_repo_set_initialize_from_config (config);
+	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	iter = low_repo_set_search_details (repos, querystr);
 	print_all_packages_short (iter);
@@ -400,7 +400,7 @@ command_repolist (int argc, const char *argv[])
 
 	print_repo (rpmdb);
 
-	repos = low_repo_set_initialize_from_config (config);
+	repos = low_repo_set_initialize_from_config (config, TRUE);
 	low_repo_set_for_each (repos, filter, (LowRepoSetFunc) print_repo,
 			       NULL);
 	low_repo_set_free (repos);
@@ -431,7 +431,7 @@ command_whatprovides (int argc G_GNUC_UNUSED, const char *argv[])
 		print_all_packages_short (iter);
 	}
 
-	repos = low_repo_set_initialize_from_config (config);
+	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	iter = low_repo_set_search_provides (repos, provides);
 	print_all_packages_short (iter);
@@ -465,7 +465,7 @@ command_whatrequires (int argc G_GNUC_UNUSED, const char *argv[])
 	iter = low_repo_rpmdb_search_requires (rpmdb, requires);
 	print_all_packages_short (iter);
 
-	repos = low_repo_set_initialize_from_config (config);
+	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	iter = low_repo_set_search_requires (repos, requires);
 	print_all_packages_short (iter);
@@ -494,7 +494,7 @@ command_whatconflicts (int argc G_GNUC_UNUSED, const char *argv[])
 	iter = low_repo_rpmdb_search_conflicts (rpmdb, conflicts);
 	print_all_packages_short (iter);
 
-	repos = low_repo_set_initialize_from_config (config);
+	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	iter = low_repo_set_search_conflicts (repos, conflicts);
 	print_all_packages_short (iter);
@@ -523,7 +523,7 @@ command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 	iter = low_repo_rpmdb_search_obsoletes (rpmdb, obsoletes);
 	print_all_packages_short (iter);
 
-	repos = low_repo_set_initialize_from_config (config);
+	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	iter = low_repo_set_search_obsoletes (repos, obsoletes);
 	print_all_packages_short (iter);
@@ -626,44 +626,59 @@ lookup_random_mirror (char *repo_id)
 	return return_val;
 }
 
-/* Repo mirrors hash is optional. */
-static void
-download_package (LowPackage *pkg, GHashTable *repo_mirrors)
+static char *
+select_mirror_url (LowRepo *repo, GHashTable *repo_mirrors)
 {
-	char *baseurl = pkg->repo->baseurl;
+	char *baseurl = repo->baseurl;
 	/* baseurl will be NULL if repo is configured to use a mirror list. */
 	if (!baseurl)
 	{
 		if (repo_mirrors)
 		{
 			baseurl = (char *) g_hash_table_lookup (repo_mirrors,
-								pkg->repo->id);
+								repo->id);
 		}
 
 		/* Have we already looked up a mirror for this repo? */
 		if (!baseurl)
 		{
-			baseurl = lookup_random_mirror (pkg->repo->id);
-			printf ("Using %s mirror: %s\n", pkg->repo->id,
-				baseurl);
+			baseurl = lookup_random_mirror (repo->id);
+			low_debug ("Using %s mirror: %s\n", repo->id,
+				   baseurl);
 			if (repo_mirrors)
 			{
 				g_hash_table_replace(repo_mirrors,
-						     pkg->repo->id,
+						     repo->id,
 						     baseurl);
 			}
 		}
 	}
 
-	static const char *url_template = "%s%s";
+	return baseurl;
+}
+
+static char *
+create_file_url (const char *baseurl, const char *relative_file)
+{
+	const char *url_template = "%s%s";
 	if (baseurl[strlen (baseurl) - 1] != '/')
 	{
 		url_template = "%s/%s";
-
 	}
 
 	char *full_url = g_strdup_printf (url_template, baseurl,
-					  pkg->location_href);
+					  relative_file);
+
+	return full_url;
+}
+
+/* Repo mirrors hash is optional. */
+static void
+download_package (LowPackage *pkg, GHashTable *repo_mirrors)
+{
+	char *baseurl = select_mirror_url (pkg->repo, repo_mirrors);
+
+	char *full_url = create_file_url (baseurl, pkg->location_href);
 	char *local_file = create_package_filepath (pkg);
 	const char *filename = get_file_basename (pkg->location_href);
 
@@ -684,7 +699,7 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (rpmdb);
 
-	repos = low_repo_set_initialize_from_config (config);
+	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	iter = low_repo_set_list_by_name (repos, name);
 	int found_pkg = 0;
@@ -867,7 +882,7 @@ command_install (int argc, const char *argv[])
 	rpmdb = low_repo_rpmdb_initialize ();
 
 	config = low_config_initialize (rpmdb);
-	repos = low_repo_set_initialize_from_config (config);
+	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	trans = low_transaction_new (rpmdb, repos);
 
@@ -915,7 +930,7 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 	rpmdb = low_repo_rpmdb_initialize ();
 
 	config = low_config_initialize (rpmdb);
-	repos = low_repo_set_initialize_from_config (config);
+	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	trans = low_transaction_new (rpmdb, repos);
 
@@ -973,7 +988,7 @@ command_remove (int argc, const char *argv[])
 	rpmdb = low_repo_rpmdb_initialize ();
 
 	config = low_config_initialize (rpmdb);
-	repos = low_repo_set_initialize_from_config (config);
+	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	trans = low_transaction_new (rpmdb, repos);
 
@@ -1017,10 +1032,10 @@ command_remove (int argc, const char *argv[])
 static char *
 download_repodata_file (LowRepo *repo, const char *relative_name)
 {
+	char *baseurl = select_mirror_url (repo, NULL);
 
 	const char *basename = get_file_basename (relative_name);
-	char *full_url = g_strdup_printf ("%s%s", repo->baseurl,
-					  relative_name);
+	char *full_url = create_file_url (baseurl, relative_name);
 	char *local_file = g_strdup_printf ("%s/%s/%s.tmp",
 					    LOCAL_CACHE, repo->id,
 					    basename);
@@ -1096,9 +1111,6 @@ refresh_repo (LowRepo *repo)
 		g_free (local_file);
 	}
 
-	if (!repo->baseurl)
-		return;
-
 	local_file = create_repodata_filename (repo, "repodata/repomd.xml");
 
 	LowRepomd *old_repomd = low_repomd_parse (local_file);
@@ -1114,7 +1126,6 @@ refresh_repo (LowRepo *repo)
 
 		return;
 	}
-	return;
 
 	rename (tmp_file, local_file);
 	g_free (local_file);
@@ -1149,7 +1160,7 @@ command_refresh (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
 	rpmdb = low_repo_rpmdb_initialize ();
 
 	config = low_config_initialize (rpmdb);
-	repos = low_repo_set_initialize_from_config (config);
+	repos = low_repo_set_initialize_from_config (config, FALSE);
 
 	low_repo_set_for_each (repos, filter, (LowRepoSetFunc) refresh_repo,
 			       NULL);

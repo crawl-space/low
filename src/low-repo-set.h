@@ -43,7 +43,8 @@ typedef enum {
 
 typedef gboolean (*LowRepoSetFunc) (LowRepo *repo, gpointer data);
 
-LowRepoSet *    low_repo_set_initialize_from_config 	(LowConfig *config);
+LowRepoSet *    low_repo_set_initialize_from_config 	(LowConfig *config,
+							 gboolean bind_dbs);
 void            low_repo_set_free                      	(LowRepoSet *repo_set);
 
 void            low_repo_set_for_each                  	(LowRepoSet *repo_set,

@@ -26,7 +26,7 @@
 
 
 LowRepoSet *
-low_repo_set_initialize_from_config (LowConfig *config)
+low_repo_set_initialize_from_config (LowConfig *config, gboolean bind_dbs)
 {
 	unsigned int i;
 	char **repo_names;
@@ -49,7 +49,8 @@ low_repo_set_initialize_from_config (LowConfig *config)
 							   "enabled");
 		LowRepo *repo = low_repo_sqlite_initialize (id, name, baseurl,
 							    mirror_list,
-							    enabled);
+							    enabled,
+							    bind_dbs);
 
 		g_free (name);
 		g_free (baseurl);
