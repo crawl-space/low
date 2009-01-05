@@ -24,6 +24,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <curl/curl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -88,9 +89,11 @@ low_download(const char *url, const char *file, const char *basename)
 		return -1;
 	}
 	if (response != 200) {
-		fprintf(stderr, " - failed %ld\n", response);
-		unlink(file);
-		return -1;
+		if (!(response == 226 && strncmp ("ftp", url, 3) == 0)) {
+			fprintf(stderr, " - failed %ld\n", response);
+			unlink(file);
+			return -1;
+		}
 	}
 	fprintf(stderr, "\n");
 
