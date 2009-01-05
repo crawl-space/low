@@ -38,10 +38,41 @@ low_download_show_progress(void *clientp, double dltotal, double dlnow,
 {
 	const char *file = clientp;
 
-	if (!dlnow < dltotal)
-		fprintf(stderr, "\rdownloading %s, %dkB/%dkB",
-			file, (int) dlnow / 1024, (int) dltotal / 1024);
+	float tmp_now = dlnow;
+	float tmp_total = dltotal;
 
+	if (dlnow > dltotal || dltotal == 0) {
+		return 0;
+	}
+
+	printf("\rdownloading %s, ", file);
+
+	if (tmp_total < 1023) {
+		printf ("%.0fB/%.0fB", tmp_now, tmp_total);
+		fflush (stdout);
+		return 0;
+	}
+
+	tmp_now /= 1024;
+	tmp_total /= 1024;
+	if (tmp_total < 1023) {
+		printf ("%.1fKB/%.1fKB", tmp_now, tmp_total);
+		fflush (stdout);
+		return 0;
+	}
+
+	tmp_now /= 1024;
+	tmp_total /= 1024;
+	if (tmp_total < 1023) {
+		printf ("%.1fMB/%.1fMB", tmp_now, tmp_total);
+		fflush (stdout);
+		return 0;
+	}
+
+	tmp_now /= 1024;
+	tmp_total /= 1024;
+	printf ("%.1fGB/%.1fGB", tmp_now, tmp_total);
+	fflush (stdout);
 	return 0;
 }
 
@@ -95,7 +126,7 @@ low_download(const char *url, const char *file, const char *basename)
 			return -1;
 		}
 	}
-	fprintf(stderr, "\n");
+	printf("\n");
 
 	curl_easy_cleanup(curl);
 
