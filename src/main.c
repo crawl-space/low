@@ -852,6 +852,14 @@ low_transaction_to_rpmts (LowTransaction *trans)
 static void
 run_transaction (LowTransaction *trans)
 {
+	if (!(g_hash_table_size (trans->install) ||
+	      g_hash_table_size (trans->update) ||
+	      g_hash_table_size (trans->remove) ||
+	      g_hash_table_size (trans->updated))) {
+		printf ("Nothing to do.\n");
+		return;
+	}
+
 	print_transaction (trans);
 
 	if (prompt_confirmed()) {
