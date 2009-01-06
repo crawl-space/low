@@ -877,6 +877,35 @@ run_transaction (LowTransaction *trans)
 	}
 }
 
+static LowPackage *
+select_package_for_install (LowPackageIter *iter)
+{
+	LowPackage *best = NULL;
+	char *best_evr = "0";
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		char *new_evr = low_package_evr_as_string (iter->pkg);
+
+		if (rpmvercmp (new_evr, best_evr) > 0 && iter->pkg->arch[0] != 'i') {
+			if (best) {
+				low_package_unref (best);
+				g_free (best_evr);
+			}
+
+			best = iter->pkg;
+			best_evr = new_evr;
+		} else {
+			low_package_unref (iter->pkg);
+			g_free (new_evr);
+		}
+
+	}
+
+	g_free (best_evr);
+
+	return best;
+}
+
 static int
 command_install (int argc, const char *argv[])
 {
@@ -898,14 +927,11 @@ command_install (int argc, const char *argv[])
 	for (i = 0; i < argc; i++) {
 		LowPackageDependency *provides =
 			low_package_dependency_new_from_string (argv[i]);
-		/* XXX just do the most EVR newest */
-		iter = low_repo_set_search_provides (repos, provides);
-		iter = low_package_iter_next (iter);
-		low_transaction_add_install (trans, iter->pkg);
 
-		/* XXX get rid of this nastiness somehow */
-		while (iter = low_package_iter_next (iter), iter != NULL) {
-			low_package_unref (iter->pkg);
+		iter = low_repo_set_search_provides (repos, provides);
+		LowPackage *pkg = select_package_for_install (iter);
+		if (pkg) {
+			low_transaction_add_install (trans, pkg);
 		}
 
 		low_package_dependency_free (provides);
