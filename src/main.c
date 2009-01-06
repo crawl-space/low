@@ -886,6 +886,7 @@ command_install (int argc, const char *argv[])
 	LowConfig *config;
 	LowTransaction *trans;
 	int i;
+	int res;
 
 	rpmdb = low_repo_rpmdb_initialize ();
 
@@ -912,17 +913,18 @@ command_install (int argc, const char *argv[])
 
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		printf ("Error resolving transaction\n");
-		return EXIT_FAILURE;
+		res = EXIT_FAILURE;
+	} else {
+		run_transaction (trans);
+		res = EXIT_SUCCESS;
 	}
-
-	run_transaction (trans);
 
 	low_transaction_free (trans);
 	low_repo_set_free (repos);
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
 
-	return EXIT_SUCCESS;
+	return res;
 }
 
 static int
@@ -934,6 +936,7 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 	LowConfig *config;
 	LowTransaction *trans;
 	int i;
+	int res;
 
 	rpmdb = low_repo_rpmdb_initialize ();
 
@@ -968,17 +971,18 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		printf ("Error resolving transaction\n");
-		return EXIT_FAILURE;
+		res = EXIT_FAILURE;
+	} else {
+		run_transaction (trans);
+		res = EXIT_SUCCESS;
 	}
-
-	run_transaction (trans);
 
 	low_transaction_free (trans);
 	low_repo_set_free (repos);
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
 
-	return EXIT_SUCCESS;
+	return res;
 }
 
 static int
@@ -990,6 +994,7 @@ command_remove (int argc, const char *argv[])
 	LowConfig *config;
 	LowTransaction *trans;
 	int i;
+	int res;
 
 	rpmdb = low_repo_rpmdb_initialize ();
 
@@ -1022,17 +1027,18 @@ command_remove (int argc, const char *argv[])
 
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		printf ("Error resolving transaction\n");
-		return EXIT_FAILURE;
+		res = EXIT_FAILURE;
+	} else {
+		run_transaction (trans);
+		res = EXIT_SUCCESS;
 	}
-
-	run_transaction (trans);
 
 	low_transaction_free (trans);
 	low_repo_set_free (repos);
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (rpmdb);
 
-	return EXIT_SUCCESS;
+	return res;
 }
 
 static char *
