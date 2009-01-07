@@ -347,6 +347,11 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg,
 		while (iter = low_package_iter_next (iter), iter != NULL) {
 			LowPackage *pkg = iter->pkg;
 
+			/* It's a self-requires, skip */
+			if (pkg == pkg) {
+				continue;
+			}
+
 			if (from_update) {
 				return LOW_TRANSACTION_UNRESOLVABLE;
 			}
