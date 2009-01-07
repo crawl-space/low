@@ -200,7 +200,9 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		char *new_evr = low_package_evr_as_string (iter->pkg);
 
-		if (rpmvercmp (new_evr, best_evr) > 0) {
+		/* XXX arch cmp here has to be better */
+		if (rpmvercmp (new_evr, best_evr) > 0 &&
+		    strcmp (iter->pkg->arch, to_update->arch) == 0) {
 			low_package_unref (best);
 			best = iter->pkg;
 
@@ -248,18 +250,10 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 	return best;
 }
 
-gboolean
-low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
+static gboolean
+add_update_worker (LowTransaction *trans, LowPackage *to_update,
+		   LowPackage *updating_to)
 {
-	LowPackage *updating_to = choose_best_for_update (trans->rpmdb,
-							  trans->repos,
-							  to_update);
-
-	if (updating_to == NULL) {
-		low_debug_pkg ("No available update for", to_update);
-		return FALSE;
-	}
-
 	low_debug_update ("Update found", to_update, updating_to);
 
 	if (low_transaction_add_to_hash (trans->update, updating_to,
@@ -272,6 +266,64 @@ low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
 		low_debug_pkg ("Not adding already added pkg for update",
 			       updating_to);
 		return FALSE;
+	}
+}
+
+gboolean
+low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
+{
+	LowPackage *updating_to = choose_best_for_update (trans->rpmdb,
+							  trans->repos,
+							  to_update);
+
+	if (updating_to == NULL) {
+		low_debug_pkg ("No available update for", to_update);
+		return FALSE;
+	}
+
+	return add_update_worker (trans, to_update, updating_to);
+}
+
+static LowPackage *
+find_updated (LowRepo *repo_rpmdb, LowPackage *updating)
+{
+	LowPackage *updated = NULL;
+	LowPackageIter *iter;
+	gboolean found = FALSE;
+	char *updating_evr = low_package_evr_as_string(updating);
+
+	iter = low_repo_rpmdb_list_by_name (repo_rpmdb, updating->name);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		char *updated_evr = low_package_evr_as_string (iter->pkg);
+
+		/* XXX arch cmp here has to be better */
+		if (!found &&
+		    rpmvercmp (updating_evr, updated_evr) > 0 &&
+		    strcmp (iter->pkg->arch, updating->arch) == 0) {
+			updated = iter->pkg;
+			found = TRUE;
+		} else {
+			low_package_unref (iter->pkg);
+		}
+		g_free (updated_evr);
+
+	}
+
+	return updated;
+}
+/**
+ * Install a package, or mark it for update if it updates an installed package
+ **/
+static gboolean
+low_transaction_add_install_or_update (LowTransaction *trans,
+				       LowPackage *to_install)
+{
+	LowPackage *updated = find_updated (trans->rpmdb, to_install);
+	if (updated) {
+		return add_update_worker (trans, updated, to_install);
+	} else {
+		return low_transaction_add_install (trans, to_install);
 	}
 }
 
@@ -460,8 +512,8 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 		if (providing != NULL) {
 			low_debug_pkg ("Provided by", providing->pkg);
 			/* XXX this might be an update, as well */
-			if (low_transaction_add_install (trans,
-							 providing->pkg)) {
+			if (low_transaction_add_install_or_update (trans,
+								   providing->pkg)) {
 				status = LOW_TRANSACTION_PACKAGES_ADDED;
 			}
 			/* XXX we just need a free function */
@@ -480,7 +532,8 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 			providing = low_package_iter_next (providing);
 			if (providing != NULL) {
 				low_debug_pkg ("Provided by", providing->pkg);
-				if (low_transaction_add_install (trans, providing->pkg)) {
+				if (low_transaction_add_install_or_update (trans,
+									   providing->pkg)) {
 					status = LOW_TRANSACTION_PACKAGES_ADDED;
 				}
 				/* XXX we just need a free function */
