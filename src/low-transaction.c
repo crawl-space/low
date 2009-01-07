@@ -429,6 +429,15 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg,
 		while (iter = low_package_iter_next (iter), iter != NULL) {
 			LowPackage *pkg = iter->pkg;
 
+			/* It's a self-requires, skip */
+			if (pkg == pkg) {
+				continue;
+			}
+
+			if (from_update) {
+				return LOW_TRANSACTION_UNRESOLVABLE;
+			}
+
 			low_debug_pkg ("Adding for removal", pkg);
 			if (low_transaction_add_remove (trans, pkg)) {
 				status = LOW_TRANSACTION_PACKAGES_ADDED;
@@ -442,6 +451,51 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg,
 
 	return status;
 }
+
+static LowTransactionStatus
+select_best_provides (LowTransaction *trans, LowPackage *pkg,
+		      LowPackageIter *iter)
+{
+	LowTransactionStatus status = LOW_TRANSACTION_UNRESOLVABLE;
+	LowPackage *best = NULL;
+	char *best_evr = "0";
+
+	/* XXX this is duplicated in main.c */
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		char *new_evr = low_package_evr_as_string (iter->pkg);
+
+		if (rpmvercmp (new_evr, best_evr) > 0 &&
+		    (strcmp (iter->pkg->arch, pkg->arch) == 0 ||
+		     strcmp (iter->pkg->arch, "noarch") == 0)) {
+			if (best) {
+				low_package_unref (best);
+				g_free (best_evr);
+			}
+
+			best = iter->pkg;
+			best_evr = new_evr;
+		} else {
+			low_package_unref (iter->pkg);
+			g_free (new_evr);
+		}
+
+	}
+
+
+	if (best) {
+		g_free (best_evr);
+
+		if (low_transaction_add_install_or_update (trans, best)) {
+			status = LOW_TRANSACTION_PACKAGES_ADDED;
+		} else {
+			status = LOW_TRANSACTION_NO_CHANGE;
+		}
+	}
+
+	return status;
+}
+
+
 static LowTransactionStatus
 low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 {
@@ -507,44 +561,20 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
 		/* Check available packages */
 		providing = low_repo_set_search_provides (trans->repos,
 							  requires[i]);
-
-		providing = low_package_iter_next (providing);
-		if (providing != NULL) {
-			low_debug_pkg ("Provided by", providing->pkg);
-			/* XXX this might be an update, as well */
-			if (low_transaction_add_install_or_update (trans,
-								   providing->pkg)) {
-				status = LOW_TRANSACTION_PACKAGES_ADDED;
-			}
-			/* XXX we just need a free function */
-			while (providing = low_package_iter_next (providing),
-				   providing != NULL) {
-					low_package_unref (providing->pkg);
-			}
-
-			continue;
-		/* Check files if appropriate */
-		} else if (requires[i]->name[0] == '/') {
+		status = select_best_provides (trans, pkg, providing);
+		if (status == LOW_TRANSACTION_UNRESOLVABLE &&
+		    requires[i]->name[0] == '/') {
 			providing =
 				low_repo_set_search_files (trans->repos,
 							   requires[i]->name);
 
-			providing = low_package_iter_next (providing);
-			if (providing != NULL) {
-				low_debug_pkg ("Provided by", providing->pkg);
-				if (low_transaction_add_install_or_update (trans,
-									   providing->pkg)) {
-					status = LOW_TRANSACTION_PACKAGES_ADDED;
-				}
-				/* XXX we just need a free function */
-				while (providing = low_package_iter_next (providing),
-					   providing != NULL) {
-						low_package_unref (providing->pkg);
-				}
-
+			status = select_best_provides (trans, pkg, providing);
+			if (status != LOW_TRANSACTION_UNRESOLVABLE) {
 				continue;
 			}
 
+		} else if (status != LOW_TRANSACTION_UNRESOLVABLE) {
+			continue;
 		}
 
 		low_debug ("%s not provided by installed pkg",

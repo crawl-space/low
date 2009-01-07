@@ -976,11 +976,10 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 			low_package_dependency_new_from_string (argv[i]);
 		/* XXX just do the most EVR newest */
 		iter = low_repo_rpmdb_search_provides (rpmdb, provides);
-		iter = low_package_iter_next (iter);
-		low_transaction_add_update (trans, iter->pkg);
 
 		/* XXX get rid of this nastiness somehow */
 		while (iter = low_package_iter_next (iter), iter != NULL) {
+			low_transaction_add_update (trans, iter->pkg);
 			low_package_unref (iter->pkg);
 		}
 
