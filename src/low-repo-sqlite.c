@@ -36,6 +36,7 @@ typedef struct _LowRepoSqlite {
 	LowRepo super;
 	sqlite3 *primary_db;
 	sqlite3 *filelists_db;
+	GHashTable *table;
 } LowRepoSqlite;
 
 /* XXX clean these up */
@@ -172,6 +173,8 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 	} else {
 		repo->primary_db = NULL;
 	}
+
+	repo->table = NULL;
 
 	repo->super.id = g_strdup (id);
 	repo->super.name = g_strdup (name);
@@ -580,35 +583,38 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 
 
 /* XXX add this to the rpmdb repo struct */
-static GHashTable *table = NULL;
 
 static LowPackage *
 low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 {
 	int i = 0;
+	int key;
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackage *pkg = malloc (sizeof (LowPackage));
 
-	if (!table) {
+	if (!repo_sqlite->table) {
 		low_debug ("initializing hash table\n");
-		table = g_hash_table_new (NULL, NULL);
+		repo_sqlite->table = g_hash_table_new (g_int_hash, g_int_equal);
 	}
 
-	pkg = g_hash_table_lookup (table, GINT_TO_POINTER (sqlite3_column_int (pp_stmt, 0)));
+	key = sqlite3_column_int (pp_stmt, 0);
+	pkg = g_hash_table_lookup (repo_sqlite->table, &key);
 	if (pkg) {
+		low_debug ("CACHE HIT, for %d", key);
 		low_package_ref (pkg);
 		return pkg;
 	}
-	low_debug ("CACHE MISS");
 
 	pkg = malloc (sizeof (LowPackage));
 	low_package_ref_init (pkg);
 	low_package_ref (pkg);
 
-	g_hash_table_insert (table, GINT_TO_POINTER (sqlite3_column_int (pp_stmt, 0)), pkg);
-
 	/* XXX kind of hacky */
 	pkg->id = malloc (sizeof (int));
 	*((int *) pkg->id) = sqlite3_column_int (pp_stmt, i++);
+
+	low_debug ("CACHE MISS, inserting %d", pkg->id);
+	g_hash_table_insert (repo_sqlite->table, pkg->id, pkg);
 
 	pkg->name = strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
 	pkg->arch = strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
@@ -658,7 +664,6 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 
 	iter->pkg = low_package_sqlite_new_from_row (iter_sqlite->pp_stmt,
 												 iter->repo);
-
 	if (iter_sqlite->func != NULL) {
 		/* move on to the next package if this one fails the filter */
 		if (!(iter_sqlite->func) (iter->pkg, iter_sqlite->filter_data)) {
