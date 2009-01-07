@@ -59,3 +59,5 @@ smoke-test:
 	@cd test && ./smoke-test.sh && cd ../
 
 .PHONY: doxygen
+
+EXTRA_DIST = HACKING
