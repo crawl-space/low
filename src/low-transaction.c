@@ -397,10 +397,8 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg,
 		iter = low_repo_rpmdb_search_requires (trans->rpmdb,
 						       provides[i]);
 		while (iter = low_package_iter_next (iter), iter != NULL) {
-			LowPackage *pkg = iter->pkg;
-
 			/* It's a self-requires, skip */
-			if (pkg == pkg) {
+			if (pkg == iter->pkg) {
 				continue;
 			}
 
@@ -408,8 +406,8 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg,
 				return LOW_TRANSACTION_UNRESOLVABLE;
 			}
 
-			low_debug_pkg ("Adding for removal", pkg);
-			if (low_transaction_add_remove (trans, pkg)) {
+			low_debug_pkg ("Adding for removal", iter->pkg);
+			if (low_transaction_add_remove (trans, iter->pkg)) {
 				status = LOW_TRANSACTION_PACKAGES_ADDED;
 			}
 		}
@@ -427,10 +425,8 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg,
 		iter = low_repo_rpmdb_search_requires (trans->rpmdb,
 						       file_dep);
 		while (iter = low_package_iter_next (iter), iter != NULL) {
-			LowPackage *pkg = iter->pkg;
-
 			/* It's a self-requires, skip */
-			if (pkg == pkg) {
+			if (pkg == iter->pkg) {
 				continue;
 			}
 
@@ -438,8 +434,8 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg,
 				return LOW_TRANSACTION_UNRESOLVABLE;
 			}
 
-			low_debug_pkg ("Adding for removal", pkg);
-			if (low_transaction_add_remove (trans, pkg)) {
+			low_debug_pkg ("Adding for removal", iter->pkg);
+			if (low_transaction_add_remove (trans, iter->pkg)) {
 				status = LOW_TRANSACTION_PACKAGES_ADDED;
 			}
 		}

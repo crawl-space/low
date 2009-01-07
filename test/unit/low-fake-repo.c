@@ -98,10 +98,31 @@ low_fake_repo_list_all (LowRepo *repo)
 	return (LowPackageIter *) iter;
 }
 
-LowPackageIter *
-low_fake_repo_list_by_name (LowRepo *repo, const char *name G_GNUC_UNUSED)
+static gboolean
+low_fake_repo_list_by_name_filter_fn (LowPackage *pkg, gpointer data)
 {
-	return low_fake_repo_list_all (repo);
+	const char *name = (const char *) data;
+
+	if (strcmp (pkg->name, name) == 0) {
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+LowPackageIter *
+low_fake_repo_list_by_name (LowRepo *repo, const char *name)
+{
+	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
+	iter->super.repo = repo;
+	iter->super.next_func = low_fake_repo_fake_iter_next;
+	iter->super.pkg = NULL;
+
+	iter->position = 0;
+	iter->func = low_fake_repo_list_by_name_filter_fn;
+	iter->data = g_strdup (name);
+
+	return (LowPackageIter *) iter;
 }
 
 static gboolean
