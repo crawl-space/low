@@ -169,6 +169,24 @@ low_transaction_remove_from_hash (GHashTable *hash, LowPackage *pkg)
 	free (key);
 }
 
+static gboolean
+low_transaction_is_pkg_in_hash (GHashTable *hash, LowPackage *pkg)
+{
+	char *key;
+
+	if (pkg->epoch) {
+		key = g_strdup_printf ("%s-%s:%s-%s.%s", pkg->name,
+				       pkg->epoch, pkg->version,
+				       pkg->release, pkg->arch);
+	} else {
+		key = g_strdup_printf ("%s-%s-%s.%s", pkg->name,
+				       pkg->version, pkg->release,
+				       pkg->arch);
+	}
+
+	return g_hash_table_lookup (hash, key) != 0 ? TRUE : FALSE;
+}
+
 gboolean
 low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
 {
@@ -376,12 +394,16 @@ low_transaction_dep_in_filelist (const char *needle, char **haystack)
 }
 
 static LowTransactionStatus
-low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg,
+low_transaction_check_removal (LowTransaction *trans,
+			       LowTransactionMember *member,
 			       gboolean from_update)
 {
+	LowPackage *pkg = member->pkg;
 	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
 	LowPackageDependency **provides;
+	LowPackageDependency **update_provides = NULL;
 	char **files;
+	char **update_files = NULL;
 	int i;
 
 	low_debug_pkg ("Checking removal of", pkg);
@@ -389,8 +411,23 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg,
 	provides = low_package_get_provides (pkg);
 	files = low_package_get_files (pkg);
 
+	if (from_update) {
+		update_provides =
+			low_package_get_provides (member->related_pkg);
+		update_files = low_package_get_files (member->related_pkg);
+	}
+
+
 	for (i = 0; provides[i] != NULL; i++) {
 		LowPackageIter *iter;
+
+		if (from_update &&
+		    low_transaction_dep_in_deplist (provides[i],
+						    update_provides)) {
+		    low_debug ("Provides provided by update %s",
+			       provides[i]->name);
+		    continue;
+		}
 
 		low_debug ("Checking provides %s", provides[i]->name);
 
@@ -399,6 +436,14 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg,
 		while (iter = low_package_iter_next (iter), iter != NULL) {
 			/* It's a self-requires, skip */
 			if (pkg == iter->pkg) {
+				continue;
+			}
+
+			if (low_transaction_is_pkg_in_hash (trans->remove,
+							    iter->pkg) ||
+			    low_transaction_is_pkg_in_hash (trans->updated,
+							    iter->pkg)) {
+				low_debug ("Requiring package is being removed");
 				continue;
 			}
 
@@ -415,6 +460,14 @@ low_transaction_check_removal (LowTransaction *trans, LowPackage *pkg,
 
 	for (i = 0; files[i] != NULL; i++) {
 		LowPackageIter *iter;
+
+		if (from_update &&
+		    low_transaction_dep_in_filelist (files[i], update_files)) {
+		    low_debug ("File contained in update");
+		    continue;
+		}
+
+
 		LowPackageDependency *file_dep =
 			low_package_dependency_new (files[i],
 						    DEPENDENCY_SENSE_NONE,
@@ -635,7 +688,8 @@ low_transaction_check_requires_for_removing(LowTransactionStatus status,
 
 		if (!member->resolved) {
 			LowTransactionStatus rm_status;
-			rm_status = low_transaction_check_removal (trans, pkg,
+			rm_status = low_transaction_check_removal (trans,
+								   member,
 								   from_update);
 
 			/* Only unresolvable for an update */

@@ -1,0 +1,15 @@
+test: Update a single package that is required by an existing installed package
+
+installed:
+    - package: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+      requires: [ zsh ]
+    - package: { name: zsh, evr: 1.0.0-1, arch: i386 }
+
+available:
+    - package: { name: zsh, evr: 1.7.1-2, arch: i386 }
+
+transaction:
+    - update: { name: zsh }
+
+results:
+    - update: { name: zsh, evr: 1.7.1-2, arch: i386 }

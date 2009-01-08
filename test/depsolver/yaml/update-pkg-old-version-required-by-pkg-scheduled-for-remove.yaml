@@ -1,0 +1,18 @@
+test: Update an installed package required by another installed package which
+      is scheduled for removal
+
+installed:
+    - package: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+    - package: { name: zsh, evr: 1.3.1-2, arch: i386 }
+      requires: [ bash ]
+
+available:
+    - package: { name: bash, evr: 0:0.4.0-1, arch: i386 }
+
+transaction:
+    - update: { name: bash }
+    - remove: { name: zsh }
+
+results:
+    - update: { name: bash, evr: 0:0.4.0-1, arch: i386 }
+    - remove: { name: zsh, evr: 1.3.1-2, arch: i386 }
