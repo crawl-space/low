@@ -292,6 +292,49 @@ print_all_packages_short (LowPackageIter *iter)
 	}
 }
 
+static void
+print_transaction_part (GHashTable *hash)
+{
+	GList *list = g_hash_table_get_values (hash);
+	while (list != NULL) {
+		LowTransactionMember *member = list->data;
+		print_package_short (member->pkg);
+		list = list->next;
+	}
+}
+
+static int
+print_updates (void)
+{
+	LowRepo *rpmdb;
+	LowRepoSet *repos;
+	LowPackageIter *iter;
+	LowConfig *config;
+	LowTransaction *trans;
+
+	rpmdb = low_repo_rpmdb_initialize ();
+
+	config = low_config_initialize (rpmdb);
+	repos = low_repo_set_initialize_from_config (config, TRUE);
+
+	trans = low_transaction_new (rpmdb, repos);
+
+	iter = low_repo_rpmdb_list_all (rpmdb);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		low_transaction_add_update (trans, iter->pkg);
+	}
+
+	print_transaction_part (trans->update);
+
+	low_transaction_free (trans);
+	low_repo_set_free (repos);
+	low_config_free (config);
+	low_repo_rpmdb_shutdown (rpmdb);
+
+	return EXIT_SUCCESS;
+}
+
 static int
 command_list (int argc G_GNUC_UNUSED, const char *argv[])
 {
@@ -301,6 +344,10 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 
 	rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (rpmdb);
+
+	if (argc == 1 && strcmp (argv[0], "updates") == 0) {
+		return print_updates ();
+	}
 
 	if (argc == 0 || !strcmp(argv[0], "installed") ||
 	    !strcmp(argv[0], "all")) {
@@ -721,17 +768,6 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	free (name);
 
 	return EXIT_SUCCESS;
-}
-
-static void
-print_transaction_part (GHashTable *hash)
-{
-	GList *list = g_hash_table_get_values (hash);
-	while (list != NULL) {
-		LowTransactionMember *member = list->data;
-		print_package_short (member->pkg);
-		list = list->next;
-	}
 }
 
 static void
