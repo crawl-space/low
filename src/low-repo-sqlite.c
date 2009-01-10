@@ -614,7 +614,7 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	pkg->id = malloc (sizeof (int));
 	*((int *) pkg->id) = sqlite3_column_int (pp_stmt, i++);
 
-	low_debug ("CACHE MISS, inserting %d", pkg->id);
+	low_debug ("CACHE MISS, inserting %d", GPOINTER_TO_INT (pkg->id));
 	g_hash_table_insert (repo_sqlite->table, pkg->id, pkg);
 
 	pkg->name = strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
