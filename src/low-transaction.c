@@ -53,11 +53,11 @@ typedef enum _LowTransactionStatus {
 static void
 low_transaction_member_free (LowTransactionMember *member)
 {
-	low_package_unref (member->pkg);
+//	low_package_unref (member->pkg);
 
-	if (member->related_pkg) {
-		low_package_unref (member->pkg);
-	}
+//	if (member->related_pkg) {
+//		low_package_unref (member->pkg);
+//	}
 
 	free (member);
 }

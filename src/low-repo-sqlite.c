@@ -203,9 +203,9 @@ low_repo_sqlite_shutdown (LowRepo *repo)
 	//	sqlite3_close (repo_sqlite->filelists_db);
 	}
 
-	if (repo_sqlite->table) {
-		g_hash_table_destroy (repo_sqlite->table);
-	}
+//	if (repo_sqlite->table) {
+//		g_hash_table_destroy (repo_sqlite->table);
+//	}
 
 	free (repo);
 }
