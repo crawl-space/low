@@ -256,7 +256,7 @@ typedef struct _DepFilterData {
 static void
 dep_filter_data_free_fn (gpointer data) {
 	DepFilterData *filter_data = (DepFilterData *) data;
-	free (filter_data->dep);
+	low_package_dependency_free (filter_data->dep);
 	free (filter_data);
 }
 
@@ -562,7 +562,6 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 				       sqlite3_column_text (pp_stmt, 3),
 				       sqlite3_column_text (pp_stmt, 4));
 
-		/* XXX Do we need to strdup this? */
 		deps[i++] = low_package_dependency_new (dep_name,
 							sense,
 							evr);
@@ -724,8 +723,11 @@ low_sqlite_package_get_provides (LowPackage *pkg)
 LowPackageDependency **
 low_sqlite_package_get_requires (LowPackage *pkg)
 {
-	const char *stmt = DEP_QUERY ("requires");
-	return low_repo_sqlite_get_deps (pkg->repo, stmt, pkg);
+	if (!pkg->requires) {
+		const char *stmt = DEP_QUERY ("requires");
+		pkg->requires = low_repo_sqlite_get_deps (pkg->repo, stmt, pkg);
+	}
+	return pkg->requires;
 }
 
 LowPackageDependency **

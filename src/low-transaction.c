@@ -137,6 +137,8 @@ low_transaction_add_to_hash (GHashTable *hash, LowPackage *pkg,
 	} else {
 		/* XXX not the right place for this */
 //		low_package_unref (pkg);
+
+		free (key);
 		res = FALSE;
 	}
 
@@ -327,6 +329,8 @@ find_updated (LowRepo *repo_rpmdb, LowPackage *updating)
 		g_free (updated_evr);
 
 	}
+
+	g_free (updating_evr);
 
 	return updated;
 }
