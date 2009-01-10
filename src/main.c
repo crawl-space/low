@@ -1074,7 +1074,9 @@ select_package_for_install (LowPackageIter *iter)
 
 	}
 
-	g_free (best_evr);
+	if (best) {
+		g_free (best_evr);
+	}
 
 	return best;
 }
