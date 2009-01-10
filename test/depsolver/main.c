@@ -327,7 +327,8 @@ low_package_from_hash (GHashTable *hash)
 }
 
 static LowRepo *
-low_repo_from_list (char *name, char *id, gboolean enabled, GSList *list)
+low_repo_from_list (const char *name, const char *id, gboolean enabled,
+		    GSList *list)
 {
 	LowRepo *repo = low_fake_repo_initialize (name, id, enabled);
 	LowPackage **packages =

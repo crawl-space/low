@@ -1054,7 +1054,7 @@ static LowPackage *
 select_package_for_install (LowPackageIter *iter)
 {
 	LowPackage *best = NULL;
-	char *best_evr = "0";
+	char *best_evr = g_strdup ("0");
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		char *new_evr = low_package_evr_as_string (iter->pkg);
@@ -1074,9 +1074,7 @@ select_package_for_install (LowPackageIter *iter)
 
 	}
 
-	if (best) {
-		g_free (best_evr);
-	}
+	g_free (best_evr);
 
 	return best;
 }
@@ -1419,9 +1417,9 @@ NOT_IMPLEMENTED (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
 }
 
 typedef struct _SubCommand {
-	char *name;
-	char *usage;
-	char *summary;
+	const char *name;
+	const char *usage;
+	const char *summary;
 	int (*func) (int argc, const char *argv[]);
 } SubCommand;
 

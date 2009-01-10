@@ -60,8 +60,8 @@ low_repo_rpmdb_initialize ()
 {
 	LowRepoRpmdb *repo = malloc (sizeof (LowRepoRpmdb));
 
-	repo->super.id = "installed";
-	repo->super.name = "Installed Packages";
+	repo->super.id = g_strdup ("installed");
+	repo->super.name = g_strdup ("Installed Packages");
 	repo->super.enabled = TRUE;
 
 	rpmReadConfigFiles (NULL, NULL);
@@ -83,6 +83,9 @@ low_repo_rpmdb_shutdown (LowRepo *repo)
 
 	rpmdbClose (repo_rpmdb->db);
 	rpmFreeRpmrc ();
+
+	g_free(repo->id);
+	g_free(repo->name);
 
 	if (table) {
 		g_hash_table_destroy (table);

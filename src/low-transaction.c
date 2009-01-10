@@ -516,7 +516,7 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 {
 	LowTransactionStatus status = LOW_TRANSACTION_UNRESOLVABLE;
 	LowPackage *best = NULL;
-	char *best_evr = "0";
+	char *best_evr = g_strdup ("0");
 
 	/* XXX this is duplicated in main.c */
 	while (iter = low_package_iter_next (iter), iter != NULL) {
@@ -539,10 +539,9 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 
 	}
 
+	g_free (best_evr);
 
 	if (best) {
-		g_free (best_evr);
-
 		if (low_transaction_add_install_or_update (trans, best)) {
 			status = LOW_TRANSACTION_PACKAGES_ADDED;
 		} else {

@@ -40,7 +40,10 @@ low_config_initialize (LowRepo *rpmdb)
 char **
 low_config_get_repo_names (LowConfig *config G_GNUC_UNUSED)
 {
-	static char *names[] = {"test1", "test2", NULL};
+	static char *names[3];
+	names[0] = g_strdup ("test1");
+	names[1] = g_strdup ("test2");
+	names[2] = NULL;
 
 	return names;
 }
@@ -50,7 +53,7 @@ low_config_get_string (LowConfig *config G_GNUC_UNUSED,
 		       const char *group G_GNUC_UNUSED,
 		       const char *key G_GNUC_UNUSED)
 {
-	return "test string";
+	return g_strdup ("test string");
 }
 
 gboolean
