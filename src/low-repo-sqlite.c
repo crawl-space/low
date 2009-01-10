@@ -195,6 +195,7 @@ low_repo_sqlite_shutdown (LowRepo *repo)
 
 	free (repo->id);
 	free (repo->name);
+	free (repo->mirror_list);
 
 	if (repo_sqlite->primary_db) {
 		detach_db (repo_sqlite->primary_db);

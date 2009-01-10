@@ -121,7 +121,7 @@ typedef struct _DepFilterData {
 static void
 dep_filter_data_free_fn (gpointer data) {
 	DepFilterData *filter_data = (DepFilterData *) data;
-	free (filter_data->dep);
+	low_package_dependency_free (filter_data->dep);
 	free (filter_data);
 }
 
@@ -141,8 +141,6 @@ low_repo_rpmdb_search_dep_filter_fn (LowPackage *pkg, gpointer data)
 		}
 	}
 
-//	low_package_dependency_list_free (deps);
-
 	return res;
 }
 
@@ -161,7 +159,7 @@ low_repo_rpmdb_search_dep (LowRepo *repo, int32_t tag,
 	iter->func = low_repo_rpmdb_search_dep_filter_fn;
 	iter->filter_data_free_func = dep_filter_data_free_fn;
 	iter->filter_data = (gpointer) data;
-	/* XXX might need to copy this */
+
 	data->dep = low_package_dependency_new (dep->name, dep->sense,
 						dep->evr);
 	data->dep_func = dep_func;
@@ -476,9 +474,13 @@ low_rpmdb_package_get_details (LowPackage *pkg)
 LowPackageDependency **
 low_rpmdb_package_get_provides (LowPackage *pkg)
 {
-	return low_repo_rpmdb_get_deps (pkg->repo, pkg, RPMTAG_PROVIDENAME,
-					RPMTAG_PROVIDEFLAGS,
-					RPMTAG_PROVIDEVERSION);
+	if (!pkg->provides) {
+		pkg->provides = low_repo_rpmdb_get_deps (pkg->repo, pkg,
+							 RPMTAG_PROVIDENAME,
+							 RPMTAG_PROVIDEFLAGS,
+							 RPMTAG_PROVIDEVERSION);
+	}
+	return pkg->provides;
 }
 
 LowPackageDependency **

@@ -38,6 +38,13 @@ low_package_free (LowPackage *pkg)
 
 	free (pkg->location_href);
 
+	if (pkg->requires) {
+		low_package_dependency_list_free (pkg->requires);
+	}
+	if (pkg->provides) {
+		low_package_dependency_list_free (pkg->provides);
+	}
+
 	free (pkg);
 }
 
