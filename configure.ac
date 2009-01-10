@@ -149,7 +149,14 @@ if test "$GCC" = "yes"; then
 	CPPFLAGS="$CPPFLAGS -Winit-self -Wmissing-include-dirs -Wundef"
 	CPPFLAGS="$CPPFLAGS -Waggregate-return -Wmissing-format-attribute"
 	CPPFLAGS="$CPPFLAGS -Wnested-externs"
-	CPPFLAGS="$CPPFLAGS -Wold-style-definition"
+	CPPFLAGS="$CPPFLAGS -Wold-style-definition -Wdeclaration-after-statement"
+	CPPFLAGS="$CPPFLAGS -fno-common -Wformat=2 -Wpacked"
+	CPPFLAGS="$CPPFLAGS -Wp,-D_FORTIFY_SOURCE=2"
+	CPPFLAGS="$CPPFLAGS -Wlarger-than-65500 -Wmissing-noreturn "
+	CPPFLAGS="$CPPFLAGS -Wmissing-prototypes -Wsign-compare -Wstrict-aliasing=2"
+	CPPFLAGS="$CPPFLAGS -Wstrict-prototypes"
+	CPPFLAGS="$CPPFLAGS -Wunsafe-loop-optimizations"
+    CPPFLAGS="$CPPFLAGS -Wwrite-strings"
 fi
 
 dnl ---------------------------------------------------------------------------

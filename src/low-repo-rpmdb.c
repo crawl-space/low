@@ -288,16 +288,25 @@ id_equal_func (gconstpointer key1, gconstpointer key2)
 static LowPackage *
 low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 {
+	LowPackage *pkg;
+	rpmtd name;
+	rpmtd id;
+
+	rpmtd version;
+	rpmtd release;
+	rpmtd epoch;
+	rpmtd arch;
+	rpmtd size;
+
 	if (!table) {
 		low_debug ("initializing hash table\n");
 		table = g_hash_table_new_full (id_hash_func, id_equal_func,
 					       NULL,
-					       (GDestroyNotify) low_package_unref);
+					       (GDestroyNotify)
+					       low_package_unref);
 	}
 
-	LowPackage *pkg;
-
-	rpmtd name = rpmtdNew ();
+	name = rpmtdNew ();
 
 	headerGet (header, RPMTAG_NAME, name, HEADERGET_DEFAULT);
 
@@ -309,7 +318,7 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 		return NULL;
 	}
 
-	rpmtd id = rpmtdNew ();
+	id = rpmtdNew ();
 
 	headerGet (header, RPMTAG_PKGID, id, HEADERGET_DEFAULT);
 
@@ -326,11 +335,11 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	}
 	low_debug ("CACHE MISS - %s", (char *) name->data);
 
-	rpmtd version = rpmtdNew ();
-	rpmtd release = rpmtdNew ();
-	rpmtd epoch = rpmtdNew ();
-	rpmtd arch = rpmtdNew ();
-	rpmtd size = rpmtdNew ();
+	version = rpmtdNew ();
+	release = rpmtdNew ();
+	epoch = rpmtdNew ();
+	arch = rpmtdNew ();
+	size = rpmtdNew ();
 
 	headerGet (header, RPMTAG_EPOCH, epoch, HEADERGET_DEFAULT);
 	headerGet (header, RPMTAG_VERSION, version, HEADERGET_DEFAULT);
@@ -466,6 +475,11 @@ low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint32_t name_tag,
 	rpmtd version = rpmtdNew ();
 	uint i;
 
+	char **names;
+	int *flags;
+	char **versions;
+
+
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator (iter);
 
@@ -473,9 +487,9 @@ low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint32_t name_tag,
 	headerGet (header, flag_tag, flag, HEADERGET_DEFAULT);
 	headerGet (header, version_tag, version, HEADERGET_DEFAULT);
 
-	char **names = name->data;
-	int *flags = flag->data;
-	char **versions = version->data;
+	names = name->data;
+	flags = flag->data;
+	versions = version->data;
 
 	deps = malloc (sizeof (char *) * (name->count + 1));
 	for (i = 0; i < name->count; i++) {

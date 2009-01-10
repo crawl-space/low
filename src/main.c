@@ -364,11 +364,12 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 
 		low_repo_set_free (repos);
 	} else {
+		LowRepoSet *repos;
+
 		iter = low_repo_rpmdb_list_by_name (repo_rpmdb, argv[0]);
 		print_all_packages_short (iter);
 
-		LowRepoSet *repos =
-			low_repo_set_initialize_from_config (config, TRUE);
+		repos = low_repo_set_initialize_from_config (config, TRUE);
 
 		iter = low_repo_set_list_by_name (repos, argv[0]);
 		print_all_packages_short (iter);
@@ -633,6 +634,11 @@ lookup_random_mirror (char *repo_id)
 
 	/* List of all mirrors as GString's. */
 	GList *all_mirrors = NULL;
+	gchar x;
+	GString *url;
+	int choice;
+	GString *random_url;
+	gchar *return_val;
 
 	FILE *file = fopen(mirrors_file, "r");
 	if (file == 0)
@@ -641,8 +647,6 @@ lookup_random_mirror (char *repo_id)
 		return NULL;
 	}
 
-	gchar x;
-	GString *url;
 	url = g_string_new("");
 	while ((x = fgetc (file)) != EOF)
 	{
@@ -661,11 +665,10 @@ lookup_random_mirror (char *repo_id)
 		url = g_string_append_c (url, x);
 	}
 	fclose (file);
-	int choice = random_int (g_list_length (all_mirrors) - 1);
-	GString *random_url = (GString *) g_list_nth_data(all_mirrors,
-							  choice);
+	choice = random_int (g_list_length (all_mirrors) - 1);
+	random_url = (GString *) g_list_nth_data(all_mirrors, choice);
 	/* Copy so we can free the entire list: */
-	gchar * return_val = g_strdup (random_url->str);
+	return_val = g_strdup (random_url->str);
 
 	g_list_foreach(all_mirrors, free_g_list_node, NULL);
 	g_list_free (all_mirrors);
@@ -743,6 +746,7 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	LowPackageIter *iter;
 	LowConfig *config;
 	gchar *name = g_strdup (argv[0]);
+	int found_pkg;
 
 	repo_rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (repo_rpmdb);
@@ -750,10 +754,10 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	iter = low_repo_set_list_by_name (repos, name);
-	int found_pkg = 0;
+	found_pkg = 0;
 	while (iter = low_package_iter_next (iter), iter != NULL) {
-		found_pkg = 1;
 		LowPackage *pkg = iter->pkg;
+		found_pkg = 1;
 		download_package (pkg, NULL);
 		low_package_unref (pkg);
 	}
@@ -787,9 +791,11 @@ print_transaction (LowTransaction *trans)
 static gboolean
 prompt_confirmed (void)
 {
+	char input;
+
 	printf("\nRun transaction? [y/N] ");
 
-	char input = getchar();
+	input = getchar();
 
 	if (input == 'y' || input == 'Y') {
 		return TRUE;
@@ -804,9 +810,11 @@ download_required_packages (LowTransaction *trans)
 	/* Maintain a running list of mirror URLs to use for each
 	 * repository encountered. */
 	GHashTable *repo_mirrors;
+	GList *list;
+
 	repo_mirrors = g_hash_table_new(g_str_hash, g_str_equal);
 
-	GList *list = g_hash_table_get_values (trans->install);
+	list = g_hash_table_get_values (trans->install);
 	while (list != NULL) {
 		LowTransactionMember *member = list->data;
 		download_package (member->pkg, repo_mirrors);
@@ -1036,6 +1044,8 @@ run_transaction (LowTransaction *trans)
 	print_transaction (trans);
 
 	if (prompt_confirmed()) {
+		rpmts ts;
+		int rc;
 		CallbackData data;
 		data.name = NULL;
 		data.verbose = TRUE;
@@ -1044,10 +1054,10 @@ run_transaction (LowTransaction *trans)
 		download_required_packages(trans);
 
 //		rpmSetVerbosity(RPMLOG_DEBUG);
-		rpmts ts = low_transaction_to_rpmts (trans, &data);
+		ts = low_transaction_to_rpmts (trans, &data);
 		rpmtsSetFlags(ts, RPMTRANS_FLAG_NONE);
 
-		int rc = rpmtsRun(ts, NULL, RPMPROB_FILTER_NONE);
+		rc = rpmtsRun(ts, NULL, RPMPROB_FILTER_NONE);
 		if (rc != 0) {
 			printf ("Error running transaction\n");
 		}
@@ -1102,11 +1112,12 @@ command_install (int argc, const char *argv[])
 	trans = low_transaction_new (repo_rpmdb, repos);
 
 	for (i = 0; i < argc; i++) {
+		LowPackage *pkg;
 		LowPackageDependency *provides =
 			low_package_dependency_new_from_string (argv[i]);
 
 		iter = low_repo_set_search_provides (repos, provides);
-		LowPackage *pkg = select_package_for_install (iter);
+		pkg = select_package_for_install (iter);
 		if (pkg) {
 			low_transaction_add_install (trans, pkg);
 		}
@@ -1281,21 +1292,26 @@ uncompress_file (const char *filename)
 {
 	int error;
 	int size_read;
+	FILE *file;
+	BZFILE *compressed;
 	int fd;
 	char buf[BUF_SIZE];
 	char *uncompressed_name = malloc (strlen (filename) - 3);
 	strncpy (uncompressed_name, filename, strlen (filename) - 4);
 	uncompressed_name[strlen (filename) - 4] = '\0';
 
-	FILE *file = fopen (filename, "r");
-	BZFILE *compressed = BZ2_bzReadOpen (&error, file, 0, 0, NULL, 0);
+	file = fopen (filename, "r");
+	compressed = BZ2_bzReadOpen (&error, file, 0, 0, NULL, 0);
 
 	fd = open (uncompressed_name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
 	printf ("Uncompressing...\n");
 	while (size_read = BZ2_bzRead (&error, compressed, &buf, BUF_SIZE),
 	       size_read != 0) {
-		write (fd, buf, size_read);
+		if (write (fd, buf, size_read) == -1) {
+			/* XXX do something better here on failure */
+			exit (EXIT_FAILURE);
+		}
 	}
 
 	close (fd);
@@ -1314,6 +1330,8 @@ refresh_repo (LowRepo *repo)
 {
 	char *local_file;
 	char *tmp_file;
+	LowRepomd *old_repomd;
+	LowRepomd *new_repomd;
 
 	if (repo->mirror_list) {
 		local_file = create_repodata_filename (repo,
@@ -1325,11 +1343,10 @@ refresh_repo (LowRepo *repo)
 	}
 
 	local_file = create_repodata_filename (repo, "repodata/repomd.xml");
-
-	LowRepomd *old_repomd = low_repomd_parse (local_file);
+	old_repomd = low_repomd_parse (local_file);
 
 	tmp_file = download_repodata_file (repo, "repodata/repomd.xml");
-	LowRepomd *new_repomd = low_repomd_parse (tmp_file);
+	new_repomd = low_repomd_parse (tmp_file);
 
 	if (old_repomd != NULL &&
 	    old_repomd->primary_db_time >= new_repomd->primary_db_time &&

@@ -146,10 +146,12 @@ START_TEST (test_low_package_dependency_satisfies_both_versioned_satisfied)
 	LowPackageDependency *dep2;
 
 	for (i = 0; deps1[i] != NULL; i++) {
+		gboolean res;
+
 		dep1 = low_package_dependency_new_from_string (deps1[i]);
 		dep2 = low_package_dependency_new_from_string (deps2[i]);
 
-		gboolean res = low_package_dependency_satisfies (dep1, dep2);
+		res = low_package_dependency_satisfies (dep1, dep2);
 		fail_unless (res, "Versioned dep not satisfied: %s - %s",
 			     deps1[i], deps2[i]);
 
@@ -170,10 +172,12 @@ START_TEST (test_low_package_dependency_satisfies_both_versioned_not_satisfied)
 	LowPackageDependency *dep2;
 
 	for (i = 0; deps1[i] != NULL; i++) {
+		gboolean res;
+
 		dep1 = low_package_dependency_new_from_string (deps1[i]);
 		dep2 = low_package_dependency_new_from_string (deps2[i]);
 
-		gboolean res = low_package_dependency_satisfies (dep1, dep2);
+		res = low_package_dependency_satisfies (dep1, dep2);
 		fail_unless (!res, "Versioned dep satisfied: %s - %s",
 			     deps1[i], deps2[i]);
 

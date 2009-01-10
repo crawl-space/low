@@ -214,6 +214,7 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 	LowPackage *best = to_update;
 	LowPackageIter *iter;
 	char *best_evr = low_package_evr_as_string(to_update);
+	gboolean found;
 
 	LowPackageDependency *provides =
 		low_package_dependency_new (to_update->name,
@@ -249,7 +250,7 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 	}
 
 	/* Ensure we don't already have it */
-	gboolean found = FALSE;
+	found = FALSE;
 	iter = low_repo_rpmdb_list_by_name (repo_rpmdb, best->name);
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
@@ -469,6 +470,7 @@ low_transaction_check_removal (LowTransaction *trans,
 
 	for (i = 0; files[i] != NULL; i++) {
 		LowPackageIter *iter;
+		LowPackageDependency *file_dep;
 
 		if (from_update &&
 		    low_transaction_dep_in_filelist (files[i], update_files)) {
@@ -477,10 +479,9 @@ low_transaction_check_removal (LowTransaction *trans,
 		}
 
 
-		LowPackageDependency *file_dep =
-			low_package_dependency_new (files[i],
-						    DEPENDENCY_SENSE_NONE,
-						    NULL);
+		file_dep = low_package_dependency_new (files[i],
+						       DEPENDENCY_SENSE_NONE,
+						       NULL);
 
 		low_debug ("Checking file %s", files[i]);
 
