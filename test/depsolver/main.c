@@ -49,7 +49,7 @@ GHashTable *symbols;
 /**
  * An id we increment for the symbol table
  */
-unsigned long int id = 0;
+unsigned long int global_id = 0;
 
 static void
 parse_string (SyckNode *node)
@@ -96,7 +96,7 @@ parse_hash (SyckNode *node)
 static SYMID
 node_handler (SyckParser *parser G_GNUC_UNUSED, SyckNode *node)
 {
-	node->id = id++;
+	node->id = global_id++;
 	if (node->kind == syck_str_kind) {
 		parse_string (node);
 	} else if (node->kind == syck_seq_kind) {

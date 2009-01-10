@@ -36,7 +36,8 @@ dnl ---------------------------------------------------------------------------
 if test "$GCC" = "yes"; then
 	CPPFLAGS="$CPPFLAGS -Werror -Wcast-align -Wno-uninitialized"
 	CPPFLAGS="$CPPFLAGS -Wall -Wextra -Wformat-security"
-	CPPFLAGS="$CPPFLAGS -Wmissing-prototypes"
+	CPPFLAGS="$CPPFLAGS -Wmissing-prototypes -Wmissing-declarations"
+	CPPFLAGS="$CPPFLAGS -Wredundant-decls -Wshadow"
 fi
 
 dnl ---------------------------------------------------------------------------

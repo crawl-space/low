@@ -63,10 +63,10 @@ low_transaction_member_free (LowTransactionMember *member)
 }
 
 LowTransaction *
-low_transaction_new (LowRepo *rpmdb, LowRepoSet *repos) {
+low_transaction_new (LowRepo *repo_rpmdb, LowRepoSet *repos) {
 	LowTransaction *trans = malloc (sizeof (LowTransaction));
 
-	trans->rpmdb = rpmdb;
+	trans->rpmdb = repo_rpmdb;
 	trans->repos = repos;
 
 	trans->install = g_hash_table_new_full (g_str_hash, g_str_equal,

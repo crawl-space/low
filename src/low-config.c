@@ -64,7 +64,7 @@ low_config_load_repo_configs (void)
 }
 
 LowConfig *
-low_config_initialize (LowRepo *rpmdb)
+low_config_initialize (LowRepo *repo_rpmdb)
 {
 	LowConfig *config = malloc (sizeof (LowConfig));
 	gchar *main_config;
@@ -72,7 +72,7 @@ low_config_initialize (LowRepo *rpmdb)
 	gchar *joined_config;
 	GError *error = NULL;
 
-	config->rpmdb = rpmdb;
+	config->rpmdb = repo_rpmdb;
 	config->config = g_key_file_new ();
 
 	g_file_get_contents ("/etc/yum.conf", &main_config, NULL, NULL);

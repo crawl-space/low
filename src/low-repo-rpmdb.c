@@ -583,7 +583,7 @@ low_rpmdb_package_get_files (LowPackage *pkg)
 	rpmdbMatchIterator iter;
 	Header header;
 	char **files;
-	rpmtd index = rpmtdNew ();
+	rpmtd indexes = rpmtdNew ();
 	rpmtd dir = rpmtdNew ();
 	rpmtd name = rpmtdNew ();
 	uint i;
@@ -595,11 +595,11 @@ low_rpmdb_package_get_files (LowPackage *pkg)
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator (iter);
 
-	headerGet (header, RPMTAG_DIRINDEXES, index, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_DIRINDEXES, indexes, HEADERGET_DEFAULT);
 	headerGet (header, RPMTAG_DIRNAMES, dir, HEADERGET_DEFAULT);
 	headerGet (header, RPMTAG_BASENAMES, name, HEADERGET_DEFAULT);
 
-	dir_index = index->data;
+	dir_index = indexes->data;
 	dir_list = dir->data;
 	name_list = name->data;
 
@@ -610,11 +610,11 @@ low_rpmdb_package_get_files (LowPackage *pkg)
 	}
 	files[name->count] = NULL;
 
-	rpmtdFreeData (index);
+	rpmtdFreeData (indexes);
 	rpmtdFreeData (dir);
 	rpmtdFreeData (name);
 
-	rpmtdFree (index);
+	rpmtdFree (indexes);
 	rpmtdFree (dir);
 	rpmtdFree (name);
 
