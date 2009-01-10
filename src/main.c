@@ -116,6 +116,7 @@ print_dependency (const LowPackageDependency * dep)
 			case DEPENDENCY_SENSE_GE:
 				fputs (" >= ", stdout);
 				break;
+			case DEPENDENCY_SENSE_NONE:
 			default:
 				break;
 		}
@@ -707,14 +708,14 @@ select_mirror_url (LowRepo *repo, GHashTable *repo_mirrors)
 static char *
 create_file_url (const char *baseurl, const char *relative_file)
 {
-	const char *url_template = "%s%s";
+	char *full_url;
+
 	if (baseurl[strlen (baseurl) - 1] != '/')
 	{
-		url_template = "%s/%s";
+		full_url = g_strdup_printf ("%s/%s", baseurl, relative_file);
+	} else {
+		full_url = g_strdup_printf ("%s%s", baseurl, relative_file);
 	}
-
-	char *full_url = g_strdup_printf (url_template, baseurl,
-					  relative_file);
 
 	return full_url;
 }
@@ -784,7 +785,7 @@ print_transaction (LowTransaction *trans)
 }
 
 static gboolean
-prompt_confirmed ()
+prompt_confirmed (void)
 {
 	printf("\nRun transaction? [y/N] ");
 
@@ -995,6 +996,9 @@ low_show_rpm_progress (const void * arg, const rpmCallbackType what,
 	case RPMCALLBACK_CPIO_ERROR:
 	case RPMCALLBACK_SCRIPT_ERROR:
 	case RPMCALLBACK_UNKNOWN:
+	case RPMCALLBACK_REPACKAGE_PROGRESS:
+	case RPMCALLBACK_REPACKAGE_START:
+	case RPMCALLBACK_REPACKAGE_STOP:
 	default:
 		break;
 	}

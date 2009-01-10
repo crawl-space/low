@@ -56,7 +56,7 @@ LowPackageDependency **	low_rpmdb_package_get_obsoletes	(LowPackage *pkg);
 char **		low_rpmdb_package_get_files 		(LowPackage *pkg);
 
 LowRepo *
-low_repo_rpmdb_initialize ()
+low_repo_rpmdb_initialize (void)
 {
 	LowRepoRpmdb *repo = malloc (sizeof (LowRepoRpmdb));
 
@@ -446,6 +446,8 @@ rpm_to_low_dependency_sense (uint32_t flag)
 			return DEPENDENCY_SENSE_GE;
 		case RPMSENSE_GREATER:
 			return DEPENDENCY_SENSE_GT;
+		default:
+			return 0;
 	}
 
 	return DEPENDENCY_SENSE_NONE;

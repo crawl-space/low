@@ -69,6 +69,8 @@ low_repomd_start_element(void *data, const char *name, const char **atts)
 				case REPODATA_STATE_FILELISTS:
 					ctx->repomd->filelists_db =
 						strdup(atts[i + 1]);
+				default:
+					break;
 				}
 
 			}
@@ -80,6 +82,8 @@ low_repomd_start_element(void *data, const char *name, const char **atts)
 			break;
 		case REPODATA_STATE_FILELISTS:
 			ctx->state = REPODATA_STATE_FILELISTS_TIMESTAMP;
+		default:
+			break;
 		}
 	}
 
@@ -109,6 +113,8 @@ low_repomd_character_data (void *data, const XML_Char *s,
 	case REPODATA_STATE_FILELISTS_TIMESTAMP:
 		ctx->repomd->filelists_db_time = strtoul (s, NULL, 10);
 		ctx->state = REPODATA_STATE_FILELISTS;
+	default:
+		break;
 	}
 }
 
@@ -158,6 +164,7 @@ low_repomd_parse(const char *repodata)
 			XML_ParseBuffer(parser, len, len == 0);
 			break;
 		case XML_FINISHED:
+		default:
 			break;
 		}
 	} while (status.parsing != XML_FINISHED);

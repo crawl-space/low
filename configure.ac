@@ -31,17 +31,6 @@ AC_HEADER_STDC
 AM_PROG_CC_C_O
 
 dnl ---------------------------------------------------------------------------
-dnl - Extra verbose warning switches
-dnl ---------------------------------------------------------------------------
-if test "$GCC" = "yes"; then
-	CPPFLAGS="$CPPFLAGS -Werror -Wcast-align -Wno-uninitialized"
-	CPPFLAGS="$CPPFLAGS -Wall -Wextra -Wformat-security"
-	CPPFLAGS="$CPPFLAGS -Wmissing-prototypes -Wmissing-declarations"
-	CPPFLAGS="$CPPFLAGS -Wredundant-decls -Wshadow -Wpointer-arith"
-	CPPFLAGS="$CPPFLAGS -Wcast-align -Wwrite-strings -Winline"
-fi
-
-dnl ---------------------------------------------------------------------------
 dnl - Library dependencies
 dnl ---------------------------------------------------------------------------
 GLIB_REQUIRED=2.16.3
@@ -145,6 +134,23 @@ AC_SUBST(DATADIR, $datadir)
 AC_SUBST(BINDIR, $bindir)
 AC_SUBST(SBINDIR, $sbindir)
 AC_SUBST(LOCALSTATEDIR, $localstatedir)
+
+dnl ---------------------------------------------------------------------------
+dnl - Extra verbose warning switches
+dnl ---------------------------------------------------------------------------
+if test "$GCC" = "yes"; then
+	CPPFLAGS="$CPPFLAGS -Werror -Wcast-align -Wno-uninitialized"
+	CPPFLAGS="$CPPFLAGS -Wall -Wextra -Wformat-security"
+	CPPFLAGS="$CPPFLAGS -Wmissing-prototypes -Wmissing-declarations"
+	CPPFLAGS="$CPPFLAGS -Wredundant-decls -Wshadow -Wpointer-arith"
+	CPPFLAGS="$CPPFLAGS -Wcast-align -Wwrite-strings -Winline"
+	CPPFLAGS="$CPPFLAGS -Wformat-nonliteral -Wformat-security"
+	CPPFLAGS="$CPPFLAGS -Wswitch-enum -Wswitch-default"
+	CPPFLAGS="$CPPFLAGS -Winit-self -Wmissing-include-dirs -Wundef"
+	CPPFLAGS="$CPPFLAGS -Waggregate-return -Wmissing-format-attribute"
+	CPPFLAGS="$CPPFLAGS -Wnested-externs"
+	CPPFLAGS="$CPPFLAGS -Wold-style-definition"
+fi
 
 dnl ---------------------------------------------------------------------------
 dnl - Developer switches

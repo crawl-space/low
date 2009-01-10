@@ -430,7 +430,8 @@ low_suite(void)
 
 
 int
-main () {
+main (void)
+{
 	int nf;
 	Suite *s = low_suite ();
 	SRunner *sr = srunner_create (s);

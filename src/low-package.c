@@ -222,6 +222,7 @@ low_dependency_sense_to_rpm (LowPackageDependencySense sense) {
 			return RPMSENSE_GREATER | RPMSENSE_EQUAL;
 		case DEPENDENCY_SENSE_GT:
 			return RPMSENSE_GREATER;
+		case DEPENDENCY_SENSE_NONE:
 		default:
 			/* XXX handle better */
 			return 0;
