@@ -288,51 +288,70 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	}
 
 	LowPackage *pkg;
-	union rpm_entry id, name, epoch, version, release, arch;
-	union rpm_entry size;
-	int32_t type, count;
 
-	headerGetEntry(header, RPMTAG_NAME, &type, &name.p, &count);
+	rpmtd name = rpmtdNew ();
+
+	headerGet (header, RPMTAG_NAME, name, HEADERGET_DEFAULT);
 
 	/* We don't care about the gpg keys (plus they have missing fields */
-	if (!strcmp (name.string, "gpg-pubkey")) {
+	if (!strcmp (name->data, "gpg-pubkey")) {
+		rpmtdFreeData (name);
+		rpmtdFree (name);
+
 		return NULL;
 	}
 
-	headerGetEntry(header, RPMTAG_PKGID, &type, &id.p, &count);
-	headerGetEntry(header, RPMTAG_EPOCH, &type, &epoch.p, &count);
-	headerGetEntry(header, RPMTAG_VERSION, &type, &version.p, &count);
-	headerGetEntry(header, RPMTAG_RELEASE, &type, &release.p, &count);
-	headerGetEntry(header, RPMTAG_ARCH, &type, &arch.p, &count);
+	rpmtd id = rpmtdNew ();
 
-	headerGetEntry(header, RPMTAG_SIZE, &type, &size.p, &count);
+	headerGet (header, RPMTAG_PKGID, id, HEADERGET_DEFAULT);
 
-	pkg = g_hash_table_lookup (table, id.p);
+	pkg = g_hash_table_lookup (table, id->data);
 	if (pkg) {
+		rpmtdFreeData (name);
+		rpmtdFreeData (id);
+
+		rpmtdFree (name);
+		rpmtdFree (id);
+
 		low_package_ref (pkg);
 		return pkg;
 	}
-	low_debug ("CACHE MISS - %s", name.string);
+	low_debug ("CACHE MISS - %s", (char *) name->data);
+
+	rpmtd version = rpmtdNew ();
+	rpmtd release = rpmtdNew ();
+	rpmtd epoch = rpmtdNew ();
+	rpmtd arch = rpmtdNew ();
+	rpmtd size = rpmtdNew ();
+
+	headerGet (header, RPMTAG_EPOCH, epoch, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_VERSION, version, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_RELEASE, release, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_ARCH, arch, HEADERGET_DEFAULT);
+
+	headerGet (header, RPMTAG_SIZE, size, HEADERGET_DEFAULT);
+
 
 	pkg = malloc (sizeof (LowPackage));
 
-	g_hash_table_insert (table, id.p, pkg);
+	pkg->id = g_memdup (id->data, 16);
+
+	g_hash_table_insert (table, pkg->id, pkg);
 	low_package_ref_init (pkg);
 	low_package_ref (pkg);
 
-	pkg->id = id.p;
-	pkg->name = strdup (name.string);
+	pkg->name = strdup (name->data);
 
 	pkg->epoch = NULL;
-	if (epoch.string) {
-		pkg->epoch = g_strdup_printf ("%d", *epoch.integer);
+	if (epoch->type != RPM_NULL_TYPE) {
+		pkg->epoch = g_strdup_printf ("%lu", rpmtdGetNumber(epoch));
 	}
 
-	pkg->version = strdup (version.string);
-	pkg->release = strdup (release.string);
-	pkg->arch = strdup (arch.string);
+	pkg->version = strdup (version->data);
+	pkg->release = strdup (release->data);
+	pkg->arch = strdup (arch->data);
 
-	pkg->size = *size.integer;
+	pkg->size = rpmtdGetNumber (size);
 	pkg->repo = repo;
 
 	/* installed packages can't be downloaded. */
@@ -349,6 +368,22 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	pkg->get_obsoletes = low_rpmdb_package_get_obsoletes;
 
 	pkg->get_files = low_rpmdb_package_get_files;
+
+	rpmtdFreeData (id);
+	rpmtdFreeData (name);
+	rpmtdFreeData (version);
+	rpmtdFreeData (release);
+	rpmtdFreeData (epoch);
+	rpmtdFreeData (arch);
+	rpmtdFreeData (size);
+
+	rpmtdFree (id);
+	rpmtdFree (name);
+	rpmtdFree (version);
+	rpmtdFree (release);
+	rpmtdFree (epoch);
+	rpmtdFree (arch);
+	rpmtdFree (size);
 
 	return pkg;
 }
@@ -416,28 +451,39 @@ low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint32_t name_tag,
 	rpmdbMatchIterator iter;
 	Header header;
 	LowPackageDependency **deps;
-	union rpm_entry name, flag, version;
-	int32_t type, count, i;
+	rpmtd name = rpmtdNew ();
+	rpmtd flag = rpmtdNew ();
+	rpmtd version = rpmtdNew ();
+	uint i;
 
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator (iter);
 
-	headerGetEntry (header, name_tag, &type, &name.p, &count);
-	headerGetEntry (header, flag_tag, &type, &flag.p, &count);
-	headerGetEntry (header, version_tag, &type, &version.p, &count);
+	headerGet (header, name_tag, name, HEADERGET_DEFAULT);
+	headerGet (header, flag_tag, flag, HEADERGET_DEFAULT);
+	headerGet (header, version_tag, version, HEADERGET_DEFAULT);
 
-	deps = malloc (sizeof (char *) * (count + 1));
-	for (i = 0; i < count; i++) {
+	char **names = name->data;
+	int *flags = flag->data;
+	char **versions = version->data;
+
+	deps = malloc (sizeof (char *) * (name->count + 1));
+	for (i = 0; i < name->count; i++) {
 		LowPackageDependencySense sense =
-			rpm_to_low_dependency_sense (flag.int_list[i]);
-		deps[i] = low_package_dependency_new (name.list[i],
-						      sense,
-						      version.list[i]);
+			rpm_to_low_dependency_sense (flags[i]);
+		deps[i] = low_package_dependency_new (names[i], sense,
+						      versions[i]);
 	}
-	deps[count] = NULL;
+	deps[name->count] = NULL;
 
-	headerFreeTag (header, name.p, type);
-	headerFreeTag (header, version.p, type);
+	rpmtdFreeData (name);
+	rpmtdFreeData (flag);
+	rpmtdFreeData (version);
+
+	rpmtdFree (name);
+	rpmtdFree (flag);
+	rpmtdFree (version);
+
 	rpmdbFreeIterator (iter);
 
 	return deps;
@@ -450,22 +496,34 @@ low_rpmdb_package_get_details (LowPackage *pkg)
 	rpmdbMatchIterator iter;
 	Header header;
 	LowPackageDetails *details = malloc (sizeof (LowPackageDetails));
-	union rpm_entry summary, description, url, license;
-	int32_t type, count;
+
+	rpmtd summary = rpmtdNew ();
+	rpmtd description = rpmtdNew ();
+	rpmtd url = rpmtdNew ();
+	rpmtd license = rpmtdNew ();
 
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator (iter);
 
-	headerGetEntry(header, RPMTAG_SUMMARY, &type, &summary.p, &count);
-	headerGetEntry(header, RPMTAG_DESCRIPTION, &type, &description.p,
-			  &count);
-	headerGetEntry(header, RPMTAG_URL, &type, &url.p, &count);
-	headerGetEntry(header, RPMTAG_LICENSE, &type, &license.p, &count);
+	headerGet (header, RPMTAG_SUMMARY, summary, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_DESCRIPTION, description, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_URL, url, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_LICENSE, license, HEADERGET_DEFAULT);
 
-	details->summary = g_strdup (summary.string);
-	details->description = g_strdup (description.string);
-	details->url = g_strdup (url.string);
-	details->license = strdup (license.string);
+	details->summary = g_strdup (summary->data);
+	details->description = g_strdup (description->data);
+	details->url = g_strdup (url->data);
+	details->license = g_strdup (license->data);
+
+	rpmtdFreeData (summary);
+	rpmtdFreeData (description);
+	rpmtdFreeData (url);
+	rpmtdFreeData (license);
+
+	rpmtdFree (summary);
+	rpmtdFree (description);
+	rpmtdFree (url);
+	rpmtdFree (license);
 
 	rpmdbFreeIterator (iter);
 
@@ -520,25 +578,41 @@ low_rpmdb_package_get_files (LowPackage *pkg)
 	rpmdbMatchIterator iter;
 	Header header;
 	char **files;
-	union rpm_entry index, dir, name;
-	int32_t type, count, i;
+	rpmtd index = rpmtdNew ();
+	rpmtd dir = rpmtdNew ();
+	rpmtd name = rpmtdNew ();
+	uint i;
+
+	int *dir_index;
+	char **dir_list;
+	char **name_list;
 
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator (iter);
 
-	headerGetEntry (header, RPMTAG_DIRINDEXES, &type, &index.p, &count);
-	headerGetEntry (header, RPMTAG_DIRNAMES, &type, &dir.p, &count);
-	headerGetEntry (header, RPMTAG_BASENAMES, &type, &name.p, &count);
+	headerGet (header, RPMTAG_DIRINDEXES, index, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_DIRNAMES, dir, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_BASENAMES, name, HEADERGET_DEFAULT);
 
-	files = malloc (sizeof (char *) * (count + 1));
-	for (i = 0; i < count; i++) {
-		files[i] = g_strdup_printf ("%s%s", dir.list[index.int_list[i]],
-					    name.list[i]);
+	dir_index = index->data;
+	dir_list = dir->data;
+	name_list = name->data;
+
+	files = malloc (sizeof (char *) * (name->count + 1));
+	for (i = 0; i < name->count; i++) {
+		files[i] = g_strdup_printf ("%s%s", dir_list[dir_index[i]],
+					    name_list[i]);
 	}
-	files[count] = NULL;
+	files[name->count] = NULL;
 
-	headerFreeTag (header, dir.p, type);
-	headerFreeTag (header, name.p, type);
+	rpmtdFreeData (index);
+	rpmtdFreeData (dir);
+	rpmtdFreeData (name);
+
+	rpmtdFree (index);
+	rpmtdFree (dir);
+	rpmtdFree (name);
+
 	rpmdbFreeIterator (iter);
 
 	return files;
