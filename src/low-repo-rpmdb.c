@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
-#include <rpm/rpmlegacy.h>
 #include <rpm/rpmlib.h>
 #include <rpm/rpmdb.h>
 #include "low-debug.h"
