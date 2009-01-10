@@ -73,6 +73,9 @@ low_repo_rpmdb_initialize ()
 	return (LowRepo *) repo;
 }
 
+/* XXX add this to the rpmdb repo struct */
+static GHashTable *table = NULL;
+
 void
 low_repo_rpmdb_shutdown (LowRepo *repo)
 {
@@ -80,6 +83,10 @@ low_repo_rpmdb_shutdown (LowRepo *repo)
 
 	rpmdbClose (repo_rpmdb->db);
 	rpmFreeRpmrc ();
+
+	if (table) {
+		g_hash_table_destroy (table);
+	}
 
 	free (repo);
 }
@@ -259,9 +266,6 @@ union rpm_entry {
 	uint32_t *integer;
 };
 
-/* XXX add this to the rpmdb repo struct */
-static GHashTable *table = NULL;
-
 static guint
 id_hash_func (gconstpointer key)
 {
@@ -283,7 +287,9 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 {
 	if (!table) {
 		low_debug ("initializing hash table\n");
-		table = g_hash_table_new (id_hash_func, id_equal_func);
+		table = g_hash_table_new_full (id_hash_func, id_equal_func,
+					       NULL,
+					       (GDestroyNotify) low_package_unref);
 	}
 
 	LowPackage *pkg;

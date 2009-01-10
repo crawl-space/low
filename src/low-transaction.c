@@ -53,7 +53,12 @@ typedef enum _LowTransactionStatus {
 static void
 low_transaction_member_free (LowTransactionMember *member)
 {
-//	low_package_unref (member->pkg);
+	low_package_unref (member->pkg);
+
+	if (member->related_pkg) {
+		low_package_unref (member->pkg);
+	}
+
 	free (member);
 }
 
@@ -925,12 +930,12 @@ low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 void
 low_transaction_free (LowTransaction *trans)
 {
-	g_hash_table_unref (trans->install);
-	g_hash_table_unref (trans->update);
-	g_hash_table_unref (trans->updated);
-	g_hash_table_unref (trans->remove);
+	g_hash_table_destroy (trans->install);
+	g_hash_table_destroy (trans->update);
+	g_hash_table_destroy (trans->updated);
+	g_hash_table_destroy (trans->remove);
 
-	g_hash_table_unref (trans->unresolved);
+	g_hash_table_destroy (trans->unresolved);
 
 	free (trans);
 }

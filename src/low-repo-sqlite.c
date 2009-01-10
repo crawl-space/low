@@ -202,6 +202,11 @@ low_repo_sqlite_shutdown (LowRepo *repo)
 		sqlite3_close (repo_sqlite->primary_db);
 	//	sqlite3_close (repo_sqlite->filelists_db);
 	}
+
+	if (repo_sqlite->table) {
+		g_hash_table_destroy (repo_sqlite->table);
+	}
+
 	free (repo);
 }
 
@@ -594,7 +599,10 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 
 	if (!repo_sqlite->table) {
 		low_debug ("initializing hash table\n");
-		repo_sqlite->table = g_hash_table_new (g_int_hash, g_int_equal);
+		repo_sqlite->table =
+			g_hash_table_new_full (g_int_hash, g_int_equal,
+					       NULL,
+					       (GDestroyNotify) low_package_unref);
 	}
 
 	key = sqlite3_column_int (pp_stmt, 0);
