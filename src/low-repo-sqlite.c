@@ -591,7 +591,7 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	int i = 0;
 	int key;
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-	LowPackage *pkg = malloc (sizeof (LowPackage));
+	LowPackage *pkg;
 
 	if (!repo_sqlite->table) {
 		low_debug ("initializing hash table\n");
