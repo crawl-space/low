@@ -869,12 +869,145 @@ add_removes_to_transaction (GHashTable *hash, rpmts ts)
 	}
 }
 
+typedef enum _CallbackState {
+	CALLBACK_PREPARE,
+	CALLBACK_INSTALL,
+	CALLBACK_REMOVE
+} CallbackState;
+
+typedef struct _CallbackData {
+	gboolean verbose;
+	char *name;
+	int total_rpms;
+	int current_rpm;
+	CallbackState state;
+} CallbackData;
+
+static void
+printHash (int part, int total, CallbackData *data)
+{
+	if (data->state == CALLBACK_INSTALL) {
+		printf ("\r(%d/%d) Installing ", data->current_rpm,
+			data->total_rpms);
+	} else if (data->state == CALLBACK_REMOVE) {
+		printf ("\r(%d/%d) Removing ", data->current_rpm,
+			data->total_rpms);
+	} else {
+		printf ("\r");
+	}
+	printf ("%s %d%%", data->name, part * 100 / total);
+	if (part == total)
+		printf ("\n");
+
+	(void) fflush(stdout);
+}
+
+static void *
+low_show_rpm_progress (const void * arg, const rpmCallbackType what,
+		       const rpm_loff_t amount, const rpm_loff_t total,
+		       fnpyKey key, void * data)
+{
+	Header h = (Header) arg;
+	void * rc = NULL;
+	const char * filename = (const char *)key;
+	static FD_t fd = NULL;
+	int xx;
+
+	CallbackData *callback = (CallbackData *) data;
+	gboolean verbose = callback->verbose;
+
+	switch (what) {
+	case RPMCALLBACK_INST_OPEN_FILE:
+		if (filename == NULL || filename[0] == '\0')
+			return NULL;
+		fd = Fopen(filename, "r.ufdio");
+		/* FIX: still necessary? */
+		if (fd == NULL || Ferror(fd)) {
+			rpmlog(RPMLOG_ERR, "open of %s failed: %s\n", filename,
+			       Fstrerror(fd));
+			if (fd != NULL) {
+				xx = Fclose(fd);
+				fd = NULL;
+			}
+		} else
+			fd = fdLink(fd, "persist (showProgress)");
+		return (void *)fd;
+		break;
+
+	case RPMCALLBACK_INST_CLOSE_FILE:
+		/* FIX: still necessary? */
+		fd = fdFree(fd, "persist (showProgress)");
+		if (fd != NULL) {
+			xx = Fclose(fd);
+			fd = NULL;
+		}
+		break;
+
+	case RPMCALLBACK_INST_START:
+	case RPMCALLBACK_UNINST_START:
+		rpmcliHashesCurrent = 0;
+		if (h == NULL)
+			break;
+		/* @todo Remove headerFormat() on a progress callback. */
+		if (verbose) {
+			callback->current_rpm++;
+			callback->state = (what == RPMCALLBACK_INST_START) ?
+				CALLBACK_INSTALL : CALLBACK_REMOVE;
+			callback->name = headerFormat(h, "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}", NULL);
+			printHash (0, 1, callback);
+		}
+		break;
+
+	case RPMCALLBACK_TRANS_PROGRESS:
+	case RPMCALLBACK_INST_PROGRESS:
+	case RPMCALLBACK_UNINST_PROGRESS:
+		if (verbose)
+			printHash(amount, total, callback);
+
+		if (amount == total) {
+			free (callback->name);
+			callback->name = NULL;
+		}
+		break;
+
+	case RPMCALLBACK_TRANS_START:
+		if (verbose) {
+			callback->state = CALLBACK_PREPARE;
+			callback->name = g_strdup ("Preparing...");
+			callback->total_rpms = total;
+			callback->current_rpm = 0;
+		}
+		break;
+
+	case RPMCALLBACK_TRANS_STOP:
+	case RPMCALLBACK_UNINST_STOP:
+		if (verbose)
+			printHash(1, 1, callback);
+		rpmcliProgressTotal = rpmcliPackagesTotal;
+		rpmcliProgressCurrent = 0;
+
+		free (callback->name);
+		callback->name = NULL;
+
+		break;
+
+	case RPMCALLBACK_UNPACK_ERROR:
+	case RPMCALLBACK_CPIO_ERROR:
+	case RPMCALLBACK_SCRIPT_ERROR:
+	case RPMCALLBACK_UNKNOWN:
+	default:
+		break;
+	}
+
+	return rc;
+}
+
 static rpmts
-low_transaction_to_rpmts (LowTransaction *trans)
+low_transaction_to_rpmts (LowTransaction *trans, CallbackData *data)
 {
 	rpmts ts = rpmtsCreate();
 	rpmtsSetRootDir(ts, "/");
-	rpmtsSetNotifyCallback(ts, rpmShowProgress, NULL);
+	rpmtsSetNotifyCallback(ts, low_show_rpm_progress, data);
 
 	add_installs_to_transaction (trans->install, ts);
 	add_installs_to_transaction (trans->update, ts);
@@ -899,11 +1032,15 @@ run_transaction (LowTransaction *trans)
 	print_transaction (trans);
 
 	if (prompt_confirmed()) {
+		CallbackData data;
+		data.name = NULL;
+		data.verbose = TRUE;
+
 		printf ("Running\n");
 		download_required_packages(trans);
 
 //		rpmSetVerbosity(RPMLOG_DEBUG);
-		rpmts ts = low_transaction_to_rpmts (trans);
+		rpmts ts = low_transaction_to_rpmts (trans, &data);
 		rpmtsSetFlags(ts, RPMTRANS_FLAG_NONE);
 
 		int rc = rpmtsRun(ts, NULL, RPMPROB_FILTER_NONE);
