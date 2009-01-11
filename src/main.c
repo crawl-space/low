@@ -1334,11 +1334,13 @@ refresh_repo (LowRepo *repo)
 	LowRepomd *new_repomd;
 
 	if (repo->mirror_list) {
+		char *display = g_strdup_printf ("%s - mirrorlist.txt",
+						 repo->id);
 		local_file = create_repodata_filename (repo,
 						       "mirrorlist.txt");
-		low_download (repo->mirror_list, local_file,
-			      "mirrorlist.txt");
+		low_download (repo->mirror_list, local_file, display);
 
+		g_free (display);
 		g_free (local_file);
 	}
 
