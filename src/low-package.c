@@ -21,8 +21,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <glib.h>
-#include <rpm/rpmlib.h>
 #include <rpm/rpmds.h>
 #include "low-package.h"
 

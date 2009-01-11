@@ -156,7 +156,7 @@ if test "$GCC" = "yes"; then
 	CPPFLAGS="$CPPFLAGS -Wmissing-prototypes -Wsign-compare -Wstrict-aliasing=2"
 	CPPFLAGS="$CPPFLAGS -Wstrict-prototypes"
 	CPPFLAGS="$CPPFLAGS -Wunsafe-loop-optimizations"
-    CPPFLAGS="$CPPFLAGS -Wwrite-strings"
+    CPPFLAGS="$CPPFLAGS -Wwrite-strings -Wunused-macros"
 fi
 
 dnl ---------------------------------------------------------------------------
