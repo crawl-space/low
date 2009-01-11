@@ -87,9 +87,9 @@ low_repo_rpmdb_shutdown (LowRepo *repo)
 	g_free(repo->id);
 	g_free(repo->name);
 
-//	if (table) {
-//		g_hash_table_destroy (table);
-//	}
+	if (table) {
+		g_hash_table_destroy (table);
+	}
 
 	free (repo);
 }

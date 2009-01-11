@@ -533,9 +533,9 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 		     strcmp (iter->pkg->arch, "noarch") == 0)) {
 			if (best) {
 				low_package_unref (best);
-				g_free (best_evr);
 			}
 
+			g_free (best_evr);
 			best = iter->pkg;
 			best_evr = new_evr;
 		} else {
@@ -551,6 +551,7 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 		if (low_transaction_add_install_or_update (trans, best)) {
 			status = LOW_TRANSACTION_PACKAGES_ADDED;
 		} else {
+			low_package_unref (best);
 			status = LOW_TRANSACTION_NO_CHANGE;
 		}
 	}

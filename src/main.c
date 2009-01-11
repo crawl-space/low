@@ -196,11 +196,9 @@ print_package (LowPackage *pkg, gboolean show_all)
 
 		deps = low_package_get_provides (pkg);
 		print_dependencies ("Provides", deps);
-		low_package_dependency_list_free (deps);
 
 		deps = low_package_get_requires (pkg);
 		print_dependencies ("Requires", deps);
-		low_package_dependency_list_free (deps);
 
 		deps = low_package_get_conflicts (pkg);
 		print_dependencies ("Conflicts", deps);
@@ -1074,12 +1072,13 @@ select_package_for_install (LowPackageIter *iter)
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		char *new_evr = low_package_evr_as_string (iter->pkg);
 
-		if (rpmvercmp (new_evr, best_evr) > 0 && iter->pkg->arch[0] != 'i') {
+		if (rpmvercmp (new_evr, best_evr) > 0 &&
+		    iter->pkg->arch[0] != 'i') {
 			if (best) {
 				low_package_unref (best);
-				g_free (best_evr);
 			}
 
+			g_free (best_evr);
 			best = iter->pkg;
 			best_evr = new_evr;
 		} else {
