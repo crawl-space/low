@@ -355,7 +355,8 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 		iter = low_repo_rpmdb_list_all (repo_rpmdb);
 		print_all_packages_short (iter);
 	}
-	if (argc == 0 || !strcmp(argv[0], "all")) {
+	if (argc == 0 || !strcmp(argv[0], "all") ||
+	    !strcmp (argv[0], "available")) {
 		LowRepoSet *repos =
 			low_repo_set_initialize_from_config (config, TRUE);
 

@@ -61,7 +61,9 @@ run_or_die "info -a kdesdk"
 run_or_die "info -a bash"
 
 run_or_die "list installed"
+run_or_die "list available"
 run_or_die "list all"
+run_or_die "list updates"
 run_or_die "list bash"
 # An uninstalled package
 run_or_die "list beagle"
