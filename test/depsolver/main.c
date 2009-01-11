@@ -285,6 +285,7 @@ low_package_from_hash (GHashTable *hash)
 
 	// We always keep a ref to the test pkgs
 	low_package_ref_init (pkg);
+	low_package_ref (pkg);
 
 	/* Default empty deps for prco */
 	empty_dep = malloc (sizeof (char *));
@@ -293,8 +294,13 @@ low_package_from_hash (GHashTable *hash)
 	nevra_hash = g_hash_table_lookup (hash, "package");
 	evr = g_hash_table_lookup (nevra_hash, "evr");
 
+	pkg->id = NULL;
 	pkg->name = g_hash_table_lookup (nevra_hash, "name");
 	pkg->arch = g_hash_table_lookup (nevra_hash, "arch");
+
+	pkg->location_href = NULL;
+	pkg->provides = NULL;
+	pkg->requires = NULL;
 
 	parse_evr (evr, &pkg->epoch, &pkg->version, &pkg->release);
 
@@ -302,7 +308,7 @@ low_package_from_hash (GHashTable *hash)
 	fake_pkg->provides = parse_package_dep (hash, "provides");
 	fake_pkg->provides =
 		realloc (fake_pkg->provides,
-			 (package_dependency_lenv (fake_pkg->provides) + 1) *
+			 (package_dependency_lenv (fake_pkg->provides) + 2) *
 			 sizeof (char *));
 
 	fake_pkg->provides[package_dependency_lenv (fake_pkg->provides) + 1] =

@@ -53,11 +53,11 @@ typedef enum _LowTransactionStatus {
 static void
 low_transaction_member_free (LowTransactionMember *member)
 {
-//	low_package_unref (member->pkg);
+	low_package_unref (member->pkg);
 
-//	if (member->related_pkg) {
-//		low_package_unref (member->pkg);
-//	}
+	if (member->related_pkg) {
+		low_package_unref (member->pkg);
+	}
 
 	free (member);
 }
@@ -180,6 +180,7 @@ static gboolean
 low_transaction_is_pkg_in_hash (GHashTable *hash, LowPackage *pkg)
 {
 	char *key;
+	gboolean ret;
 
 	if (pkg->epoch) {
 		key = g_strdup_printf ("%s-%s:%s-%s.%s", pkg->name,
@@ -191,7 +192,11 @@ low_transaction_is_pkg_in_hash (GHashTable *hash, LowPackage *pkg)
 				       pkg->arch);
 	}
 
-	return g_hash_table_lookup (hash, key) != 0 ? TRUE : FALSE;
+	ret = g_hash_table_lookup (hash, key) != 0 ? TRUE : FALSE;
+
+	g_free (key);
+
+	return ret;
 }
 
 gboolean

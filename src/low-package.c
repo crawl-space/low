@@ -29,14 +29,14 @@
 static void
 low_package_free (LowPackage *pkg)
 {
-	free (pkg->id);
-	free (pkg->name);
-	free (pkg->version);
-	free (pkg->release);
+	g_free (pkg->id);
+	g_free (pkg->name);
+	g_free (pkg->version);
+	g_free (pkg->release);
 	g_free (pkg->epoch);
-	free (pkg->arch);
+	g_free (pkg->arch);
 
-	free (pkg->location_href);
+	g_free (pkg->location_href);
 
 	if (pkg->requires) {
 		low_package_dependency_list_free (pkg->requires);
@@ -45,7 +45,7 @@ low_package_free (LowPackage *pkg)
 		low_package_dependency_list_free (pkg->provides);
 	}
 
-	free (pkg);
+	g_free (pkg);
 }
 
 LowPackage *
