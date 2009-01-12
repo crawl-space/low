@@ -308,7 +308,7 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	name = rpmtdNew ();
 
-	headerGet (header, RPMTAG_NAME, name, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_NAME, name, HEADERGET_MINMEM);
 
 	/* We don't care about the gpg keys (plus they have missing fields */
 	if (!strcmp (name->data, "gpg-pubkey")) {
@@ -320,7 +320,7 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	id = rpmtdNew ();
 
-	headerGet (header, RPMTAG_PKGID, id, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_PKGID, id, HEADERGET_MINMEM);
 
 	pkg = g_hash_table_lookup (table, id->data);
 	if (pkg) {
@@ -341,12 +341,12 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	arch = rpmtdNew ();
 	size = rpmtdNew ();
 
-	headerGet (header, RPMTAG_EPOCH, epoch, HEADERGET_DEFAULT);
-	headerGet (header, RPMTAG_VERSION, version, HEADERGET_DEFAULT);
-	headerGet (header, RPMTAG_RELEASE, release, HEADERGET_DEFAULT);
-	headerGet (header, RPMTAG_ARCH, arch, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_EPOCH, epoch, HEADERGET_MINMEM);
+	headerGet (header, RPMTAG_VERSION, version, HEADERGET_MINMEM);
+	headerGet (header, RPMTAG_RELEASE, release, HEADERGET_MINMEM);
+	headerGet (header, RPMTAG_ARCH, arch, HEADERGET_MINMEM);
 
-	headerGet (header, RPMTAG_SIZE, size, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_SIZE, size, HEADERGET_MINMEM);
 
 
 	pkg = malloc (sizeof (LowPackage));
@@ -483,9 +483,9 @@ low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint32_t name_tag,
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator (iter);
 
-	headerGet (header, name_tag, name, HEADERGET_DEFAULT);
-	headerGet (header, flag_tag, flag, HEADERGET_DEFAULT);
-	headerGet (header, version_tag, version, HEADERGET_DEFAULT);
+	headerGet (header, name_tag, name, HEADERGET_MINMEM);
+	headerGet (header, flag_tag, flag, HEADERGET_MINMEM);
+	headerGet (header, version_tag, version, HEADERGET_MINMEM);
 
 	names = name->data;
 	flags = flag->data;
@@ -529,10 +529,10 @@ low_rpmdb_package_get_details (LowPackage *pkg)
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator (iter);
 
-	headerGet (header, RPMTAG_SUMMARY, summary, HEADERGET_DEFAULT);
-	headerGet (header, RPMTAG_DESCRIPTION, description, HEADERGET_DEFAULT);
-	headerGet (header, RPMTAG_URL, url, HEADERGET_DEFAULT);
-	headerGet (header, RPMTAG_LICENSE, license, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_SUMMARY, summary, HEADERGET_MINMEM);
+	headerGet (header, RPMTAG_DESCRIPTION, description, HEADERGET_MINMEM);
+	headerGet (header, RPMTAG_URL, url, HEADERGET_MINMEM);
+	headerGet (header, RPMTAG_LICENSE, license, HEADERGET_MINMEM);
 
 	details->summary = g_strdup (summary->data);
 	details->description = g_strdup (description->data);
@@ -614,9 +614,9 @@ low_rpmdb_package_get_files (LowPackage *pkg)
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator (iter);
 
-	headerGet (header, RPMTAG_DIRINDEXES, indexes, HEADERGET_DEFAULT);
-	headerGet (header, RPMTAG_DIRNAMES, dir, HEADERGET_DEFAULT);
-	headerGet (header, RPMTAG_BASENAMES, name, HEADERGET_DEFAULT);
+	headerGet (header, RPMTAG_DIRINDEXES, indexes, HEADERGET_MINMEM);
+	headerGet (header, RPMTAG_DIRNAMES, dir, HEADERGET_MINMEM);
+	headerGet (header, RPMTAG_BASENAMES, name, HEADERGET_MINMEM);
 
 	dir_index = indexes->data;
 	dir_list = dir->data;
