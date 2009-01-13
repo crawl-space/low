@@ -772,14 +772,35 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 static void
 print_transaction (LowTransaction *trans)
 {
-	printf ("Update:\n");
-	print_transaction_part (trans->update);
+	guint update_size = g_hash_table_size (trans->update);
+	guint install_size = g_hash_table_size (trans->install);
+	guint remove_size = g_hash_table_size (trans->remove);
 
-	printf ("\nInstall:\n");
-	print_transaction_part (trans->install);
+	if (update_size > 0) {
+		printf ("Update:\n");
+		print_transaction_part (trans->update);
+	}
 
-	printf ("\nRemove:\n");
-	print_transaction_part (trans->remove);
+	if (install_size > 0) {
+		printf ("\nInstall:\n");
+		print_transaction_part (trans->install);
+	}
+
+	if (remove_size > 0) {
+		printf ("\nRemove:\n");
+		print_transaction_part (trans->remove);
+	}
+
+	printf ("\nSummary:\n");
+	if (update_size > 0) {
+		printf ("Update: %d\n", update_size);
+	}
+	if (install_size > 0) {
+		printf ("Install: %d\n", install_size);
+	}
+	if (remove_size > 0) {
+		printf ("Remove: %d\n", remove_size);
+	}
 }
 
 static gboolean
