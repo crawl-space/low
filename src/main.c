@@ -303,17 +303,12 @@ print_transaction_part (GHashTable *hash)
 }
 
 static int
-print_updates (void)
+print_updates (LowRepo *repo_rpmdb, LowConfig *config)
 {
-	LowRepo *repo_rpmdb;
 	LowRepoSet *repos;
 	LowPackageIter *iter;
-	LowConfig *config;
 	LowTransaction *trans;
 
-	repo_rpmdb = low_repo_rpmdb_initialize ();
-
-	config = low_config_initialize (repo_rpmdb);
 	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	trans = low_transaction_new (repo_rpmdb, repos);
@@ -345,7 +340,7 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 	config = low_config_initialize (repo_rpmdb);
 
 	if (argc == 1 && strcmp (argv[0], "updates") == 0) {
-		return print_updates ();
+		return print_updates (repo_rpmdb, config);
 	}
 
 	if (argc == 0 || !strcmp(argv[0], "installed") ||
