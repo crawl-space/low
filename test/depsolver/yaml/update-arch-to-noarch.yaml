@@ -1,0 +1,14 @@
+test: Update an installed package where the newer package is noarch, and the
+      old was not.
+
+installed:
+    - package: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+
+available:
+    - package: { name: bash, evr: 0:0.4.0-1, arch: noarch }
+
+transaction:
+    - update: { name: bash }
+
+results:
+    - update: { name: bash, evr: 0:0.4.0-1, arch: noarch }

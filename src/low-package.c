@@ -64,7 +64,7 @@ low_package_ref (LowPackage *pkg)
 void
 low_package_unref (LowPackage *pkg)
 {
-	pkg->ref_count--;
+//	pkg->ref_count--;
 	if (pkg->ref_count == 0) {
 		low_package_free (pkg);
 	}

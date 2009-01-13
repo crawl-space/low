@@ -233,7 +233,8 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 
 		/* XXX arch cmp here has to be better */
 		if (rpmvercmp (new_evr, best_evr) > 0 &&
-		    strcmp (iter->pkg->arch, to_update->arch) == 0) {
+		    (strcmp (iter->pkg->arch, to_update->arch) == 0 ||
+		     strcmp (iter->pkg->arch, "noarch") == 0)) {
 			low_package_unref (best);
 			best = iter->pkg;
 
@@ -331,7 +332,8 @@ find_updated (LowRepo *repo_rpmdb, LowPackage *updating)
 		/* XXX arch cmp here has to be better */
 		if (!found &&
 		    rpmvercmp (updating_evr, updated_evr) > 0 &&
-		    strcmp (iter->pkg->arch, updating->arch) == 0) {
+		    (strcmp (iter->pkg->arch, updating->arch) == 0 ||
+		     strcmp (updating->arch, "noarch") == 0)) {
 			updated = iter->pkg;
 			found = TRUE;
 		} else {
@@ -540,9 +542,10 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		char *new_evr = low_package_evr_as_string (iter->pkg);
 
-		if (rpmvercmp (new_evr, best_evr) > 0 &&
-		    (strcmp (iter->pkg->arch, pkg->arch) == 0 ||
-		     strcmp (iter->pkg->arch, "noarch") == 0)) {
+		pkg = pkg;
+		if (rpmvercmp (new_evr, best_evr) > 0) {
+//		    (strcmp (iter->pkg->arch, pkg->arch) == 0 ||
+//		     strcmp (iter->pkg->arch, "noarch") == 0)) {
 			if (best) {
 				low_package_unref (best);
 			}
