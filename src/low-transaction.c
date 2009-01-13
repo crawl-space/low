@@ -463,7 +463,13 @@ low_transaction_check_removal (LowTransaction *trans,
 			}
 
 			if (from_update) {
-				return LOW_TRANSACTION_UNRESOLVABLE;
+				if (low_transaction_add_update (trans, iter->pkg)) {
+					low_debug ("found updating package");
+					status = LOW_TRANSACTION_PACKAGES_ADDED;
+					continue;
+				} else {
+					return LOW_TRANSACTION_UNRESOLVABLE;
+				}
 			}
 
 			low_debug_pkg ("Adding for removal", iter->pkg);
@@ -499,7 +505,13 @@ low_transaction_check_removal (LowTransaction *trans,
 			}
 
 			if (from_update) {
-				return LOW_TRANSACTION_UNRESOLVABLE;
+				if (low_transaction_add_update (trans, iter->pkg)) {
+					low_debug ("found updating package");
+					status = LOW_TRANSACTION_PACKAGES_ADDED;
+					continue;
+				} else {
+					return LOW_TRANSACTION_UNRESOLVABLE;
+				}
 			}
 
 			low_debug_pkg ("Adding for removal", iter->pkg);
