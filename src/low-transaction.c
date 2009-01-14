@@ -449,6 +449,177 @@ low_transaction_dep_in_filelist (const char *needle, char **haystack)
 }
 
 static LowTransactionStatus
+select_best_provides (LowTransaction *trans, LowPackage *pkg,
+		      LowPackageIter *iter)
+{
+	LowTransactionStatus status = LOW_TRANSACTION_UNRESOLVABLE;
+	LowPackage *best = NULL;
+	char *best_evr = g_strdup ("0");
+
+	/* XXX this is duplicated in main.c */
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		char *new_evr = low_package_evr_as_string (iter->pkg);
+		int cmp = rpmvercmp (new_evr, best_evr);
+
+		if ((cmp > 0 && arch_is_compatible (pkg, iter->pkg)) ||
+		    (cmp == 0 &&
+		     choose_best_arch (pkg, best, iter->pkg) == iter->pkg)) {
+			if (best) {
+				low_package_unref (best);
+			}
+
+			g_free (best_evr);
+			best = iter->pkg;
+			best_evr = new_evr;
+		} else {
+			low_package_unref (iter->pkg);
+			g_free (new_evr);
+		}
+
+	}
+
+	g_free (best_evr);
+
+	if (best) {
+		if (low_transaction_add_install_or_update (trans, best)) {
+			status = LOW_TRANSACTION_PACKAGES_ADDED;
+		} else {
+			low_package_unref (best);
+			status = LOW_TRANSACTION_NO_CHANGE;
+		}
+	}
+
+	return status;
+}
+
+static LowTransactionStatus
+low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
+					gboolean check_available)
+{
+	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
+	LowPackageDependency **requires;
+	LowPackageDependency **provides;
+	char **files;
+	int i;
+	gboolean found;
+
+	low_debug_pkg ("Checking requires for", pkg);
+
+	requires = low_package_get_requires (pkg);
+	provides = low_package_get_provides (pkg);
+	files = low_package_get_files (pkg);
+
+	for (i = 0; requires[i] != NULL; i++) {
+		LowPackageIter *providing;
+
+		if (low_transaction_dep_in_deplist (requires[i], provides)
+		    || low_transaction_dep_in_filelist (requires[i]->name,
+						        files)) {
+		    low_debug ("Self provided requires %s, skipping",
+			       requires[i]->name);
+		    continue;
+		}
+		low_debug ("Checking requires %s", requires[i]->name);
+
+		if (strncmp (requires[i]->name, "rpmlib(", 7) == 0) {
+			low_debug ("rpmlib requires, skipping");
+			continue;
+		}
+
+		providing =
+			low_repo_rpmdb_search_provides (trans->rpmdb,
+							requires[i]);
+
+		found = FALSE;
+		while (providing = low_package_iter_next (providing),
+		       providing != NULL) {
+			if (!found) {
+				if (low_transaction_is_pkg_in_hash (trans->remove,
+								    providing->pkg) ||
+				    low_transaction_is_pkg_in_hash (trans->updated,
+								    providing->pkg)) {
+					low_debug ("Providing package is being removed");
+				} else {
+					low_debug_pkg ("Provided by", providing->pkg);
+					found = TRUE;
+				}
+
+			}
+
+			low_package_unref (providing->pkg);
+		}
+		if (found) {
+			continue;
+		/* Check files if appropriate */
+		} else if (requires[i]->name[0] == '/') {
+			providing =
+				low_repo_rpmdb_search_files (trans->rpmdb,
+							     requires[i]->name);
+
+			found = FALSE;
+			while (providing = low_package_iter_next (providing),
+			       providing != NULL) {
+				if (!found) {
+					if (low_transaction_is_pkg_in_hash (trans->remove,
+									    providing->pkg) ||
+					    low_transaction_is_pkg_in_hash (trans->updated,
+									    providing->pkg)) {
+						low_debug ("Providing package is being removed");
+					} else {
+						low_debug_pkg ("Provided by", providing->pkg);
+						found = TRUE;
+					}
+
+				}
+
+				low_package_unref (providing->pkg);
+			}
+			if (found) {
+				continue;
+			}
+
+		}
+
+
+		/* XXX hacky */
+		if (!check_available) {
+			low_debug ("%s not provided by installed pkg",
+				   requires[i]->name);
+			return LOW_TRANSACTION_UNRESOLVABLE;
+		}
+
+		/* Check available packages */
+		providing = low_repo_set_search_provides (trans->repos,
+							  requires[i]);
+		status = select_best_provides (trans, pkg, providing);
+		if (status == LOW_TRANSACTION_UNRESOLVABLE &&
+		    requires[i]->name[0] == '/') {
+			providing =
+				low_repo_set_search_files (trans->repos,
+							   requires[i]->name);
+
+			status = select_best_provides (trans, pkg, providing);
+			if (status != LOW_TRANSACTION_UNRESOLVABLE) {
+				continue;
+			}
+
+		} else if (status != LOW_TRANSACTION_UNRESOLVABLE) {
+			continue;
+		}
+
+		low_debug ("%s not provided by installed pkg",
+			   requires[i]->name);
+		return LOW_TRANSACTION_UNRESOLVABLE;
+	}
+
+//	low_package_dependency_list_free (provides);
+//	low_package_dependency_list_free (requires);
+	g_strfreev (files);
+
+	return status;
+}
+
+static LowTransactionStatus
 low_transaction_check_removal (LowTransaction *trans,
 			       LowTransactionMember *member,
 			       gboolean from_update)
@@ -499,6 +670,15 @@ low_transaction_check_removal (LowTransaction *trans,
 			    low_transaction_is_pkg_in_hash (trans->updated,
 							    iter->pkg)) {
 				low_debug ("Requiring package is being removed");
+				continue;
+			}
+
+
+			if (low_transaction_check_package_requires (trans,
+								    iter->pkg,
+								    FALSE) ==
+			    LOW_TRANSACTION_NO_CHANGE) {
+				low_debug ("Requiring package satisfied by installed package");
 				continue;
 			}
 
@@ -577,144 +757,6 @@ low_transaction_check_removal (LowTransaction *trans,
 }
 
 static LowTransactionStatus
-select_best_provides (LowTransaction *trans, LowPackage *pkg,
-		      LowPackageIter *iter)
-{
-	LowTransactionStatus status = LOW_TRANSACTION_UNRESOLVABLE;
-	LowPackage *best = NULL;
-	char *best_evr = g_strdup ("0");
-
-	/* XXX this is duplicated in main.c */
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		char *new_evr = low_package_evr_as_string (iter->pkg);
-		int cmp = rpmvercmp (new_evr, best_evr);
-
-		if ((cmp > 0 && arch_is_compatible (pkg, iter->pkg)) ||
-		    (cmp == 0 &&
-		     choose_best_arch (pkg, best, iter->pkg) == iter->pkg)) {
-			if (best) {
-				low_package_unref (best);
-			}
-
-			g_free (best_evr);
-			best = iter->pkg;
-			best_evr = new_evr;
-		} else {
-			low_package_unref (iter->pkg);
-			g_free (new_evr);
-		}
-
-	}
-
-	g_free (best_evr);
-
-	if (best) {
-		if (low_transaction_add_install_or_update (trans, best)) {
-			status = LOW_TRANSACTION_PACKAGES_ADDED;
-		} else {
-			low_package_unref (best);
-			status = LOW_TRANSACTION_NO_CHANGE;
-		}
-	}
-
-	return status;
-}
-
-
-static LowTransactionStatus
-low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg)
-{
-	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
-	LowPackageDependency **requires;
-	LowPackageDependency **provides;
-	char **files;
-	int i;
-
-	low_debug_pkg ("Checking requires for", pkg);
-
-	requires = low_package_get_requires (pkg);
-	provides = low_package_get_provides (pkg);
-	files = low_package_get_files (pkg);
-
-	for (i = 0; requires[i] != NULL; i++) {
-		LowPackageIter *providing;
-
-		if (low_transaction_dep_in_deplist (requires[i], provides)
-		    || low_transaction_dep_in_filelist (requires[i]->name,
-						        files)) {
-		    low_debug ("Self provided requires %s, skipping",
-			       requires[i]->name);
-		    continue;
-		}
-		low_debug ("Checking requires %s", requires[i]->name);
-
-		providing =
-			low_repo_rpmdb_search_provides (trans->rpmdb,
-							requires[i]);
-
-		providing = low_package_iter_next (providing);
-		if (providing != NULL) {
-			low_debug_pkg ("Provided by", providing->pkg);
-			low_package_unref (providing->pkg);
-
-			/* XXX we just need a free function */
-			while (providing = low_package_iter_next (providing),
-				   providing != NULL) {
-					low_package_unref (providing->pkg);
-			}
-			continue;
-		/* Check files if appropriate */
-		} else if (requires[i]->name[0] == '/') {
-			providing =
-				low_repo_rpmdb_search_files (trans->rpmdb,
-							     requires[i]->name);
-
-			providing = low_package_iter_next (providing);
-			if (providing != NULL) {
-				low_debug_pkg ("Provided by", providing->pkg);
-				low_package_unref (providing->pkg);
-
-				/* XXX we just need a free function */
-				while (providing = low_package_iter_next (providing),
-					   providing != NULL) {
-						low_package_unref (providing->pkg);
-				}
-				continue;
-			}
-		}
-
-		/* Check available packages */
-		providing = low_repo_set_search_provides (trans->repos,
-							  requires[i]);
-		status = select_best_provides (trans, pkg, providing);
-		if (status == LOW_TRANSACTION_UNRESOLVABLE &&
-		    requires[i]->name[0] == '/') {
-			providing =
-				low_repo_set_search_files (trans->repos,
-							   requires[i]->name);
-
-			status = select_best_provides (trans, pkg, providing);
-			if (status != LOW_TRANSACTION_UNRESOLVABLE) {
-				continue;
-			}
-
-		} else if (status != LOW_TRANSACTION_UNRESOLVABLE) {
-			continue;
-		}
-
-		low_debug ("%s not provided by installed pkg",
-			   requires[i]->name);
-		return LOW_TRANSACTION_UNRESOLVABLE;
-	}
-
-//	low_package_dependency_list_free (provides);
-//	low_package_dependency_list_free (requires);
-	g_strfreev (files);
-
-	return status;
-}
-
-static LowTransactionStatus
 low_transaction_check_requires_for_added(LowTransactionStatus status,
 					 LowTransaction *trans,
 					 GHashTable *hash)
@@ -729,7 +771,8 @@ low_transaction_check_requires_for_added(LowTransactionStatus status,
 
 		if (!member->resolved) {
 			req_status = low_transaction_check_package_requires (trans,
-									     pkg);
+									     pkg,
+									     TRUE);
 
 			if (req_status == LOW_TRANSACTION_UNRESOLVABLE) {
 				low_debug_pkg ("Adding to unresolved", pkg);
