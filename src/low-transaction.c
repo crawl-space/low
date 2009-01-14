@@ -450,7 +450,7 @@ low_transaction_dep_in_filelist (const char *needle, char **haystack)
 
 static LowTransactionStatus
 select_best_provides (LowTransaction *trans, LowPackage *pkg,
-		      LowPackageIter *iter)
+		      LowPackageIter *iter, gboolean check_for_existing)
 {
 	LowTransactionStatus status = LOW_TRANSACTION_UNRESOLVABLE;
 	LowPackage *best = NULL;
@@ -463,7 +463,9 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 
 		if ((cmp > 0 && arch_is_compatible (pkg, iter->pkg)) ||
 		    (cmp == 0 &&
-		     choose_best_arch (pkg, best, iter->pkg) == iter->pkg)) {
+		     choose_best_arch (pkg, best, iter->pkg) == iter->pkg) ||
+		    low_transaction_is_pkg_in_hash (trans->install, iter->pkg) ||
+		    low_transaction_is_pkg_in_hash (trans->update, iter->pkg)) {
 			if (best) {
 				low_package_unref (best);
 			}
@@ -481,6 +483,15 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 	g_free (best_evr);
 
 	if (best) {
+		/* XXX clean this up */
+		if (check_for_existing) {
+			if (low_transaction_is_pkg_in_hash (trans->install, best) ||
+			    low_transaction_is_pkg_in_hash (trans->update, best)) {
+				return LOW_TRANSACTION_NO_CHANGE;
+			} else {
+				return LOW_TRANSACTION_UNRESOLVABLE;
+			}
+		}
 		if (low_transaction_add_install_or_update (trans, best)) {
 			status = LOW_TRANSACTION_PACKAGES_ADDED;
 		} else {
@@ -580,25 +591,19 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 
 		}
 
-
-		/* XXX hacky */
-		if (!check_available) {
-			low_debug ("%s not provided by installed pkg",
-				   requires[i]->name);
-			return LOW_TRANSACTION_UNRESOLVABLE;
-		}
-
 		/* Check available packages */
 		providing = low_repo_set_search_provides (trans->repos,
 							  requires[i]);
-		status = select_best_provides (trans, pkg, providing);
+		status = select_best_provides (trans, pkg, providing,
+					       !check_available);
 		if (status == LOW_TRANSACTION_UNRESOLVABLE &&
 		    requires[i]->name[0] == '/') {
 			providing =
 				low_repo_set_search_files (trans->repos,
 							   requires[i]->name);
 
-			status = select_best_provides (trans, pkg, providing);
+			status = select_best_provides (trans, pkg, providing,
+						       !check_available);
 			if (status != LOW_TRANSACTION_UNRESOLVABLE) {
 				continue;
 			}

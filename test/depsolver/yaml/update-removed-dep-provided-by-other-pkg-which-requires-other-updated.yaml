@@ -1,0 +1,24 @@
+test: Update a single package where a dep being removed is provided by another
+      installed package that is scheduled for update.
+
+installed:
+    - package: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+      provides: [ shell ]
+    - package: { name: zsh, evr: 1.0.0-1, arch: i386 }
+      provides: [ shell ]
+    - package: { name: system-base, evr: 1.0.0-1, arch: i386 }
+      requires: [ shell ]
+
+
+available:
+    - package: { name: zsh, evr: 1.7.1-2, arch: i386 }
+    - package: { name: bash, evr: 0:1.0.0-1, arch: i386 }
+      provides: [ shell ]
+
+transaction:
+    - update: { name: zsh }
+    - update: { name: bash }
+
+results:
+    - update: { name: zsh, evr: 1.7.1-2, arch: i386 }
+    - update: { name: bash, evr: 0:1.0.0-1, arch: i386 }
