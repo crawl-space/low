@@ -506,6 +506,14 @@ low_transaction_check_removal (LowTransaction *trans,
 				continue;
 			}
 
+			if (low_transaction_is_pkg_in_hash (trans->remove,
+							    iter->pkg) ||
+			    low_transaction_is_pkg_in_hash (trans->updated,
+							    iter->pkg)) {
+				low_debug ("Requiring package is being removed");
+				continue;
+			}
+
 			if (from_update) {
 				if (low_transaction_add_update (trans, iter->pkg)) {
 					low_debug ("found updating package");
