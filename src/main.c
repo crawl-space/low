@@ -803,6 +803,14 @@ print_transaction (LowTransaction *trans)
 	}
 }
 
+static void
+print_transaction_problems (LowTransaction *trans)
+{
+	printf ("Error resolving transaction\n");
+	printf ("The following packages had errors:\n");
+	print_transaction_part (trans->unresolved);
+}
+
 static gboolean
 prompt_confirmed (void)
 {
@@ -1142,7 +1150,7 @@ command_install (int argc, const char *argv[])
 	}
 
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
-		printf ("Error resolving transaction\n");
+		print_transaction_problems (trans);
 		res = EXIT_FAILURE;
 	} else {
 		run_transaction (trans);
@@ -1198,7 +1206,7 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 	}
 
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
-		printf ("Error resolving transaction\n");
+		print_transaction_problems (trans);
 		res = EXIT_FAILURE;
 	} else {
 		run_transaction (trans);
@@ -1254,7 +1262,7 @@ command_remove (int argc, const char *argv[])
 	}
 
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
-		printf ("Error resolving transaction\n");
+		print_transaction_problems (trans);
 		res = EXIT_FAILURE;
 	} else {
 		run_transaction (trans);
