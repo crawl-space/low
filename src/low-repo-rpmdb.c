@@ -456,7 +456,7 @@ rpm_to_low_dependency_sense (uint32_t flag)
 		case RPMSENSE_GREATER:
 			return DEPENDENCY_SENSE_GT;
 		default:
-			return 0;
+			return DEPENDENCY_SENSE_NONE;
 	}
 
 	return DEPENDENCY_SENSE_NONE;
