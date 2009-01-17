@@ -534,6 +534,8 @@ build_evr (const unsigned char *epoch, const unsigned char *version,
 
 	if (epoch && version && release) {
 		evr = g_strdup_printf ("%s:%s-%s", epoch, version, release);
+	} else if (epoch && version) {
+		evr = g_strdup_printf ("%s:%s", epoch, version);
 	} else if (version && release) {
 		evr = g_strdup_printf ("%s-%s", version, release);
 	} else {
