@@ -423,7 +423,10 @@ low_transaction_dep_in_deplist (const LowPackageDependency *needle,
 	int i;
 
 	for (i = 0; haystack[i] != NULL; i++) {
-		if (!strcmp (needle->name, haystack[i]->name)) {
+		if (!strcmp (needle->name, haystack[i]->name) &&
+		    needle->sense == haystack[i]->sense &&
+		    needle->evr != NULL && haystack[i]->evr != NULL &&
+		    !strcmp (needle->evr, haystack[i]->evr)) {
 			return TRUE;
 		}
 	}

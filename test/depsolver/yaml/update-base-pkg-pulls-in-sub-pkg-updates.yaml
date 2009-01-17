@@ -1,0 +1,23 @@
+test: Updating a base package pulls in the updated subpackages as well.
+
+installed:
+    - package: { name: openjdk-plugins, evr: 1:0.3.0-1, arch: i386 }
+      requires: [ openjdk = 1:0.3.0-1 ]
+    - package: { name: openjdk-devel, evr: 1:0.3.0-1, arch: i386 }
+      requires: [ openjdk = 1:0.3.0-1 ]
+    - package: { name: openjdk, evr: 1:0.3.0-1, arch: i386 }
+
+available:
+    - package: { name: openjdk-plugins, evr: 1:0.4.0-1, arch: i386 }
+      requires: [ openjdk = 1:0.4.0-1 ]
+    - package: { name: openjdk-devel, evr: 1:0.4.0-1, arch: i386 }
+      requires: [ openjdk = 1:0.4.0-1 ]
+    - package: { name: openjdk, evr: 1:0.4.0-1, arch: i386 }
+
+transaction:
+    - update: { name: openjdk }
+
+results:
+    - update: { name: openjdk-plugins, evr: 1:0.4.0-1, arch: i386 }
+    - update: { name: openjdk-devel, evr: 1:0.4.0-1, arch: i386 }
+    - update: { name: openjdk, evr: 1:0.4.0-1, arch: i386 }
