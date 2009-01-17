@@ -291,10 +291,20 @@ print_all_packages_short (LowPackageIter *iter)
 	}
 }
 
+static int
+package_compare_fn (gconstpointer data1, gconstpointer data2)
+{
+	LowTransactionMember *member1 = (LowTransactionMember *) data1;
+	LowTransactionMember *member2 = (LowTransactionMember *) data2;
+
+	return strcmp (member1->pkg->name, member2->pkg->name);
+}
+
 static void
 print_transaction_part (GHashTable *hash)
 {
 	GList *list = g_hash_table_get_values (hash);
+	list = g_list_sort (list, package_compare_fn);
 	while (list != NULL) {
 		LowTransactionMember *member = list->data;
 		print_package_short (member->pkg);
