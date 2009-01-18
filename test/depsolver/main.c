@@ -68,7 +68,7 @@ parse_list (SyckNode *node)
 		gpointer sym_entry = GINT_TO_POINTER (syck_seq_read (node, i));
 		gpointer entry = g_hash_table_lookup (symbols, sym_entry);
 
-		list  =	g_slist_append (list, entry);
+		list = g_slist_append (list, entry);
 	}
 	g_hash_table_insert (symbols, GINT_TO_POINTER (node->id), list);
 }
@@ -159,6 +159,7 @@ package_dependency_lenv (LowPackageDependency **dependencies)
 
 	return i;
 }
+
 static LowPackageDependency **
 package_dependency_dupv (LowPackageDependency **dependencies)
 {
@@ -181,27 +182,32 @@ package_dependency_dupv (LowPackageDependency **dependencies)
 }
 
 static LowPackageDependency **
-low_fake_package_get_provides (LowPackage *pkg) {
+low_fake_package_get_provides (LowPackage *pkg)
+{
 	return package_dependency_dupv (((LowFakePackage *) pkg)->provides);
 }
 
 static LowPackageDependency **
-low_fake_package_get_requires (LowPackage *pkg) {
+low_fake_package_get_requires (LowPackage *pkg)
+{
 	return package_dependency_dupv (((LowFakePackage *) pkg)->requires);
 }
 
 static LowPackageDependency **
-low_fake_package_get_conflicts (LowPackage *pkg) {
+low_fake_package_get_conflicts (LowPackage *pkg)
+{
 	return package_dependency_dupv (((LowFakePackage *) pkg)->conflicts);
 }
 
 static LowPackageDependency **
-low_fake_package_get_obsoletes (LowPackage *pkg) {
+low_fake_package_get_obsoletes (LowPackage *pkg)
+{
 	return package_dependency_dupv (((LowFakePackage *) pkg)->obsoletes);
 }
 
 static char **
-low_fake_package_get_files (LowPackage *pkg) {
+low_fake_package_get_files (LowPackage *pkg)
+{
 	return g_strdupv (((LowFakePackage *) pkg)->files);
 }
 
@@ -246,13 +252,12 @@ parse_package_dep (GHashTable *hash, const char *dep_type)
 		char *evr = NULL;
 
 		if (g_strv_length (parts) == 3) {
-			sense = low_package_dependency_sense_from_string (parts[1]);
+			sense = low_package_dependency_sense_from_string (parts
+									  [1]);
 			evr = parts[2];
 		}
 
-		deps[i++] = low_package_dependency_new (parts[0],
-							sense,
-							evr);
+		deps[i++] = low_package_dependency_new (parts[0], sense, evr);
 	}
 	deps[i] = NULL;
 
@@ -454,8 +459,7 @@ assert_package (GHashTable *pkgs, GHashTable *hash)
 		parse_evr (evr, &epoch, &version, &release);
 	}
 
-	for (cur = g_hash_table_get_values (pkgs); cur != NULL;
-	     cur = cur->next) {
+	for (cur = g_hash_table_get_values (pkgs); cur != NULL; cur = cur->next) {
 		LowTransactionMember *member = cur->data;
 		LowPackage *pkg = member->pkg;
 		low_debug_pkg ("on package", pkg);
@@ -551,7 +555,6 @@ run_test (GHashTable *test)
 	GSList *list;
 	int res;
 
-
 	installed =
 		low_repo_from_list ("installed", "installed", TRUE,
 				    g_hash_table_lookup (test, "installed"));
@@ -591,7 +594,7 @@ main (int argc, char *argv[])
 		exit (EXIT_FAILURE);
 	}
 
-	printf("Starting test\n");
+	printf ("Starting test\n");
 
 	low_debug_init ();
 
