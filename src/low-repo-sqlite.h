@@ -23,9 +23,6 @@
 #include "low-repo.h"
 #include "low-package.h"
 
-/* XXX for the filter stuff; will go away */
-#include "low-repo-rpmdb.h"
-
 #ifndef _LOW_REPO_SQLITE_H_
 #define _LOW_REPO_SQLITE_H_
 
