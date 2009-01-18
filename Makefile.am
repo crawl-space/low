@@ -46,10 +46,12 @@ trailinglint:
 
 whitespacelint: tablint trailinglint leadingspacelint
 
+TAGS=$(shell awk 'BEGIN{RS=""} { for(i=1;i<=NF;i++) printf "-T "$$(i)" "; print ""}' typedefs.txt)
+
 # XXX watch for pointers and custom typedefs with this
 indent:
 	@find \( -name \*.c -o -name '*.h' \) \
-		| xargs indent -linux -pcs -psl
+		| xargs indent $(TAGS) -linux -pcs -psl
 
 todo:
 	@find \( -name \*.c -o -name '*.h' \) \
