@@ -32,9 +32,9 @@
 #include "low-download.h"
 
 int
-low_download_show_progress(void *clientp, double dltotal, double dlnow,
-			   double ultotal G_GNUC_UNUSED,
-			   double ulnow G_GNUC_UNUSED)
+low_download_show_progress (void *clientp, double dltotal, double dlnow,
+			    double ultotal G_GNUC_UNUSED,
+			    double ulnow G_GNUC_UNUSED)
 {
 	const char *file = clientp;
 
@@ -45,7 +45,7 @@ low_download_show_progress(void *clientp, double dltotal, double dlnow,
 		return 0;
 	}
 
-	printf("\rdownloading %s, ", file);
+	printf ("\rdownloading %s, ", file);
 
 	if (tmp_total < 1023) {
 		printf ("%.0fB/%.0fB", tmp_now, tmp_total);
@@ -77,7 +77,7 @@ low_download_show_progress(void *clientp, double dltotal, double dlnow,
 }
 
 int
-low_download(const char *url, const char *file, const char *basename)
+low_download (const char *url, const char *file, const char *basename)
 {
 	CURL *curl;
 	char error[256];
@@ -85,59 +85,59 @@ low_download(const char *url, const char *file, const char *basename)
 	CURLcode res;
 	long response;
 
-	curl = curl_easy_init();
+	curl = curl_easy_init ();
 	if (curl == NULL) {
 		return 1;
 	}
 
-	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
-	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error);
-	curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
-	curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION,
-			 low_download_show_progress);
-	curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, basename);
+	curl_easy_setopt (curl, CURLOPT_FOLLOWLOCATION, 1);
+	curl_easy_setopt (curl, CURLOPT_ERRORBUFFER, error);
+	curl_easy_setopt (curl, CURLOPT_NOPROGRESS, 0);
+	curl_easy_setopt (curl, CURLOPT_PROGRESSFUNCTION,
+			  low_download_show_progress);
+	curl_easy_setopt (curl, CURLOPT_PROGRESSDATA, basename);
 
-	fp = fopen(file, "w");
+	fp = fopen (file, "w");
 	if (fp == NULL) {
-		fprintf(stderr,
-			"failed to open %s for writing\n", file);
+		fprintf (stderr, "failed to open %s for writing\n", file);
 		return -1;
 	}
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-	curl_easy_setopt(curl, CURLOPT_URL, url);
-	res = curl_easy_perform(curl);
-	fclose(fp);
+	curl_easy_setopt (curl, CURLOPT_WRITEDATA, fp);
+	curl_easy_setopt (curl, CURLOPT_URL, url);
+	res = curl_easy_perform (curl);
+	fclose (fp);
 	if (res != CURLE_OK) {
-		fprintf(stderr, "curl error: %s\n", error);
-		unlink(file);
+		fprintf (stderr, "curl error: %s\n", error);
+		unlink (file);
 		return -1;
 	}
-	res = curl_easy_getinfo(curl,
-				CURLINFO_RESPONSE_CODE, &response);
+	res = curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &response);
 	if (res != CURLE_OK) {
-		fprintf(stderr, "curl error: %s\n", error);
-		unlink(file);
+		fprintf (stderr, "curl error: %s\n", error);
+		unlink (file);
 		return -1;
 	}
 	if (response != 200) {
 		if (!(response == 226 && strncmp ("ftp", url, 3) == 0)) {
-			fprintf(stderr, " - failed %ld\n", response);
-			unlink(file);
+			fprintf (stderr, " - failed %ld\n", response);
+			unlink (file);
 			return -1;
 		}
 	}
-	printf("\n");
+	printf ("\n");
 
-	curl_easy_cleanup(curl);
+	curl_easy_cleanup (curl);
 
 	return 0;
 }
+
 int
-low_download_if_missing(const char *url, const char *file, const char *basename)
+low_download_if_missing (const char *url, const char *file,
+			 const char *basename)
 {
 	struct stat buf;
 
-	if (stat(file, &buf) < 0) {
+	if (stat (file, &buf) < 0) {
 		return low_download (url, file, basename);
 	}
 

@@ -36,8 +36,7 @@
 START_TEST (test_core)
 {
 	fail_unless (1 == 1, "core test suite");
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_package_dependency_new)
 {
@@ -50,8 +49,7 @@ START_TEST (test_low_package_dependency_new)
 	fail_unless (!strcmp ("0.1.3-3", dep->evr), "dep evr incorrect");
 
 	low_package_dependency_free (dep);
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_package_dependency_new_from_string)
 {
@@ -63,8 +61,7 @@ START_TEST (test_low_package_dependency_new_from_string)
 	fail_unless (!strcmp ("0.1.3-3", dep->evr), "dep evr incorrect");
 
 	low_package_dependency_free (dep);
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_package_dependency_new_from_string_unversioned)
 {
@@ -77,8 +74,7 @@ START_TEST (test_low_package_dependency_new_from_string_unversioned)
 	fail_unless (dep->evr == NULL, "dep evr incorrect");
 
 	low_package_dependency_free (dep);
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_package_dependency_satisfies_unversioned)
 {
@@ -88,8 +84,7 @@ START_TEST (test_low_package_dependency_satisfies_unversioned)
 	fail_unless (res, "Unversioned dep does not satisfy self");
 
 	low_package_dependency_free (dep);
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_package_dependency_satisfies_unversioned_not_satisfied)
 {
@@ -103,8 +98,7 @@ START_TEST (test_low_package_dependency_satisfies_unversioned_not_satisfied)
 
 	low_package_dependency_free (dep1);
 	low_package_dependency_free (dep2);
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_package_dependency_satisfies_needs_versioned_satisfies_not)
 {
@@ -118,8 +112,7 @@ START_TEST (test_low_package_dependency_satisfies_needs_versioned_satisfies_not)
 
 	low_package_dependency_free (dep1);
 	low_package_dependency_free (dep2);
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_package_dependency_satisfies_satisfies_versioned_needs_not)
 {
@@ -133,13 +126,13 @@ START_TEST (test_low_package_dependency_satisfies_satisfies_versioned_needs_not)
 
 	low_package_dependency_free (dep1);
 	low_package_dependency_free (dep2);
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_package_dependency_satisfies_both_versioned_satisfied)
 {
-	const char *deps1[4] = {"foo > 0.1", "foo < 0.4", "foo < 1", NULL};
-	const char *deps2[4] = {"foo = 3.0.0", "foo = 0.2", "foo > 0.5", NULL};
+	const char *deps1[4] = { "foo > 0.1", "foo < 0.4", "foo < 1", NULL };
+	const char *deps2[4] =
+		{ "foo = 3.0.0", "foo = 0.2", "foo > 0.5", NULL };
 
 	int i;
 	LowPackageDependency *dep1;
@@ -159,13 +152,12 @@ START_TEST (test_low_package_dependency_satisfies_both_versioned_satisfied)
 		low_package_dependency_free (dep2);
 	}
 
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_package_dependency_satisfies_both_versioned_not_satisfied)
 {
-	const char *deps1[4] = {"foo = 0.1", "foo < 0.4", "foo < 1", NULL};
-	const char *deps2[4] = {"foo = 3.0.0", "foo = 0.6", "foo > 2", NULL};
+	const char *deps1[4] = { "foo = 0.1", "foo < 0.4", "foo < 1", NULL };
+	const char *deps2[4] = { "foo = 3.0.0", "foo = 0.6", "foo > 2", NULL };
 
 	int i;
 	LowPackageDependency *dep1;
@@ -184,16 +176,14 @@ START_TEST (test_low_package_dependency_satisfies_both_versioned_not_satisfied)
 		low_package_dependency_free (dep1);
 		low_package_dependency_free (dep2);
 	}
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_util_word_wrap_no_wrap_needed)
 {
 	const char *input = "A small string";
 	char **output = low_util_word_wrap (input, 79);
 	fail_unless (!strcmp (input, output[0]), "unexpected wrapping");
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_util_word_wrap_wrap_one_line_to_two)
 {
@@ -201,8 +191,7 @@ START_TEST (test_low_util_word_wrap_wrap_one_line_to_two)
 	char **output = low_util_word_wrap (input, 7);
 	fail_unless (!strcmp ("A small", output[0]), "unexpected wrapping");
 	fail_unless (!strcmp ("string", output[1]), "unexpected wrapping");
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_util_parse_nevra_empty_string)
 {
@@ -210,8 +199,7 @@ START_TEST (test_low_util_parse_nevra_empty_string)
 	gboolean result = low_util_parse_nevra (input, NULL, NULL, NULL, NULL,
 						NULL);
 	fail_unless (!result, "parse_nevra did not error on an empty string");
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_util_parse_nevra_just_name)
 {
@@ -222,9 +210,7 @@ START_TEST (test_low_util_parse_nevra_just_name)
 	fail_unless (result, "parse_nevra did not errored");
 	fail_unless (!strcmp ("zsh", name),
 		     "parse_nevra did not parse the name");
-}
-END_TEST
-
+} END_TEST
 
 START_TEST (test_low_repo_set_search_no_repos)
 {
@@ -242,8 +228,7 @@ START_TEST (test_low_repo_set_search_no_repos)
 
 	fail_unless (i == 0, "results found for an empty repo");
 	low_repo_set_free (repo_set);
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_repo_set_search_single_repo_no_packages)
 {
@@ -260,8 +245,7 @@ START_TEST (test_low_repo_set_search_single_repo_no_packages)
 								 "test repo",
 								 "test url",
 								 "mirror",
-								 TRUE,
-								 TRUE);
+								 TRUE, TRUE);
 	packages[0] = NULL;
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
@@ -273,8 +257,7 @@ START_TEST (test_low_repo_set_search_single_repo_no_packages)
 
 	fail_unless (i == 0, "results found for an empty repo");
 	low_repo_set_free (repo_set);
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_repo_set_search_two_repos_no_packages)
 {
@@ -293,8 +276,7 @@ START_TEST (test_low_repo_set_search_two_repos_no_packages)
 								 "test repo",
 								 "test url",
 								 "mirror",
-								 TRUE,
-								 TRUE);
+								 TRUE, TRUE);
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
@@ -302,8 +284,7 @@ START_TEST (test_low_repo_set_search_two_repos_no_packages)
 								 "test repo",
 								 "test url",
 								 "mirror",
-								 TRUE,
-								 TRUE);
+								 TRUE, TRUE);
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
@@ -314,8 +295,7 @@ START_TEST (test_low_repo_set_search_two_repos_no_packages)
 
 	fail_unless (i == 0, "results found for empty repos");
 	low_repo_set_free (repo_set);
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_repo_set_search_single_repo_one_package)
 {
@@ -333,8 +313,7 @@ START_TEST (test_low_repo_set_search_single_repo_one_package)
 								 "test repo",
 								 "test url",
 								 "mirror",
-								 TRUE,
-								 TRUE);
+								 TRUE, TRUE);
 	packages[0] = &package;
 	packages[1] = NULL;
 	repo->packages = packages;
@@ -347,8 +326,7 @@ START_TEST (test_low_repo_set_search_single_repo_one_package)
 
 	fail_unless (i == 1, "wrong number of results found");
 	low_repo_set_free (repo_set);
-}
-END_TEST
+} END_TEST
 
 START_TEST (test_low_repo_set_search_two_repos_two_packages)
 {
@@ -369,8 +347,7 @@ START_TEST (test_low_repo_set_search_two_repos_two_packages)
 								 "test repo",
 								 "test url",
 								 "mirror",
-								 TRUE,
-								 TRUE);
+								 TRUE, TRUE);
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
@@ -378,8 +355,7 @@ START_TEST (test_low_repo_set_search_two_repos_two_packages)
 								 "test repo",
 								 "test url",
 								 "mirror",
-								 TRUE,
-								 TRUE);
+								 TRUE, TRUE);
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
@@ -390,11 +366,10 @@ START_TEST (test_low_repo_set_search_two_repos_two_packages)
 
 	fail_unless (i == 2, "wrong number of packages found");
 	low_repo_set_free (repo_set);
-}
-END_TEST
+} END_TEST
 
 static Suite *
-low_suite(void)
+low_suite (void)
 {
 	Suite *s = suite_create ("low");
 
@@ -405,13 +380,19 @@ low_suite(void)
 	tc = tcase_create ("low-package");
 	tcase_add_test (tc, test_low_package_dependency_new);
 	tcase_add_test (tc, test_low_package_dependency_new_from_string);
-	tcase_add_test (tc, test_low_package_dependency_new_from_string_unversioned);
+	tcase_add_test (tc,
+			test_low_package_dependency_new_from_string_unversioned);
 	tcase_add_test (tc, test_low_package_dependency_satisfies_unversioned);
-	tcase_add_test (tc, test_low_package_dependency_satisfies_unversioned_not_satisfied);
-	tcase_add_test (tc, test_low_package_dependency_satisfies_needs_versioned_satisfies_not);
-	tcase_add_test (tc, test_low_package_dependency_satisfies_satisfies_versioned_needs_not);
-	tcase_add_test (tc, test_low_package_dependency_satisfies_both_versioned_satisfied);
-	tcase_add_test (tc, test_low_package_dependency_satisfies_both_versioned_not_satisfied);
+	tcase_add_test (tc,
+			test_low_package_dependency_satisfies_unversioned_not_satisfied);
+	tcase_add_test (tc,
+			test_low_package_dependency_satisfies_needs_versioned_satisfies_not);
+	tcase_add_test (tc,
+			test_low_package_dependency_satisfies_satisfies_versioned_needs_not);
+	tcase_add_test (tc,
+			test_low_package_dependency_satisfies_both_versioned_satisfied);
+	tcase_add_test (tc,
+			test_low_package_dependency_satisfies_both_versioned_not_satisfied);
 	suite_add_tcase (s, tc);
 
 	tc = tcase_create ("low-util");
@@ -431,7 +412,6 @@ low_suite(void)
 
 	return s;
 }
-
 
 int
 main (void)

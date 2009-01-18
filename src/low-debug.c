@@ -29,7 +29,7 @@ static gboolean debugging_enabled = FALSE;
 
 void
 low_debug_impl (const char *file, const char *func, const int line,
-				const char *format, ...)
+		const char *format, ...)
 {
 	va_list args;
 
@@ -55,4 +55,5 @@ low_debug_init (void)
 		debugging_enabled = TRUE;
 	}
 }
+
 /* vim: set ts=8 sw=8 noet: */

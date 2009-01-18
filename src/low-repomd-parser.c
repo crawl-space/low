@@ -44,46 +44,47 @@ struct repodata_context {
 };
 
 static void
-low_repomd_start_element(void *data, const char *name, const char **atts)
+low_repomd_start_element (void *data, const char *name, const char **atts)
 {
 	struct repodata_context *ctx = data;
 	int i;
 
-	if (strcmp(name, "data") == 0) {
+	if (strcmp (name, "data") == 0) {
 		for (i = 0; atts[i]; i += 2) {
-			if (strcmp(atts[i], "type") == 0) {
-				if (strcmp(atts[i + 1], "primary_db") == 0)
+			if (strcmp (atts[i], "type") == 0) {
+				if (strcmp (atts[i + 1], "primary_db") == 0)
 					ctx->state = REPODATA_STATE_PRIMARY;
-				else if (strcmp(atts[i + 1], "filelists_db") == 0)
+				else if (strcmp (atts[i + 1], "filelists_db") ==
+					 0)
 					ctx->state = REPODATA_STATE_FILELISTS;
 			}
 		}
-	} else if (strcmp(name, "location") == 0) {
+	} else if (strcmp (name, "location") == 0) {
 		for (i = 0; atts[i]; i += 2) {
-			if (strcmp(atts[i], "href") == 0) {
+			if (strcmp (atts[i], "href") == 0) {
 				switch (ctx->state) {
-				case REPODATA_STATE_PRIMARY:
-					ctx->repomd->primary_db =
-						strdup(atts[i + 1]);
-					break;
-				case REPODATA_STATE_FILELISTS:
-					ctx->repomd->filelists_db =
-						strdup(atts[i + 1]);
-				default:
-					break;
+					case REPODATA_STATE_PRIMARY:
+						ctx->repomd->primary_db =
+							strdup (atts[i + 1]);
+						break;
+					case REPODATA_STATE_FILELISTS:
+						ctx->repomd->filelists_db =
+							strdup (atts[i + 1]);
+					default:
+						break;
 				}
 
 			}
 		}
-	} else if (strcmp(name, "timestamp") == 0) {
+	} else if (strcmp (name, "timestamp") == 0) {
 		switch (ctx->state) {
-		case REPODATA_STATE_PRIMARY:
-			ctx->state = REPODATA_STATE_PRIMARY_TIMESTAMP;
-			break;
-		case REPODATA_STATE_FILELISTS:
-			ctx->state = REPODATA_STATE_FILELISTS_TIMESTAMP;
-		default:
-			break;
+			case REPODATA_STATE_PRIMARY:
+				ctx->state = REPODATA_STATE_PRIMARY_TIMESTAMP;
+				break;
+			case REPODATA_STATE_FILELISTS:
+				ctx->state = REPODATA_STATE_FILELISTS_TIMESTAMP;
+			default:
+				break;
 		}
 	}
 
@@ -94,34 +95,33 @@ low_repomd_end_element (void *data, const char *name)
 {
 	struct repodata_context *ctx = data;
 
-	if (strcmp(name, "data") == 0) {
+	if (strcmp (name, "data") == 0) {
 		ctx->state = REPODATA_STATE_BEGIN;
 	}
 }
 
 static void
-low_repomd_character_data (void *data, const XML_Char *s,
-			   int len G_GNUC_UNUSED)
+low_repomd_character_data (void *data, const XML_Char *s, int len G_GNUC_UNUSED)
 {
 	struct repodata_context *ctx = data;
 
 	switch (ctx->state) {
-	case REPODATA_STATE_PRIMARY_TIMESTAMP:
-		ctx->repomd->primary_db_time = strtoul (s, NULL, 10);
-		ctx->state = REPODATA_STATE_PRIMARY;
-		break;
-	case REPODATA_STATE_FILELISTS_TIMESTAMP:
-		ctx->repomd->filelists_db_time = strtoul (s, NULL, 10);
-		ctx->state = REPODATA_STATE_FILELISTS;
-	default:
-		break;
+		case REPODATA_STATE_PRIMARY_TIMESTAMP:
+			ctx->repomd->primary_db_time = strtoul (s, NULL, 10);
+			ctx->state = REPODATA_STATE_PRIMARY;
+			break;
+		case REPODATA_STATE_FILELISTS_TIMESTAMP:
+			ctx->repomd->filelists_db_time = strtoul (s, NULL, 10);
+			ctx->state = REPODATA_STATE_FILELISTS;
+		default:
+			break;
 	}
 }
 
 #define XML_BUFFER_SIZE 4096
 
 LowRepomd *
-low_repomd_parse(const char *repodata)
+low_repomd_parse (const char *repodata)
 {
 	struct repodata_context ctx;
 	void *buf;
@@ -133,46 +133,45 @@ low_repomd_parse(const char *repodata)
 	ctx.repomd = malloc (sizeof (LowRepomd));
 	ctx.state = REPODATA_STATE_BEGIN;
 
-	parser = XML_ParserCreate(NULL);
-	XML_SetUserData(parser, &ctx);
-	XML_SetElementHandler(parser,
-			      low_repomd_start_element,
-			      low_repomd_end_element);
+	parser = XML_ParserCreate (NULL);
+	XML_SetUserData (parser, &ctx);
+	XML_SetElementHandler (parser,
+			       low_repomd_start_element,
+			       low_repomd_end_element);
 	XML_SetCharacterDataHandler (parser, low_repomd_character_data);
 
-	repodata_file = open(repodata, O_RDONLY);
+	repodata_file = open (repodata, O_RDONLY);
 	if (repodata_file < 0) {
 		return NULL;
 	}
 
 	do {
-		XML_GetParsingStatus(parser, &status);
+		XML_GetParsingStatus (parser, &status);
 		switch (status.parsing) {
-		case XML_SUSPENDED:
-		case XML_PARSING:
-		case XML_INITIALIZED:
-			buf = XML_GetBuffer(parser,
+			case XML_SUSPENDED:
+			case XML_PARSING:
+			case XML_INITIALIZED:
+				buf = XML_GetBuffer (parser, XML_BUFFER_SIZE);
+				len = read (repodata_file, buf,
 					    XML_BUFFER_SIZE);
-			len = read(repodata_file, buf, XML_BUFFER_SIZE);
-			if (len < 0) {
-				fprintf(stderr,
-					"couldn't read input: %s\n",
-					strerror(errno));
-				return NULL;
-			}
+				if (len < 0) {
+					fprintf (stderr,
+						 "couldn't read input: %s\n",
+						 strerror (errno));
+					return NULL;
+				}
 
-			XML_ParseBuffer(parser, len, len == 0);
-			break;
-		case XML_FINISHED:
-		default:
-			break;
+				XML_ParseBuffer (parser, len, len == 0);
+				break;
+			case XML_FINISHED:
+			default:
+				break;
 		}
 	} while (status.parsing != XML_FINISHED);
 
+	XML_ParserFree (parser);
 
-	XML_ParserFree(parser);
-
-	close(repodata_file);
+	close (repodata_file);
 	return ctx.repomd;
 }
 

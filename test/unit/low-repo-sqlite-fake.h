@@ -19,7 +19,6 @@
  *  02110-1301  USA
  */
 
-
 #ifndef _LOW_REPO_SQLITE_FAKE_H_
 #define _LOW_REPO_SQLITE_FAKE_H_
 

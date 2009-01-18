@@ -135,7 +135,7 @@ low_fake_repo_search_provides_filter_fn (LowPackage *pkg, gpointer data)
 
 	for (i = 0; deps[i] != NULL; i++) {
 		if (low_package_dependency_satisfies (query_dep, deps[i])) {
-		    return TRUE;
+			return TRUE;
 		}
 	}
 
@@ -170,7 +170,7 @@ low_fake_repo_search_requires_filter_fn (LowPackage *pkg, gpointer data)
 
 	for (i = 0; deps[i] != NULL; i++) {
 		if (low_package_dependency_satisfies (query_dep, deps[i])) {
-		    return TRUE;
+			return TRUE;
 		}
 	}
 
@@ -205,7 +205,7 @@ low_fake_repo_search_conflicts_filter_fn (LowPackage *pkg, gpointer data)
 
 	for (i = 0; deps[i] != NULL; i++) {
 		if (low_package_dependency_satisfies (query_dep, deps[i])) {
-		    return TRUE;
+			return TRUE;
 		}
 	}
 
@@ -232,7 +232,8 @@ low_fake_repo_search_conflicts (LowRepo *repo,
 
 LowPackageIter *
 low_fake_repo_search_obsoletes (LowRepo *repo,
-				const LowPackageDependency *obsoletes G_GNUC_UNUSED)
+				const LowPackageDependency *obsoletes
+				G_GNUC_UNUSED)
 {
 	return low_fake_repo_list_all (repo);
 }
@@ -246,7 +247,7 @@ low_fake_repo_search_files_filter_fn (LowPackage *pkg, gpointer data)
 
 	for (i = 0; deps[i] != NULL; i++) {
 		if (!strcmp (querystr, deps[i])) {
-		    return TRUE;
+			return TRUE;
 		}
 	}
 

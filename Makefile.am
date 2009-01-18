@@ -51,7 +51,7 @@ TAGS=$(shell awk 'BEGIN{RS=""} { for(i=1;i<=NF;i++) printf "-T "$$(i)" "; print 
 # XXX watch for pointers and custom typedefs with this
 indent:
 	@find \( -name \*.c -o -name '*.h' \) \
-		| xargs indent $(TAGS) -linux -pcs -psl -ci8 -cs
+		| xargs indent $(TAGS) -linux -pcs -psl -ci8 -cs -cli8 -cp0
 
 todo:
 	@find \( -name \*.c -o -name '*.h' \) \

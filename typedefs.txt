@@ -10,6 +10,7 @@ LowRepoSet
 LowRepoRpmdb
 LowRepoSqlite
 LowTransaction
+LowTransactionMember
 
 SyckNode
 SyckParser
@@ -18,6 +19,9 @@ sqlite3
 sqlite3_context
 sqlite3_value
 
+gpointer
 GHashTable
 GList
 GSList
+
+XML_Char

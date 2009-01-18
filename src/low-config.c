@@ -47,9 +47,11 @@ low_config_load_repo_configs (void)
 	while (file_name = g_dir_read_name (config_dir), file_name != NULL) {
 		if (g_str_has_suffix (file_name, ".repo")) {
 			old_joined_config = joined_config;
-			path = g_strjoin ("/", config_dir_path, file_name, NULL);
+			path = g_strjoin ("/", config_dir_path, file_name,
+					  NULL);
 			g_file_get_contents (path, &config, NULL, NULL);
-			joined_config = g_strjoin ("\n", joined_config, config, NULL);
+			joined_config =
+				g_strjoin ("\n", joined_config, config, NULL);
 			g_free (path);
 			g_free (old_joined_config);
 			g_free (config);
@@ -146,7 +148,7 @@ low_config_replace_macros (LowConfig *config, const char *value)
 		low_package_dependency_new (RELEASE_PKG, DEPENDENCY_SENSE_NONE,
 					    NULL);
 
-	uname(&uts);
+	uname (&uts);
 
 	/* XXX deal with no providing package, or more than one */
 	iter = low_repo_rpmdb_search_provides (config->rpmdb, release_rpm);
@@ -154,7 +156,6 @@ low_config_replace_macros (LowConfig *config, const char *value)
 	low_package_dependency_free (release_rpm);
 
 	iter = low_package_iter_next (iter);
-
 
 	replaced = low_config_replace_single_macro (value, "$releasever",
 						    iter->pkg->version);

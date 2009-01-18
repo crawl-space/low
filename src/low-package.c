@@ -53,6 +53,7 @@ low_package_ref_init (LowPackage *pkg)
 
 	return pkg;
 }
+
 LowPackage *
 low_package_ref (LowPackage *pkg)
 {
@@ -64,7 +65,7 @@ low_package_ref (LowPackage *pkg)
 void
 low_package_unref (LowPackage *pkg)
 {
-//	pkg->ref_count--;
+//      pkg->ref_count--;
 	if (pkg->ref_count == 0) {
 		low_package_free (pkg);
 	}
@@ -126,7 +127,7 @@ low_package_iter_next (LowPackageIter *iter)
 
 LowPackageDependency *
 low_package_dependency_new (const char *name, LowPackageDependencySense sense,
-							const char *evr)
+			    const char *evr)
 {
 	/* XXX should check that evr is empty iff sense is NONE */
 	LowPackageDependency *dep = malloc (sizeof (LowPackageDependency));
@@ -208,7 +209,8 @@ low_package_dependency_list_free (LowPackageDependency **dependencies)
 }
 
 static rpmsenseFlags
-low_dependency_sense_to_rpm (LowPackageDependencySense sense) {
+low_dependency_sense_to_rpm (LowPackageDependencySense sense)
+{
 	switch (sense) {
 		case DEPENDENCY_SENSE_LT:
 			return RPMSENSE_LESS;
@@ -234,9 +236,9 @@ low_package_dependency_satisfies (const LowPackageDependency *needs,
 	int res;
 
 	/* The tag type doesn't matter for comparison, so just use a default */
-	rpmds rpm_needs =
-		rpmdsSingle (RPMTAG_PROVIDES, needs->name, needs->evr,
-			     low_dependency_sense_to_rpm (needs->sense));
+	rpmds rpm_needs = rpmdsSingle (RPMTAG_PROVIDES, needs->name, needs->evr,
+				       low_dependency_sense_to_rpm
+				       (needs->sense));
 	rpmds rpm_satisfies =
 		rpmdsSingle (RPMTAG_PROVIDES, satisfies->name, satisfies->evr,
 			     low_dependency_sense_to_rpm (satisfies->sense));

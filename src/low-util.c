@@ -68,9 +68,7 @@ low_util_word_wrap (const char *text, int width)
 
 		if (word_pos > MAXWORD) {
 			word[word_pos] = '\0';
-			printf
-			    ("ERROR: \"%s\" exceeds maximum word length (%d)\n",
-			     word, MAXWORD);
+			printf ("ERROR: \"%s\" exceeds maximum word length (%d)\n", word, MAXWORD);
 			goto quit;
 		}
 
@@ -91,14 +89,15 @@ low_util_word_wrap (const char *text, int width)
 		output[lineno++] = g_strdup (line);
 	}
 
-quit:
+ quit:
 	output[lineno] = NULL;
 	return output;
 }
 
 gboolean
-low_util_parse_nevra (const char *nevra, char **name G_GNUC_UNUSED, char **epoch G_GNUC_UNUSED,
-		      char **version G_GNUC_UNUSED, char **release G_GNUC_UNUSED, char **arch G_GNUC_UNUSED)
+low_util_parse_nevra (const char *nevra, char **name G_GNUC_UNUSED,
+		      char **epoch G_GNUC_UNUSED, char **version G_GNUC_UNUSED,
+		      char **release G_GNUC_UNUSED, char **arch G_GNUC_UNUSED)
 {
 	/* XXX fill me in */
 	if (strlen (nevra) == 0) {

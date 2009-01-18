@@ -19,7 +19,6 @@
  *  02110-1301  USA
  */
 
-
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
@@ -96,7 +95,7 @@ wrap_and_print (const char *text)
 }
 
 static void
-print_dependency (const LowPackageDependency * dep)
+print_dependency (const LowPackageDependency *dep)
 {
 	fputs (dep->name, stdout);
 	if (dep->sense != DEPENDENCY_SENSE_NONE) {
@@ -353,12 +352,12 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 		return print_updates (repo_rpmdb, config);
 	}
 
-	if (argc == 0 || !strcmp(argv[0], "installed") ||
-	    !strcmp(argv[0], "all")) {
+	if (argc == 0 || !strcmp (argv[0], "installed") ||
+	    !strcmp (argv[0], "all")) {
 		iter = low_repo_rpmdb_list_all (repo_rpmdb);
 		print_all_packages_short (iter);
 	}
-	if (argc == 0 || !strcmp(argv[0], "all") ||
+	if (argc == 0 || !strcmp (argv[0], "all") ||
 	    !strcmp (argv[0], "available")) {
 		LowRepoSet *repos =
 			low_repo_set_initialize_from_config (config, TRUE);
@@ -380,7 +379,6 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 
 		low_repo_set_free (repos);
 	}
-
 
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (repo_rpmdb);
@@ -615,16 +613,16 @@ create_package_filepath (LowPackage *pkg)
 
 /* Generate a random integer between 0 and upper bound. (inclusive) */
 static int
-random_int(int upper)
+random_int (int upper)
 {
 	/* Not the most random thing in the world but do we care? */
-	unsigned int iseed = (unsigned int)time (NULL);
+	unsigned int iseed = (unsigned int) time (NULL);
 	srand (iseed);
 	return rand () % (upper + 1);
 }
 
 static void
-free_g_list_node(gpointer data_ptr, gpointer ignored G_GNUC_UNUSED)
+free_g_list_node (gpointer data_ptr, gpointer ignored G_GNUC_UNUSED)
 {
 	g_string_free ((GString *) data_ptr, TRUE);
 }
@@ -644,37 +642,33 @@ lookup_random_mirror (char *repo_id)
 	GString *random_url;
 	gchar *return_val;
 
-	FILE *file = fopen(mirrors_file, "r");
-	if (file == 0)
-	{
-		printf("Error opening file: %s\n", mirrors_file);
+	FILE *file = fopen (mirrors_file, "r");
+	if (file == 0) {
+		printf ("Error opening file: %s\n", mirrors_file);
 		return NULL;
 	}
 
-	url = g_string_new("");
-	while ((x = fgetc (file)) != EOF)
-	{
-		if (x == '\n')
-		{
+	url = g_string_new ("");
+	while ((x = fgetc (file)) != EOF) {
+		if (x == '\n') {
 			/* g_print ("Final string: %s\n", url->str); */
 			/* Ignore lines commented out: */
-			if (url->str[0] != '#')
-			{
+			if (url->str[0] != '#') {
 				all_mirrors = g_list_append (all_mirrors,
 							     (gpointer) url);
 			}
-			url = g_string_new("");
+			url = g_string_new ("");
 			continue;
 		}
 		url = g_string_append_c (url, x);
 	}
 	fclose (file);
 	choice = random_int (g_list_length (all_mirrors) - 1);
-	random_url = (GString *) g_list_nth_data(all_mirrors, choice);
+	random_url = (GString *) g_list_nth_data (all_mirrors, choice);
 	/* Copy so we can free the entire list: */
 	return_val = g_strdup (random_url->str);
 
-	g_list_foreach(all_mirrors, free_g_list_node, NULL);
+	g_list_foreach (all_mirrors, free_g_list_node, NULL);
 	g_list_free (all_mirrors);
 	free (mirrors_file);
 
@@ -686,25 +680,19 @@ select_mirror_url (LowRepo *repo, GHashTable *repo_mirrors)
 {
 	char *baseurl = repo->baseurl;
 	/* baseurl will be NULL if repo is configured to use a mirror list. */
-	if (!baseurl)
-	{
-		if (repo_mirrors)
-		{
+	if (!baseurl) {
+		if (repo_mirrors) {
 			baseurl = (char *) g_hash_table_lookup (repo_mirrors,
 								repo->id);
 		}
 
 		/* Have we already looked up a mirror for this repo? */
-		if (!baseurl)
-		{
+		if (!baseurl) {
 			baseurl = lookup_random_mirror (repo->id);
-			low_debug ("Using %s mirror: %s\n", repo->id,
-				   baseurl);
-			if (repo_mirrors)
-			{
-				g_hash_table_replace(repo_mirrors,
-						     repo->id,
-						     baseurl);
+			low_debug ("Using %s mirror: %s\n", repo->id, baseurl);
+			if (repo_mirrors) {
+				g_hash_table_replace (repo_mirrors,
+						      repo->id, baseurl);
 			}
 		}
 	}
@@ -717,8 +705,7 @@ create_file_url (const char *baseurl, const char *relative_file)
 {
 	char *full_url;
 
-	if (baseurl[strlen (baseurl) - 1] != '/')
-	{
+	if (baseurl[strlen (baseurl) - 1] != '/') {
 		full_url = g_strdup_printf ("%s/%s", baseurl, relative_file);
 	} else {
 		full_url = g_strdup_printf ("%s%s", baseurl, relative_file);
@@ -826,9 +813,9 @@ prompt_confirmed (void)
 {
 	char input;
 
-	printf("\nRun transaction? [y/N] ");
+	printf ("\nRun transaction? [y/N] ");
 
-	input = getchar();
+	input = getchar ();
 
 	if (input == 'y' || input == 'Y') {
 		return TRUE;
@@ -845,7 +832,7 @@ download_required_packages (LowTransaction *trans)
 	GHashTable *repo_mirrors;
 	GList *list;
 
-	repo_mirrors = g_hash_table_new(g_str_hash, g_str_equal);
+	repo_mirrors = g_hash_table_new (g_str_hash, g_str_equal);
 
 	list = g_hash_table_get_values (trans->install);
 	while (list != NULL) {
@@ -874,7 +861,7 @@ add_installs_to_transaction (GHashTable *hash, rpmts ts)
 		FD_t fd = Fopen (filepath, "r.ufdio");
 		Header hdr;
 		int res = rpmReadPackageFile (ts, fd, NULL, &hdr);
-		Fclose(fd);
+		Fclose (fd);
 		if (res != RPMRC_OK) {
 			/* XXX do something better here */
 			printf ("Unable to read %s, skipping\n", filepath);
@@ -899,8 +886,7 @@ add_removes_to_transaction (GHashTable *hash, rpmts ts)
 		unsigned int offset;
 
 		iter = rpmdbInitIterator (low_repo_rpmdb_get_db (pkg->repo),
-					  RPMTAG_PKGID,
-					  pkg->id, 16);
+					  RPMTAG_PKGID, pkg->id, 16);
 		hdr = rpmdbNextIterator (iter);
 		offset = rpmdbGetIteratorOffset (iter);
 
@@ -941,17 +927,17 @@ printHash (int part, int total, CallbackData *data)
 	if (part == total)
 		printf ("\n");
 
-	(void) fflush(stdout);
+	(void) fflush (stdout);
 }
 
 static void *
-low_show_rpm_progress (const void * arg, const rpmCallbackType what,
+low_show_rpm_progress (const void *arg, const rpmCallbackType what,
 		       const rpm_loff_t amount, const rpm_loff_t total,
-		       fnpyKey key, void * data)
+		       fnpyKey key, void *data)
 {
 	Header h = (Header) arg;
-	void * rc = NULL;
-	const char * filename = (const char *)key;
+	void *rc = NULL;
+	const char *filename = (const char *) key;
 	static FD_t fd = NULL;
 	int xx;
 
@@ -959,89 +945,94 @@ low_show_rpm_progress (const void * arg, const rpmCallbackType what,
 	gboolean verbose = callback->verbose;
 
 	switch (what) {
-	case RPMCALLBACK_INST_OPEN_FILE:
-		if (filename == NULL || filename[0] == '\0')
-			return NULL;
-		fd = Fopen(filename, "r.ufdio");
-		/* FIX: still necessary? */
-		if (fd == NULL || Ferror(fd)) {
-			rpmlog(RPMLOG_ERR, "open of %s failed: %s\n", filename,
-			       Fstrerror(fd));
+		case RPMCALLBACK_INST_OPEN_FILE:
+			if (filename == NULL || filename[0] == '\0')
+				return NULL;
+			fd = Fopen (filename, "r.ufdio");
+			/* FIX: still necessary? */
+			if (fd == NULL || Ferror (fd)) {
+				rpmlog (RPMLOG_ERR, "open of %s failed: %s\n",
+					filename, Fstrerror (fd));
+				if (fd != NULL) {
+					xx = Fclose (fd);
+					fd = NULL;
+				}
+			} else
+				fd = fdLink (fd, "persist (showProgress)");
+			return (void *) fd;
+			break;
+
+		case RPMCALLBACK_INST_CLOSE_FILE:
+			/* FIX: still necessary? */
+			fd = fdFree (fd, "persist (showProgress)");
 			if (fd != NULL) {
-				xx = Fclose(fd);
+				xx = Fclose (fd);
 				fd = NULL;
 			}
-		} else
-			fd = fdLink(fd, "persist (showProgress)");
-		return (void *)fd;
-		break;
-
-	case RPMCALLBACK_INST_CLOSE_FILE:
-		/* FIX: still necessary? */
-		fd = fdFree(fd, "persist (showProgress)");
-		if (fd != NULL) {
-			xx = Fclose(fd);
-			fd = NULL;
-		}
-		break;
-
-	case RPMCALLBACK_INST_START:
-	case RPMCALLBACK_UNINST_START:
-		rpmcliHashesCurrent = 0;
-		if (h == NULL)
 			break;
-		/* @todo Remove headerFormat() on a progress callback. */
-		if (verbose) {
-			callback->current_rpm++;
-			callback->state = (what == RPMCALLBACK_INST_START) ?
-				CALLBACK_INSTALL : CALLBACK_REMOVE;
-			callback->name = headerFormat(h, "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}", NULL);
-			printHash (0, 1, callback);
-		}
-		break;
 
-	case RPMCALLBACK_TRANS_PROGRESS:
-	case RPMCALLBACK_INST_PROGRESS:
-	case RPMCALLBACK_UNINST_PROGRESS:
-		if (verbose)
-			printHash(amount, total, callback);
+		case RPMCALLBACK_INST_START:
+		case RPMCALLBACK_UNINST_START:
+			rpmcliHashesCurrent = 0;
+			if (h == NULL)
+				break;
+			/* @todo Remove headerFormat() on a progress callback. */
+			if (verbose) {
+				callback->current_rpm++;
+				callback->state =
+					(what ==
+					 RPMCALLBACK_INST_START) ?
+					CALLBACK_INSTALL : CALLBACK_REMOVE;
+				callback->name =
+					headerFormat (h,
+						      "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}",
+						      NULL);
+				printHash (0, 1, callback);
+			}
+			break;
 
-		if (amount == total) {
+		case RPMCALLBACK_TRANS_PROGRESS:
+		case RPMCALLBACK_INST_PROGRESS:
+		case RPMCALLBACK_UNINST_PROGRESS:
+			if (verbose)
+				printHash (amount, total, callback);
+
+			if (amount == total) {
+				free (callback->name);
+				callback->name = NULL;
+			}
+			break;
+
+		case RPMCALLBACK_TRANS_START:
+			if (verbose) {
+				callback->state = CALLBACK_PREPARE;
+				callback->name = g_strdup ("Preparing...");
+				callback->total_rpms = total;
+				callback->current_rpm = 0;
+			}
+			break;
+
+		case RPMCALLBACK_TRANS_STOP:
+		case RPMCALLBACK_UNINST_STOP:
+			if (verbose)
+				printHash (1, 1, callback);
+			rpmcliProgressTotal = rpmcliPackagesTotal;
+			rpmcliProgressCurrent = 0;
+
 			free (callback->name);
 			callback->name = NULL;
-		}
-		break;
 
-	case RPMCALLBACK_TRANS_START:
-		if (verbose) {
-			callback->state = CALLBACK_PREPARE;
-			callback->name = g_strdup ("Preparing...");
-			callback->total_rpms = total;
-			callback->current_rpm = 0;
-		}
-		break;
+			break;
 
-	case RPMCALLBACK_TRANS_STOP:
-	case RPMCALLBACK_UNINST_STOP:
-		if (verbose)
-			printHash(1, 1, callback);
-		rpmcliProgressTotal = rpmcliPackagesTotal;
-		rpmcliProgressCurrent = 0;
-
-		free (callback->name);
-		callback->name = NULL;
-
-		break;
-
-	case RPMCALLBACK_UNPACK_ERROR:
-	case RPMCALLBACK_CPIO_ERROR:
-	case RPMCALLBACK_SCRIPT_ERROR:
-	case RPMCALLBACK_UNKNOWN:
-	case RPMCALLBACK_REPACKAGE_PROGRESS:
-	case RPMCALLBACK_REPACKAGE_START:
-	case RPMCALLBACK_REPACKAGE_STOP:
-	default:
-		break;
+		case RPMCALLBACK_UNPACK_ERROR:
+		case RPMCALLBACK_CPIO_ERROR:
+		case RPMCALLBACK_SCRIPT_ERROR:
+		case RPMCALLBACK_UNKNOWN:
+		case RPMCALLBACK_REPACKAGE_PROGRESS:
+		case RPMCALLBACK_REPACKAGE_START:
+		case RPMCALLBACK_REPACKAGE_STOP:
+		default:
+			break;
 	}
 
 	return rc;
@@ -1050,9 +1041,9 @@ low_show_rpm_progress (const void * arg, const rpmCallbackType what,
 static rpmts
 low_transaction_to_rpmts (LowTransaction *trans, CallbackData *data)
 {
-	rpmts ts = rpmtsCreate();
-	rpmtsSetRootDir(ts, "/");
-	rpmtsSetNotifyCallback(ts, low_show_rpm_progress, data);
+	rpmts ts = rpmtsCreate ();
+	rpmtsSetRootDir (ts, "/");
+	rpmtsSetNotifyCallback (ts, low_show_rpm_progress, data);
 
 	add_installs_to_transaction (trans->install, ts);
 	add_installs_to_transaction (trans->update, ts);
@@ -1076,7 +1067,7 @@ run_transaction (LowTransaction *trans)
 
 	print_transaction (trans);
 
-	if (prompt_confirmed()) {
+	if (prompt_confirmed ()) {
 		rpmts ts;
 		int rc;
 		CallbackData data;
@@ -1084,13 +1075,13 @@ run_transaction (LowTransaction *trans)
 		data.verbose = TRUE;
 
 		printf ("Running\n");
-		download_required_packages(trans);
+		download_required_packages (trans);
 
-//		rpmSetVerbosity(RPMLOG_DEBUG);
+//              rpmSetVerbosity(RPMLOG_DEBUG);
 		ts = low_transaction_to_rpmts (trans, &data);
-		rpmtsSetFlags(ts, RPMTRANS_FLAG_NONE);
+		rpmtsSetFlags (ts, RPMTRANS_FLAG_NONE);
 
-		rc = rpmtsRun(ts, NULL, RPMPROB_FILTER_NONE);
+		rc = rpmtsRun (ts, NULL, RPMPROB_FILTER_NONE);
 		if (rc != 0) {
 			printf ("Error running transaction\n");
 		}
@@ -1301,7 +1292,7 @@ download_repodata_file (LowRepo *repo, const char *relative_name)
 	/* Just something nice to display */
 	char *displayed_basename;
 	if (strlen (basename) > 24) {
-		int offset = strlen(basename) - 24;
+		int offset = strlen (basename) - 24;
 		displayed_basename =
 			g_strdup_printf ("%s - ...%s", repo->id,
 					 basename + offset);
@@ -1370,8 +1361,7 @@ refresh_repo (LowRepo *repo)
 	if (repo->mirror_list) {
 		char *display = g_strdup_printf ("%s - mirrorlist.txt",
 						 repo->id);
-		local_file = create_repodata_filename (repo,
-						       "mirrorlist.txt");
+		local_file = create_repodata_filename (repo, "mirrorlist.txt");
 		low_download (repo->mirror_list, local_file, display);
 
 		g_free (display);
@@ -1406,8 +1396,7 @@ refresh_repo (LowRepo *repo)
 	g_free (tmp_file);
 
 	tmp_file = download_repodata_file (repo, new_repomd->filelists_db);
-	local_file = create_repodata_filename (repo,
-					       new_repomd->filelists_db);
+	local_file = create_repodata_filename (repo, new_repomd->filelists_db);
 	rename (tmp_file, local_file);
 	uncompress_file (local_file);
 
@@ -1416,7 +1405,7 @@ refresh_repo (LowRepo *repo)
 }
 
 static int
-command_refresh (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
+command_refresh (int argc G_GNUC_UNUSED, const char **argv G_GNUC_UNUSED)
 {
 	LowRepo *repo_rpmdb;
 	LowRepoSet *repos;
@@ -1438,18 +1427,15 @@ command_refresh (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
 	return EXIT_SUCCESS;
 }
 
-
 /**
  * Display the program version as specified in configure.ac
  */
 static int
-command_version (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
+command_version (int argc G_GNUC_UNUSED, const char **argv G_GNUC_UNUSED)
 {
-	printf  (PACKAGE_STRING"\n");
+	printf (PACKAGE_STRING "\n");
 	return EXIT_SUCCESS;
 }
-
-
 
 static int
 command_help (int argc, const char *argv[])
@@ -1466,7 +1452,7 @@ command_help (int argc, const char *argv[])
 }
 
 static int
-NOT_IMPLEMENTED (int argc G_GNUC_UNUSED, const char *argv[] G_GNUC_UNUSED)
+NOT_IMPLEMENTED (int argc G_GNUC_UNUSED, const char **argv G_GNUC_UNUSED)
 {
 	printf ("This function is not yet implemented\n");
 
@@ -1481,33 +1467,33 @@ typedef struct _SubCommand {
 } SubCommand;
 
 const SubCommand commands[] = {
-	{ "refresh", NULL, "Download new metadata", command_refresh },
-	{ "install", "PACKAGE", "Install a package", command_install },
-	{ "update", "[PACKAGE]", "Update or install a package",
-	  command_update },
-	{ "remove", "PACKAGE", "Remove a package", command_remove },
-	{ "clean", NULL, "Remove cached data", NOT_IMPLEMENTED },
-	{ "info", "PACKAGE", "Display package details", command_info },
-	{ "list", "[all|installed|PACKAGE]", "Display a group of packages",
-	  command_list },
-	{ "download", NULL, "Download (but don't install) a list of packages",
-	  command_download},
-	{ "search", "PATTERN",
-	  "Search package information for the given string", command_search },
-	{ "repolist", "[all|enabled|disabled]",
-	  "Display configured software repositories", command_repolist },
-	{ "whatprovides", "PATTERN",
-	  "Find what package provides the given value", command_whatprovides },
-	{ "whatrequires", "PATTERN",
-	  "Find what package requires the given value", command_whatrequires },
-	{ "whatconflicts", "PATTERN",
-	  "Find what package conflicts the given value",
-	  command_whatconflicts },
-	{ "whatobsoletes", "PATTERN",
-	  "Find what package obsoletes the given value",
-	  command_whatobsoletes },
-	{ "version", NULL, "Display version information", command_version },
-	{ "help", "COMMAND", "Display a helpful usage message", command_help }
+	{"refresh", NULL, "Download new metadata", command_refresh},
+	{"install", "PACKAGE", "Install a package", command_install},
+	{"update", "[PACKAGE]", "Update or install a package",
+	 command_update},
+	{"remove", "PACKAGE", "Remove a package", command_remove},
+	{"clean", NULL, "Remove cached data", NOT_IMPLEMENTED},
+	{"info", "PACKAGE", "Display package details", command_info},
+	{"list", "[all|installed|PACKAGE]", "Display a group of packages",
+	 command_list},
+	{"download", NULL, "Download (but don't install) a list of packages",
+	 command_download},
+	{"search", "PATTERN",
+	 "Search package information for the given string", command_search},
+	{"repolist", "[all|enabled|disabled]",
+	 "Display configured software repositories", command_repolist},
+	{"whatprovides", "PATTERN",
+	 "Find what package provides the given value", command_whatprovides},
+	{"whatrequires", "PATTERN",
+	 "Find what package requires the given value", command_whatrequires},
+	{"whatconflicts", "PATTERN",
+	 "Find what package conflicts the given value",
+	 command_whatconflicts},
+	{"whatobsoletes", "PATTERN",
+	 "Find what package obsoletes the given value",
+	 command_whatobsoletes},
+	{"version", NULL, "Display version information", command_version},
+	{"help", "COMMAND", "Display a helpful usage message", command_help}
 };
 
 static void
@@ -1519,7 +1505,7 @@ show_help (const char *command)
 		if (!strcmp (command, commands[i].name)) {
 			printf ("Usage: %s %s\n", commands[i].name,
 				commands[i].usage ? commands[i].usage : "");
-			printf("\n%s\n", commands[i].summary);
+			printf ("\n%s\n", commands[i].summary);
 		}
 	}
 }

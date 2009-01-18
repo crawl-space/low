@@ -24,7 +24,6 @@
 #include "low-repo-sqlite.h"
 #include "low-repo-set.h"
 
-
 LowRepoSet *
 low_repo_set_initialize_from_config (LowConfig *config, gboolean bind_dbs)
 {
@@ -94,8 +93,8 @@ low_repo_set_inner_for_each (gpointer key G_GNUC_UNUSED, gpointer value,
 	LowRepoSetForEachData *for_each_data = (LowRepoSetForEachData *) data;
 
 	if (for_each_data->filter == ALL ||
-		(for_each_data->filter == ENABLED && repo->enabled) ||
-		(for_each_data->filter == DISABLED && !repo->enabled)) {
+	    (for_each_data->filter == ENABLED && repo->enabled) ||
+	    (for_each_data->filter == DISABLED && !repo->enabled)) {
 		(for_each_data->func) (repo, for_each_data->data);
 	}
 }
@@ -110,11 +109,11 @@ low_repo_set_for_each (LowRepoSet *repo_set, LowRepoSetFilter filter,
 	for_each_data.data = data;
 
 	g_hash_table_foreach (repo_set->repos, low_repo_set_inner_for_each,
-						  &for_each_data);
+			      &for_each_data);
 }
 
-typedef LowPackageIter * (*LowRepoSetIterSearchFunc) (LowRepo *repo,
-						      const void *search_data);
+typedef LowPackageIter *(*LowRepoSetIterSearchFunc) (LowRepo *repo,
+						     const void *search_data);
 
 typedef struct _LowRepoSetPackageIter {
 	LowPackageIter super;
@@ -184,7 +183,7 @@ low_repo_set_package_iter_new (LowRepoSet *repo_set,
 	iter->super.next_func = low_repo_set_package_iter_next;
 	iter->super.pkg = NULL;
 	iter->repo_iter = malloc (sizeof (GHashTableIter));
-	g_hash_table_iter_init(iter->repo_iter, repo_set->repos);
+	g_hash_table_iter_init (iter->repo_iter, repo_set->repos);
 
 	do {
 		iter->current_repo = NULL;
@@ -214,8 +213,7 @@ low_repo_set_list_all (LowRepoSet *repo_set)
 	 */
 	return low_repo_set_package_iter_new (repo_set,
 					      (LowRepoSetIterSearchFunc)
-					      low_repo_sqlite_list_all,
-					      NULL);
+					      low_repo_sqlite_list_all, NULL);
 }
 
 LowPackageIter *
