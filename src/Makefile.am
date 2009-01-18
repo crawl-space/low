@@ -25,7 +25,6 @@ INCLUDES = \
 bin_PROGRAMS = low
 
 low_SOURCES = \
-	low.c \
 	low-config.c \
 	low-config.h \
 	low-debug.c \
