@@ -447,11 +447,11 @@ rpm_to_low_dependency_sense (uint32_t flag)
 	switch (flag & (RPMSENSE_LESS | RPMSENSE_EQUAL | RPMSENSE_GREATER)) {
 		case RPMSENSE_LESS:
 			return DEPENDENCY_SENSE_LT;
-		case RPMSENSE_LESS|RPMSENSE_EQUAL:
+		case RPMSENSE_LESS | RPMSENSE_EQUAL:
 			return DEPENDENCY_SENSE_LE;
 		case RPMSENSE_EQUAL:
 			return DEPENDENCY_SENSE_EQ;
-		case RPMSENSE_GREATER|RPMSENSE_EQUAL:
+		case RPMSENSE_GREATER | RPMSENSE_EQUAL:
 			return DEPENDENCY_SENSE_GE;
 		case RPMSENSE_GREATER:
 			return DEPENDENCY_SENSE_GT;
@@ -646,7 +646,7 @@ low_rpmdb_package_get_files (LowPackage *pkg)
 rpmdb
 low_repo_rpmdb_get_db (LowRepo *repo)
 {
-	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *)repo;
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
 	return repo_rpmdb->db;
 }
 
