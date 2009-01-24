@@ -230,12 +230,39 @@ low_fake_repo_search_conflicts (LowRepo *repo,
 	return (LowPackageIter *) iter;
 }
 
+static gboolean
+low_fake_repo_search_obsoletes_filter_fn (LowPackage *pkg, gpointer data)
+{
+	int i;
+	LowPackageDependency **deps = low_package_get_obsoletes (pkg);
+	const LowPackageDependency *query_dep =
+		(const LowPackageDependency *) data;
+
+	for (i = 0; deps[i] != NULL; i++) {
+		if (low_package_dependency_satisfies (query_dep, deps[i])) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
 LowPackageIter *
 low_fake_repo_search_obsoletes (LowRepo *repo,
-				const LowPackageDependency *obsoletes
-				G_GNUC_UNUSED)
+				const LowPackageDependency *obsoletes)
 {
-	return low_fake_repo_list_all (repo);
+	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
+	iter->super.repo = repo;
+	iter->super.next_func = low_fake_repo_fake_iter_next;
+	iter->super.pkg = NULL;
+
+	iter->position = 0;
+	iter->func = low_fake_repo_search_obsoletes_filter_fn;
+	iter->data = low_package_dependency_new (obsoletes->name,
+						 obsoletes->sense,
+						 obsoletes->evr);
+
+	return (LowPackageIter *) iter;
 }
 
 static gboolean

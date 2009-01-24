@@ -285,6 +285,28 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 
 	}
 
+	iter = low_repo_set_search_obsoletes (repos, provides);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		char *new_evr = low_package_evr_as_string (iter->pkg);
+		int cmp = rpmvercmp (new_evr, best_evr);
+
+		/* XXX arch cmp here has to be better */
+		if ((cmp > 0 && arch_is_compatible (to_update, iter->pkg)) ||
+		    (cmp == 0 &&
+		     choose_best_arch (to_update, best, iter->pkg) == iter->pkg)) {
+			low_package_unref (best);
+			best = iter->pkg;
+
+			g_free (best_evr);
+			best_evr = new_evr;
+		} else {
+			low_package_unref (iter->pkg);
+			g_free (new_evr);
+		}
+
+	}
+
 	low_package_dependency_free (provides);
 
 	/* We haven't found anything better */

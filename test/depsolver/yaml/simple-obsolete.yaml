@@ -1,0 +1,16 @@
+test: Update a single package via obsoletes
+
+installed:
+    - package: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+    - package: { name: zsh, evr: 1.0.0-1, arch: i386 }
+
+available:
+    - package: { name: xsh, evr: 1.3.1-2, arch: i386 }
+      obsoletes: [ zsh ]
+      provides: [ zsh = 0.9.0 ]
+
+transaction:
+    - update: { name: zsh }
+
+results:
+    - update: { name: xsh, evr: 1.3.1-2, arch: i386 }
