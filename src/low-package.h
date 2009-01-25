@@ -83,6 +83,8 @@ struct _LowPackage {
 
 	LowPackageDependency **requires;
 	LowPackageDependency **provides;
+	LowPackageDependency **conflicts;
+	LowPackageDependency **obsoletes;
 
 	LowPackageGetDetails get_details;
 

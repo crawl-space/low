@@ -650,6 +650,8 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 
 	pkg->provides = NULL;
 	pkg->requires = NULL;
+	pkg->conflicts = NULL;
+	pkg->obsoletes = NULL;
 
 	pkg->get_files = low_sqlite_package_get_files;
 
@@ -743,15 +745,23 @@ low_sqlite_package_get_requires (LowPackage *pkg)
 LowPackageDependency **
 low_sqlite_package_get_conflicts (LowPackage *pkg)
 {
-	const char *stmt = DEP_QUERY ("conflicts");
-	return low_repo_sqlite_get_deps (pkg->repo, stmt, pkg);
+	if (!pkg->conflicts) {
+		const char *stmt = DEP_QUERY ("conflicts");
+		pkg->conflicts = low_repo_sqlite_get_deps (pkg->repo, stmt,
+							   pkg);
+	}
+	return pkg->conflicts;
 }
 
 LowPackageDependency **
 low_sqlite_package_get_obsoletes (LowPackage *pkg)
 {
-	const char *stmt = DEP_QUERY ("obsoletes");
-	return low_repo_sqlite_get_deps (pkg->repo, stmt, pkg);
+	if (!pkg->obsoletes) {
+		const char *stmt = DEP_QUERY ("obsoletes");
+		pkg->obsoletes = low_repo_sqlite_get_deps (pkg->repo, stmt,
+							   pkg);
+	}
+	return pkg->obsoletes;
 }
 
 char **

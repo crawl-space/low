@@ -376,6 +376,8 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	pkg->provides = NULL;
 	pkg->requires = NULL;
+	pkg->conflicts = NULL;
+	pkg->obsoletes = NULL;
 
 	pkg->get_details = low_rpmdb_package_get_details;
 
@@ -582,17 +584,27 @@ low_rpmdb_package_get_requires (LowPackage *pkg)
 LowPackageDependency **
 low_rpmdb_package_get_conflicts (LowPackage *pkg)
 {
-	return low_repo_rpmdb_get_deps (pkg->repo, pkg, RPMTAG_CONFLICTNAME,
-					RPMTAG_CONFLICTFLAGS,
-					RPMTAG_CONFLICTVERSION);
+	if (!pkg->conflicts) {
+		pkg->conflicts = low_repo_rpmdb_get_deps (pkg->repo, pkg,
+							  RPMTAG_CONFLICTNAME,
+							  RPMTAG_CONFLICTFLAGS,
+							  RPMTAG_CONFLICTVERSION);
+	}
+
+	return pkg->conflicts;
 }
 
 LowPackageDependency **
 low_rpmdb_package_get_obsoletes (LowPackage *pkg)
 {
-	return low_repo_rpmdb_get_deps (pkg->repo, pkg, RPMTAG_OBSOLETENAME,
-					RPMTAG_OBSOLETEFLAGS,
-					RPMTAG_OBSOLETEVERSION);
+	if (!pkg->obsoletes) {
+		pkg->obsoletes = low_repo_rpmdb_get_deps (pkg->repo, pkg,
+							  RPMTAG_OBSOLETENAME,
+							  RPMTAG_OBSOLETEFLAGS,
+							  RPMTAG_OBSOLETEVERSION);
+	}
+
+	return pkg->obsoletes;
 }
 
 char **

@@ -42,6 +42,12 @@ low_package_free (LowPackage *pkg)
 	if (pkg->provides) {
 		low_package_dependency_list_free (pkg->provides);
 	}
+	if (pkg->conflicts) {
+		low_package_dependency_list_free (pkg->conflicts);
+	}
+	if (pkg->obsoletes) {
+		low_package_dependency_list_free (pkg->obsoletes);
+	}
 
 	g_free (pkg);
 }
