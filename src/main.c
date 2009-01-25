@@ -1312,7 +1312,7 @@ download_repodata_file (LowRepo *repo, const char *relative_name)
 #define BUF_SIZE 1024
 
 /* XXX should do this while downloading */
-static void
+static char *
 uncompress_file (const char *filename)
 {
 	int error;
@@ -1340,6 +1340,8 @@ uncompress_file (const char *filename)
 	}
 
 	close (fd);
+
+	return uncompressed_name;
 }
 
 static char *
@@ -1350,11 +1352,43 @@ create_repodata_filename (LowRepo *repo, const char *relative_name)
 
 }
 
+/* XXX HACK to create indicies on conflicts and obsoletes until they're there */
+
+#define name_index(x) "CREATE INDEX IF NOT EXISTS " x "name ON " x " (name)"
+
+static void
+create_indicies (const char *file_name)
+{
+	int rc;
+	sqlite3 *db;
+	rc = sqlite3_open (file_name, &db);
+	if (rc != SQLITE_OK) {
+		printf ("Unable to open %s\n", file_name);
+	}
+
+	rc = sqlite3_exec (db, name_index ("conflicts"), NULL, NULL, NULL);
+	if (rc != SQLITE_OK) {
+		printf ("Unable to create conflicts index: %s - %s\n",
+			file_name, sqlite3_errmsg (db));
+	}
+
+	rc = sqlite3_exec (db, name_index ("obsoletes"), NULL, NULL, NULL);
+	if (rc != SQLITE_OK) {
+		printf ("Unable to create obsoletes index %s - %s\n",
+			file_name, sqlite3_errmsg (db));
+	}
+
+	sqlite3_close (db);
+}
+
+/* END HACK */
+
 static void
 refresh_repo (LowRepo *repo)
 {
 	char *local_file;
 	char *tmp_file;
+	char *db_file;
 	LowRepomd *old_repomd;
 	LowRepomd *new_repomd;
 
@@ -1390,18 +1424,22 @@ refresh_repo (LowRepo *repo)
 	tmp_file = download_repodata_file (repo, new_repomd->primary_db);
 	local_file = create_repodata_filename (repo, new_repomd->primary_db);
 	rename (tmp_file, local_file);
-	uncompress_file (local_file);
+	db_file = uncompress_file (local_file);
+
+	create_indicies (db_file);
 
 	g_free (local_file);
 	g_free (tmp_file);
+	g_free (db_file);
 
 	tmp_file = download_repodata_file (repo, new_repomd->filelists_db);
 	local_file = create_repodata_filename (repo, new_repomd->filelists_db);
 	rename (tmp_file, local_file);
-	uncompress_file (local_file);
+	db_file = uncompress_file (local_file);
 
 	g_free (local_file);
 	g_free (tmp_file);
+	g_free (db_file);
 }
 
 static int
