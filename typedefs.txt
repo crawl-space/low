@@ -18,6 +18,7 @@ SyckParser
 sqlite3
 sqlite3_context
 sqlite3_value
+sqlite3_stmt
 
 gpointer
 GHashTable

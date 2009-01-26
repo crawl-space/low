@@ -118,12 +118,12 @@ low_repo_sqlite_regexp (sqlite3_context *ctx, int argc G_GNUC_UNUSED,
 }
 
 static char *
-find_sqlite_file(const char *pattern)
+find_sqlite_file (const char *pattern)
 {
 	char *match;
 	glob_t pglob;
 
-	glob(pattern, 0, NULL, &pglob);
+	glob (pattern, 0, NULL, &pglob);
 
 	if (pglob.gl_pathc == 0) {
 		match = g_strdup ("");
@@ -131,7 +131,7 @@ find_sqlite_file(const char *pattern)
 		match = g_strdup (pglob.gl_pathv[0]);
 	}
 
-	globfree(&pglob);
+	globfree (&pglob);
 
 	return match;
 }
@@ -437,7 +437,7 @@ low_repo_sqlite_search_filelists_files (LowRepo *repo, const char *file)
 			   "AND f.dirname = :dir "
 			   "AND f.filenames REGEXP :file";
 
-	char *slash = g_strrstr(file, "/");
+	char *slash = g_strrstr (file, "/");
 	char *filename = g_strdup_printf ("(^|/)%s(/|$)", (char *) (slash + 1));
 	char *dirname = g_strndup (file, slash - file);
 
@@ -556,11 +556,10 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 	sqlite3_stmt *pp_stmt;
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 
-	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
-			 NULL);
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt, NULL);
 	sqlite3_bind_int (pp_stmt, 1, *((int *) pkg->id));
 
-	while (sqlite3_step(pp_stmt) != SQLITE_DONE) {
+	while (sqlite3_step (pp_stmt) != SQLITE_DONE) {
 		const char *dep_name =
 			(const char *) sqlite3_column_text (pp_stmt, 0);
 		LowPackageDependencySense sense =
@@ -569,9 +568,7 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 				       sqlite3_column_text (pp_stmt, 3),
 				       sqlite3_column_text (pp_stmt, 4));
 
-		deps[i++] = low_package_dependency_new (dep_name,
-							sense,
-							evr);
+		deps[i++] = low_package_dependency_new (dep_name, sense, evr);
 
 		free (evr);
 
@@ -632,14 +629,13 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
 	pkg->release =
 		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-	pkg->epoch =
-		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->epoch = strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
 
 	pkg->size = sqlite3_column_int (pp_stmt, i++);
 	pkg->repo = repo;
 
 	pkg->location_href =
-		strdup ((const char *) sqlite3_column_text(pp_stmt, i++));
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
 
 	pkg->get_details = low_sqlite_package_get_details;
 
@@ -663,7 +659,7 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 {
 	LowPackageIterSqlite *iter_sqlite = (LowPackageIterSqlite *) iter;
 
-	if (sqlite3_step(iter_sqlite->pp_stmt) == SQLITE_DONE) {
+	if (sqlite3_step (iter_sqlite->pp_stmt) == SQLITE_DONE) {
 		sqlite3_finalize (iter_sqlite->pp_stmt);
 
 		if (iter_sqlite->filter_data_free_func) {
@@ -698,11 +694,10 @@ low_sqlite_package_get_details (LowPackage *pkg)
 	sqlite3_stmt *pp_stmt;
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) pkg->repo;
 
-	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
-			 NULL);
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt, NULL);
 	sqlite3_bind_int (pp_stmt, 1, *((int *) pkg->id));
 
-	sqlite3_step(pp_stmt);
+	sqlite3_step (pp_stmt);
 
 	details->summary =
 		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
@@ -765,7 +760,7 @@ low_sqlite_package_get_obsoletes (LowPackage *pkg)
 }
 
 char **
-low_sqlite_package_get_files(LowPackage *pkg)
+low_sqlite_package_get_files (LowPackage *pkg)
 {
 	const char *stmt = "SELECT dirname, filenames FROM filelist "
 			   "WHERE pkgKey = :pkgKey";
@@ -777,11 +772,10 @@ low_sqlite_package_get_files(LowPackage *pkg)
 	sqlite3_stmt *pp_stmt;
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) pkg->repo;
 
-	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt,
-			 NULL);
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt, NULL);
 	sqlite3_bind_int (pp_stmt, 1, *((int *) pkg->id));
 
-	while (sqlite3_step(pp_stmt) != SQLITE_DONE) {
+	while (sqlite3_step (pp_stmt) != SQLITE_DONE) {
 		int j;
 		const unsigned char *dir = sqlite3_column_text (pp_stmt, 0);
 		const unsigned char *names = sqlite3_column_text (pp_stmt, 1);

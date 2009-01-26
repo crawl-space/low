@@ -84,8 +84,8 @@ low_repo_rpmdb_shutdown (LowRepo *repo)
 	rpmdbClose (repo_rpmdb->db);
 	rpmFreeRpmrc ();
 
-	g_free(repo->id);
-	g_free(repo->name);
+	g_free (repo->id);
+	g_free (repo->name);
 
 	if (table) {
 		g_hash_table_destroy (table);
@@ -128,7 +128,8 @@ typedef struct _DepFilterData {
 } DepFilterData;
 
 static void
-dep_filter_data_free_fn (gpointer data) {
+dep_filter_data_free_fn (gpointer data)
+{
 	DepFilterData *filter_data = (DepFilterData *) data;
 	low_package_dependency_free (filter_data->dep);
 	free (filter_data);
@@ -361,7 +362,7 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	pkg->epoch = NULL;
 	if (epoch->type != RPM_NULL_TYPE) {
-		pkg->epoch = g_strdup_printf ("%lu", rpmtdGetNumber(epoch));
+		pkg->epoch = g_strdup_printf ("%lu", rpmtdGetNumber (epoch));
 	}
 
 	pkg->version = strdup (version->data);
@@ -411,7 +412,7 @@ LowPackageIter *
 low_package_iter_rpmdb_next (LowPackageIter *iter)
 {
 	LowPackageIterRpmdb *iter_rpmdb = (LowPackageIterRpmdb *) iter;
-	Header header = rpmdbNextIterator(iter_rpmdb->rpm_iter);
+	Header header = rpmdbNextIterator (iter_rpmdb->rpm_iter);
 
 	if (header == NULL) {
 		rpmdbFreeIterator (iter_rpmdb->rpm_iter);
@@ -428,7 +429,7 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 
 	/* Ignore the gpg-pubkeys */
 	while (iter->pkg == NULL && header) {
-		header = rpmdbNextIterator(iter_rpmdb->rpm_iter);
+		header = rpmdbNextIterator (iter_rpmdb->rpm_iter);
 		iter->pkg = low_package_rpmdb_new_from_header (header,
 							       iter->repo);
 	}
@@ -480,7 +481,6 @@ low_repo_rpmdb_get_deps (LowRepo *repo, LowPackage *pkg, uint32_t name_tag,
 	char **names;
 	int *flags;
 	char **versions;
-
 
 	iter = rpmdbInitIterator (repo_rpmdb->db, RPMTAG_PKGID, pkg->id, 16);
 	header = rpmdbNextIterator (iter);
