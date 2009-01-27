@@ -995,7 +995,7 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 				low_transaction_search_provides (trans->install,
 								 conflicts[i]->name);
 			if (conflicting) {
-				low_debug_pkg ("Conflicted by installing",
+				low_debug_pkg ("Conflicts with installing",
 					   conflicting);
 
 				low_debug_pkg ("Adding to unresolved",
@@ -1013,7 +1013,7 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 		}
 
 //		low_package_dependency_list_free (provides);
-		low_package_dependency_list_free (conflicts);
+//		low_package_dependency_list_free (conflicts);
 
 		if (status == LOW_TRANSACTION_UNRESOLVABLE) {
 			low_debug_pkg ("Adding to unresolved", pkg);
