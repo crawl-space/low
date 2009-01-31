@@ -544,6 +544,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 	char **files;
 	int i;
 	gboolean found;
+	gboolean pkgs_added = FALSE;
 
 	low_debug_pkg ("Checking requires for", pkg);
 
@@ -627,6 +628,9 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 							  requires[i]);
 		status = select_best_provides (trans, pkg, providing,
 					       !check_available);
+		if (status == LOW_TRANSACTION_PACKAGES_ADDED) {
+			pkgs_added = TRUE;
+		}
 		if (status == LOW_TRANSACTION_UNRESOLVABLE &&
 		    requires[i]->name[0] == '/') {
 			providing =
@@ -635,6 +639,9 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 
 			status = select_best_provides (trans, pkg, providing,
 						       !check_available);
+			if (status == LOW_TRANSACTION_PACKAGES_ADDED) {
+				pkgs_added = TRUE;
+			}
 			if (status != LOW_TRANSACTION_UNRESOLVABLE) {
 				continue;
 			}
@@ -652,6 +659,9 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 //	low_package_dependency_list_free (requires);
 	g_strfreev (files);
 
+	if (pkgs_added) {
+		return LOW_TRANSACTION_PACKAGES_ADDED;
+	}
 	return status;
 }
 

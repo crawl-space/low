@@ -1,0 +1,23 @@
+test: Update a single package which has a new dep, which in turn has a new dep.
+      The first package has multiple deps; but we must still notice a new
+      package was added.
+
+installed:
+    - package: { name: zsh, evr: 1.0.0-1, arch: i386 }
+
+available:
+    - package: { name: zsh, evr: 1.7.1-2, arch: i386 }
+      requires: [ shell-libs, zsh ]
+    - package: { name: zsh-libs, evr: 1.7.1-2, arch: i386 }
+      provides: [ shell-libs ]
+      requires: [ base-libs ]
+    - package: { name: generic-libs, evr: 1.0.0-1, arch: i386 }
+      provides: [ base-libs ]
+
+transaction:
+    - update: { name: zsh }
+
+results:
+    - update: { name: zsh, evr: 1.7.1-2, arch: i386 }
+    - install: { name: zsh-libs, evr: 1.7.1-2, arch: i386 }
+    - install: { name: generic-libs, evr: 1.0.0-1, arch: i386 }
