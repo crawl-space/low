@@ -1097,7 +1097,7 @@ select_package_for_install (LowPackageIter *iter)
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		char *new_evr = low_package_evr_as_string (iter->pkg);
 
-		if (rpmvercmp (new_evr, best_evr) > 0 &&
+		if (low_util_evr_cmp (new_evr, best_evr) > 0 &&
 		    iter->pkg->arch[0] != 'i') {
 			if (best) {
 				low_package_unref (best);

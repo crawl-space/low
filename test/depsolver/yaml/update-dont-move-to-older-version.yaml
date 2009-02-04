@@ -1,0 +1,13 @@
+test: Sanity check on evrcmp.
+
+installed:
+    - package: { name: kernel, evr: 0.3.6-1, arch: i386 }
+
+available:
+    - package: { name: kernel, evr: 0.3.6-1, arch: i386 }
+    - package: { name: kernel, evr: 0.3-9, arch: i386 }
+
+transaction:
+    - update: { name: kernel }
+
+results: []

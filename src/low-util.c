@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <rpm/rpmlib.h>
 #include <glib.h>
 
 #define MAXLINE 10000
@@ -106,6 +107,88 @@ low_util_parse_nevra (const char *nevra, char **name G_GNUC_UNUSED,
 	*name = g_strdup (nevra);
 
 	return TRUE;
+}
+
+static int
+low_util_evr_cmp_worker (const char *e1, const char *v1, const char *r1,
+			 const char *e2, const char *v2, const char *r2)
+{
+	int e_cmp;
+	int v_cmp;
+	int r_cmp;
+
+	const char *e1_fixed = e1;
+	const char *e2_fixed = e2;
+
+	if (e1 == NULL) {
+		e1_fixed = "0";
+	}
+
+	if (e2 == NULL) {
+		e2_fixed = "0";
+	}
+
+	e_cmp = rpmvercmp (e1, e2);
+	if (e_cmp != 0) {
+		return e_cmp;
+	}
+
+	v_cmp = rpmvercmp (v1, v2);
+	if (v_cmp != 0) {
+		return v_cmp;
+	}
+
+	r_cmp = rpmvercmp (r1, r2);
+	return r_cmp;
+}
+
+static void
+low_util_split_evr (const char *evr, char **e, char **v, char **r)
+{
+	const char *colon;
+	const char *dash;
+
+	colon = index (evr, ':');
+	if (colon != NULL) {
+		*e = g_strndup (evr, colon - evr);
+	} else {
+		*e = g_strdup_printf ("0");
+		colon = evr - 1;
+	}
+
+	dash = rindex (evr, '-');
+	if (dash != NULL) {
+		*r = g_strdup (dash + 1);
+	} else {
+		*r = g_strdup_printf ("0");
+		dash = evr + strlen(evr) + 1;
+	}
+
+	*v = g_strndup (colon + 1, dash - (colon + 1));
+}
+
+int
+low_util_evr_cmp (const char *evr1, const char *evr2)
+{
+	int ret;
+
+	char *e1, *v1, *r1;
+	char *e2, *v2, *r2;
+
+	low_util_split_evr (evr1, &e1, &v1, &r1);
+	low_util_split_evr (evr2, &e2, &v2, &r2);
+
+	ret = low_util_evr_cmp_worker (e1, v1, r1, e2, v2, r2);
+
+	free (e1);
+	free (v1);
+	free (r1);
+
+	free (e2);
+	free (v2);
+	free (r2);
+
+	return ret;
 }
 
 /* vim: set ts=8 sw=8 noet: */

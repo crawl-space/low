@@ -28,6 +28,7 @@
 #include "low-debug.h"
 #include "low-transaction.h"
 #include "low-repo-rpmdb.h"
+#include "low-util.h"
 
 /**
  * \page depsolver The Depedency Resolution Algorithm
@@ -267,7 +268,7 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		char *new_evr = low_package_evr_as_string (iter->pkg);
-		int cmp = rpmvercmp (new_evr, best_evr);
+		int cmp = low_util_evr_cmp (new_evr, best_evr);
 
 		/* XXX arch cmp here has to be better */
 		if ((cmp > 0 && arch_is_compatible (to_update, iter->pkg)) ||
@@ -289,7 +290,7 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		char *new_evr = low_package_evr_as_string (iter->pkg);
-		int cmp = rpmvercmp (new_evr, best_evr);
+		int cmp = low_util_evr_cmp (new_evr, best_evr);
 
 		/* XXX arch cmp here has to be better */
 		if ((cmp > 0 && arch_is_compatible (to_update, iter->pkg)) ||
@@ -323,7 +324,7 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 		if (!found) {
 			char *this_evr = low_package_evr_as_string(iter->pkg);
 
-			if (rpmvercmp (best_evr, this_evr) == 0) {
+			if (low_util_evr_cmp (best_evr, this_evr) == 0) {
 				found = TRUE;
 			}
 
@@ -391,7 +392,7 @@ find_updated (LowRepo *repo_rpmdb, LowPackage *updating)
 
 		/* XXX arch cmp here has to be better */
 		if (!found &&
-		    rpmvercmp (updating_evr, updated_evr) > 0 &&
+		    low_util_evr_cmp (updating_evr, updated_evr) > 0 &&
 		    (strcmp (iter->pkg->arch, updating->arch) == 0 ||
 		     strcmp (updating->arch, "noarch") == 0)) {
 			updated = iter->pkg;
@@ -484,7 +485,7 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 	/* XXX this is duplicated in main.c */
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		char *new_evr = low_package_evr_as_string (iter->pkg);
-		int cmp = rpmvercmp (new_evr, best_evr);
+		int cmp = low_util_evr_cmp (new_evr, best_evr);
 
 		if ((cmp > 0 && arch_is_compatible (pkg, iter->pkg)) ||
 		    (cmp == 0 &&
