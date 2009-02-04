@@ -258,16 +258,12 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 	char *best_evr = low_package_evr_as_string(to_update);
 	gboolean found;
 
-	LowPackageDependency *provides =
-		low_package_dependency_new (to_update->name,
-					    DEPENDENCY_SENSE_GT,
-					    best_evr);
 	LowPackageDependency *obsoletes =
 		low_package_dependency_new (to_update->name,
 					    DEPENDENCY_SENSE_EQ,
 					    best_evr);
 
-	iter = low_repo_set_search_provides (repos, provides);
+	iter = low_repo_set_list_by_name (repos, to_update->name);
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		char *new_evr = low_package_evr_as_string (iter->pkg);
@@ -288,8 +284,6 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 		}
 
 	}
-
-	low_package_dependency_free (provides);
 
 	iter = low_repo_set_search_obsoletes (repos, obsoletes);
 

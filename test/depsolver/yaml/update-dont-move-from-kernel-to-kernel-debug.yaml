@@ -1,0 +1,13 @@
+test: A kernel should not be updated to a kernel-debug package.
+
+installed:
+    - package: { name: kernel, evr: 0:0.3.0-1, arch: i386 }
+
+available:
+    - package: { name: kernel-debug, evr: 1.3.1-2, arch: i386 }
+      provides: [ kernel = 1.3.1-2 ]
+
+transaction:
+    - update: { name: kernel }
+
+results: []
