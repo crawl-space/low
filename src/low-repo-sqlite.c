@@ -37,6 +37,7 @@ typedef struct _LowRepoSqlite {
 	sqlite3 *primary_db;
 	sqlite3 *filelists_db;
 	GHashTable *table;
+	GHashTable *obsoletes;
 } LowRepoSqlite;
 
 /* XXX clean these up */
@@ -175,6 +176,7 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 	}
 
 	repo->table = NULL;
+	repo->obsoletes = NULL;
 
 	repo->super.id = g_strdup (id);
 	repo->super.name = g_strdup (name);
@@ -374,17 +376,117 @@ low_repo_sqlite_search_conflicts (LowRepo *repo,
 	return (LowPackageIter *) iter;
 }
 
+static LowPackageDependencySense
+low_package_dependency_sense_from_sqlite_flags (const unsigned char *flags)
+{
+	const char *sensestr = (const char *) flags;
+
+	if (sensestr == NULL) {
+		return DEPENDENCY_SENSE_NONE;
+	} else if (!strcmp ("EQ", sensestr)) {
+		return DEPENDENCY_SENSE_EQ;
+	} else if (!strcmp ("GT", sensestr)) {
+		return DEPENDENCY_SENSE_GT;
+	} else if (!strcmp ("GE", sensestr)) {
+		return DEPENDENCY_SENSE_GE;
+	} else if (!strcmp ("LT", sensestr)) {
+		return DEPENDENCY_SENSE_LT;
+	} else if (!strcmp ("LE", sensestr)) {
+		return DEPENDENCY_SENSE_LE;
+	} else {
+		/* XXX error here instead */
+		return DEPENDENCY_SENSE_NONE;
+	}
+}
+
+static char *
+build_evr (const unsigned char *epoch, const unsigned char *version,
+	   const unsigned char *release)
+{
+	char *evr;
+
+	if (epoch && version && release) {
+		evr = g_strdup_printf ("%s:%s-%s", epoch, version, release);
+	} else if (epoch && version) {
+		evr = g_strdup_printf ("%s:%s", epoch, version);
+	} else if (version && release) {
+		evr = g_strdup_printf ("%s-%s", version, release);
+	} else {
+		evr = g_strdup ((const char *) version);
+	}
+
+	return evr;
+}
+
+static void
+add_dep_to_hash (GHashTable *table, const char *dep_name, int pkg_id)
+{
+	GSList *deps = g_hash_table_lookup (table, dep_name);
+	deps = g_slist_prepend (deps, GINT_TO_POINTER (pkg_id));
+
+	g_hash_table_replace (table, g_strdup (dep_name), deps);
+}
+
+static void
+low_repo_sqlite_initialize_obsoletes (LowRepoSqlite *repo_sqlite)
+{
+	const char *stmt = "SELECT name, pkgKey from obsoletes";
+	sqlite3_stmt *pp_stmt;
+
+	repo_sqlite->obsoletes = g_hash_table_new (g_str_hash, g_str_equal);
+
+	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &pp_stmt, NULL);
+
+	while (sqlite3_step (pp_stmt) != SQLITE_DONE) {
+		const char *dep_name =
+			(const char *) sqlite3_column_text (pp_stmt, 0);
+
+		add_dep_to_hash (repo_sqlite->obsoletes, dep_name,
+				 sqlite3_column_int (pp_stmt, 1));
+	}
+
+	sqlite3_finalize (pp_stmt);
+}
+
 LowPackageIter *
 low_repo_sqlite_search_obsoletes (LowRepo *repo,
 				  const LowPackageDependency *obsoletes)
 {
-	const char *stmt = SELECT_FIELDS_FROM "packages p, obsoletes obs "
-			   "WHERE obs.pkgKey = p.pkgKey "
-			   "AND obs.name = :obsoletes";
+	char *stmt;
+	GSList *obs;
+	char *tmp;
 
 	DepFilterData *data = malloc (sizeof (DepFilterData));
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+	if (repo_sqlite->obsoletes == NULL) {
+		low_repo_sqlite_initialize_obsoletes (repo_sqlite);
+	}
+
+	obs = g_hash_table_lookup (repo_sqlite->obsoletes, obsoletes->name);
+	if (obs == NULL) {
+		/* Just an ID we don't find */
+		tmp = g_strdup ("-1);");
+	} else {
+		char *tmp2;
+		tmp = g_strdup_printf ("%d", GPOINTER_TO_INT (obs->data));
+		obs = obs->next;
+
+		while (obs != NULL) {
+			tmp2 = g_strdup_printf ("%s, %d", tmp,
+						GPOINTER_TO_INT (obs->data));
+			g_free (tmp);
+			tmp = tmp2;
+			obs = obs->next;
+		}
+
+		tmp2 = g_strdup_printf ("%s)", tmp);
+		g_free (tmp);
+		tmp = tmp2;
+	}
+	stmt = g_strdup_printf (SELECT_FIELDS_FROM "packages p "
+			   "WHERE p.pkgKey IN (%s", tmp);
+
 	iter->super.repo = repo;
 	iter->super.next_func = low_sqlite_package_iter_next;
 	iter->super.pkg = NULL;
@@ -400,8 +502,8 @@ low_repo_sqlite_search_obsoletes (LowRepo *repo,
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
 			 NULL);
-	sqlite3_bind_text (iter->pp_stmt, 1, obsoletes->name, -1,
-			   SQLITE_STATIC);
+	g_free (stmt);
+
 	return (LowPackageIter *) iter;
 }
 
@@ -501,48 +603,6 @@ low_repo_sqlite_search_details (LowRepo *repo, const char *querystr)
 	sqlite3_bind_text (iter->pp_stmt, 1, like_querystr, -1, free);
 
 	return (LowPackageIter *) iter;
-}
-
-static LowPackageDependencySense
-low_package_dependency_sense_from_sqlite_flags (const unsigned char *flags)
-{
-	const char *sensestr = (const char *) flags;
-
-	if (sensestr == NULL) {
-		return DEPENDENCY_SENSE_NONE;
-	} else if (!strcmp ("EQ", sensestr)) {
-		return DEPENDENCY_SENSE_EQ;
-	} else if (!strcmp ("GT", sensestr)) {
-		return DEPENDENCY_SENSE_GT;
-	} else if (!strcmp ("GE", sensestr)) {
-		return DEPENDENCY_SENSE_GE;
-	} else if (!strcmp ("LT", sensestr)) {
-		return DEPENDENCY_SENSE_LT;
-	} else if (!strcmp ("LE", sensestr)) {
-		return DEPENDENCY_SENSE_LE;
-	} else {
-		/* XXX error here instead */
-		return DEPENDENCY_SENSE_NONE;
-	}
-}
-
-static char *
-build_evr (const unsigned char *epoch, const unsigned char *version,
-	   const unsigned char *release)
-{
-	char *evr;
-
-	if (epoch && version && release) {
-		evr = g_strdup_printf ("%s:%s-%s", epoch, version, release);
-	} else if (epoch && version) {
-		evr = g_strdup_printf ("%s:%s", epoch, version);
-	} else if (version && release) {
-		evr = g_strdup_printf ("%s-%s", version, release);
-	} else {
-		evr = g_strdup ((const char *) version);
-	}
-
-	return evr;
 }
 
 static LowPackageDependency **
