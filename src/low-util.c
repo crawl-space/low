@@ -161,7 +161,7 @@ low_util_split_evr (const char *evr, char **e, char **v, char **r)
 		*r = g_strdup (dash + 1);
 	} else {
 		*r = g_strdup_printf ("0");
-		dash = evr + strlen(evr) + 1;
+		dash = evr + strlen (evr) + 1;
 	}
 
 	*v = g_strndup (colon + 1, dash - (colon + 1));
