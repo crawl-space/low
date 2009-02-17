@@ -324,6 +324,7 @@ print_updates (LowRepo *repo_rpmdb, LowConfig *config)
 
 	iter = low_repo_rpmdb_list_all (repo_rpmdb);
 
+	printf ("Computing updates\n");
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		low_transaction_add_update (trans, iter->pkg);
 	}
@@ -1150,6 +1151,7 @@ command_install (int argc, const char *argv[])
 		low_package_dependency_free (provides);
 	}
 
+	printf ("Resolving transaction\n");
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		print_transaction_problems (trans);
 		res = EXIT_FAILURE;
@@ -1201,11 +1203,13 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 	if (argc == 0) {
 		iter = low_repo_rpmdb_list_all (repo_rpmdb);
 
+		printf ("Computing updates\n");
 		while (iter = low_package_iter_next (iter), iter != NULL) {
 			low_transaction_add_update (trans, iter->pkg);
 		}
 	}
 
+	printf ("Resolving transaction\n");
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		print_transaction_problems (trans);
 		res = EXIT_FAILURE;
@@ -1262,6 +1266,7 @@ command_remove (int argc, const char *argv[])
 		low_package_dependency_free (provides);
 	}
 
+	printf ("Resolving transaction\n");
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		print_transaction_problems (trans);
 		res = EXIT_FAILURE;
