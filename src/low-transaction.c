@@ -448,8 +448,24 @@ low_transaction_dep_in_deplist (const LowPackageDependency *needle,
 	for (i = 0; haystack[i] != NULL; i++) {
 		if (!strcmp (needle->name, haystack[i]->name) &&
 		    needle->sense == haystack[i]->sense &&
-		    needle->evr != NULL && haystack[i]->evr != NULL &&
-		    !strcmp (needle->evr, haystack[i]->evr)) {
+		    ((needle->evr == NULL && haystack[i]->evr == NULL) ||
+		    (needle->evr != NULL && haystack[i]->evr != NULL &&
+		    low_util_evr_cmp (needle->evr, haystack[i]->evr) == 0))) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+static gboolean
+low_transaction_dep_satisfied_by_deplist (const LowPackageDependency *needle,
+					  LowPackageDependency **haystack)
+{
+	int i;
+
+	for (i = 0; haystack[i] != NULL; i++) {
+		if (low_package_dependency_satisfies (needle, haystack[i])) {
 			return TRUE;
 		}
 	}
@@ -550,7 +566,8 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 	for (i = 0; requires[i] != NULL; i++) {
 		LowPackageIter *providing;
 
-		if (low_transaction_dep_in_deplist (requires[i], provides)
+		if (low_transaction_dep_satisfied_by_deplist (requires[i],
+							      provides)
 		    || low_transaction_dep_in_filelist (requires[i]->name,
 						        files)) {
 		    low_debug ("Self provided requires %s, skipping",
@@ -698,6 +715,7 @@ low_transaction_check_removal (LowTransaction *trans,
 
 		low_debug ("Checking provides %s", provides[i]->name);
 
+		/* XXX only check the specific requires here */
 		iter = low_repo_rpmdb_search_requires (trans->rpmdb,
 						       provides[i]);
 		while (iter = low_package_iter_next (iter), iter != NULL) {
