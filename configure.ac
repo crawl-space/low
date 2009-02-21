@@ -23,6 +23,9 @@ AC_INIT(low, 0.0.1)
 AC_CONFIG_SRCDIR(src)
 AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(config.h)
+AC_CONFIG_MACRO_DIR(m4)
+
+AC_PROG_LIBTOOL
 
 AC_PROG_CC
 AC_PROG_INSTALL
@@ -198,6 +201,7 @@ if test x$enable_gprof = xyes; then
 fi
 AM_CONDITIONAL(LOW_BUILD_GPROF, test x$enable_gprof = xyes)
 
+SHAVE_INIT(shave)
 
 dnl ---------------------------------------------------------------------------
 dnl - Makefiles, etc.
@@ -211,6 +215,8 @@ src/Makefile
 test/Makefile
 test/unit/Makefile
 test/depsolver/Makefile
+shave/shave
+shave/shave-libtool
 ])
 
 dnl ---------------------------------------------------------------------------
