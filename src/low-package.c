@@ -242,11 +242,13 @@ low_package_dependency_satisfies (const LowPackageDependency *needs,
 	int res;
 
 	/* The tag type doesn't matter for comparison, so just use a default */
-	rpmds rpm_needs = rpmdsSingle (RPMTAG_PROVIDES, needs->name, needs->evr,
+	rpmds rpm_needs = rpmdsSingle (RPMTAG_PROVIDES, needs->name,
+				       needs->evr ? needs->evr : "",
 				       low_dependency_sense_to_rpm
 				       (needs->sense));
 	rpmds rpm_satisfies =
-		rpmdsSingle (RPMTAG_PROVIDES, satisfies->name, satisfies->evr,
+		rpmdsSingle (RPMTAG_PROVIDES, satisfies->name,
+			     satisfies->evr ? satisfies->evr : "",
 			     low_dependency_sense_to_rpm (satisfies->sense));
 
 	res = rpmdsCompare (rpm_needs, rpm_satisfies);
