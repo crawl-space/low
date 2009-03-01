@@ -315,7 +315,7 @@ static void
 compute_updates (LowTransaction *trans, LowRepo *repo_rpmdb)
 {
 	int i = 0;
-	char spinner[] = {'-', '\\', '|', '/'};
+	char spinner[] = { '-', '\\', '|', '/' };
 	LowPackageIter *iter = low_repo_rpmdb_list_all (repo_rpmdb);
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
@@ -323,7 +323,7 @@ compute_updates (LowTransaction *trans, LowRepo *repo_rpmdb)
 
 		if (i % 100 == 0) {
 			printf ("\rComputing updates... %c",
-				spinner[i/100 % 4]);
+				spinner[i / 100 % 4]);
 			fflush (stdout);
 		}
 		i++;
