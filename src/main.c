@@ -311,23 +311,38 @@ print_transaction_part (GHashTable *hash)
 	}
 }
 
+static void
+compute_updates (LowTransaction *trans, LowRepo *repo_rpmdb)
+{
+	int i = 0;
+	char spinner[] = {'-', '\\', '|', '/'};
+	LowPackageIter *iter = low_repo_rpmdb_list_all (repo_rpmdb);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		low_transaction_add_update (trans, iter->pkg);
+
+		if (i % 100 == 0) {
+			printf ("\rComputing updates... %c",
+				spinner[i/100 % 4]);
+			fflush (stdout);
+		}
+		i++;
+	}
+	printf ("\rComputing updates... Done\n");
+	putchar ('\n');
+}
+
 static int
 print_updates (LowRepo *repo_rpmdb, LowConfig *config)
 {
 	LowRepoSet *repos;
-	LowPackageIter *iter;
 	LowTransaction *trans;
 
 	repos = low_repo_set_initialize_from_config (config, TRUE);
 
 	trans = low_transaction_new (repo_rpmdb, repos);
 
-	iter = low_repo_rpmdb_list_all (repo_rpmdb);
-
-	printf ("Computing updates\n");
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		low_transaction_add_update (trans, iter->pkg);
-	}
+	compute_updates (trans, repo_rpmdb);
 
 	print_transaction_part (trans->update);
 
@@ -1201,12 +1216,7 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 	}
 
 	if (argc == 0) {
-		iter = low_repo_rpmdb_list_all (repo_rpmdb);
-
-		printf ("Computing updates\n");
-		while (iter = low_package_iter_next (iter), iter != NULL) {
-			low_transaction_add_update (trans, iter->pkg);
-		}
+		compute_updates (trans, repo_rpmdb);
 	}
 
 	printf ("Resolving transaction\n");
