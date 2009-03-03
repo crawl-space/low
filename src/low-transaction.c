@@ -349,6 +349,11 @@ add_update_worker (LowTransaction *trans, LowPackage *to_update,
 {
 	low_debug_update ("Update found", to_update, updating_to);
 
+	if (strcmp (updating_to->name, "kernel") == 0 ||
+	    strcmp (updating_to->name, "kernel-devel") == 0) {
+		return low_transaction_add_install (trans, updating_to);
+	}
+
 	if (low_transaction_add_to_hash (trans->update, updating_to,
 					 to_update)) {
 		low_transaction_add_to_hash (trans->updated, to_update,
