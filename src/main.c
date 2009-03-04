@@ -739,6 +739,12 @@ download_package (LowPackage *pkg, GHashTable *repo_mirrors)
 	char *full_url = create_file_url (baseurl, pkg->location_href);
 	char *local_file = create_package_filepath (pkg);
 	const char *filename = get_file_basename (pkg->location_href);
+	char *dirname = g_strdup_printf ("%s/%s/packages", LOCAL_CACHE,
+					pkg->repo->id);
+
+	if (!g_file_test(dirname, G_FILE_TEST_EXISTS)) {
+		mkdir (dirname, 0755);
+	}
 
 	low_download_if_missing (full_url, local_file, filename);
 	free (full_url);
