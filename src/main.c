@@ -329,7 +329,20 @@ compute_updates (LowTransaction *trans, LowRepo *repo_rpmdb)
 		i++;
 	}
 	printf ("\rComputing updates... Done\n");
-	putchar ('\n');
+}
+
+static void
+transaction_callback (int progress, gpointer data)
+{
+	int counter = (*((int *) data))++;
+	char spinner[] = { '-', '\\', '|', '/' };
+
+	if (progress == -1) {
+		printf ("\rResolving transaction... Done\n");
+	} else {
+		printf ("\rResolving Transaction... %c", spinner[counter % 4]);
+		fflush (stdout);
+	}
 }
 
 static int
@@ -337,10 +350,11 @@ print_updates (LowRepo *repo_rpmdb, LowConfig *config)
 {
 	LowRepoSet *repos;
 	LowTransaction *trans;
+	int counter = 0;
 
 	repos = low_repo_set_initialize_from_config (config, TRUE);
 
-	trans = low_transaction_new (repo_rpmdb, repos);
+	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback, &counter);
 
 	compute_updates (trans, repo_rpmdb);
 
@@ -1150,13 +1164,14 @@ command_install (int argc, const char *argv[])
 	LowTransaction *trans;
 	int i;
 	int res;
+	int counter = 0;
 
 	repo_rpmdb = low_repo_rpmdb_initialize ();
 
 	config = low_config_initialize (repo_rpmdb);
 	repos = low_repo_set_initialize_from_config (config, TRUE);
 
-	trans = low_transaction_new (repo_rpmdb, repos);
+	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback, &counter);
 
 	for (i = 0; i < argc; i++) {
 		LowPackage *pkg;
@@ -1172,7 +1187,6 @@ command_install (int argc, const char *argv[])
 		low_package_dependency_free (provides);
 	}
 
-	printf ("Resolving transaction\n");
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		print_transaction_problems (trans);
 		res = EXIT_FAILURE;
@@ -1199,13 +1213,14 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 	LowTransaction *trans;
 	int i;
 	int res;
+	int counter = 0;
 
 	repo_rpmdb = low_repo_rpmdb_initialize ();
 
 	config = low_config_initialize (repo_rpmdb);
 	repos = low_repo_set_initialize_from_config (config, TRUE);
 
-	trans = low_transaction_new (repo_rpmdb, repos);
+	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback, &counter);
 
 	for (i = 0; i < argc; i++) {
 		LowPackageDependency *provides =
@@ -1225,7 +1240,6 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 		compute_updates (trans, repo_rpmdb);
 	}
 
-	printf ("Resolving transaction\n");
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		print_transaction_problems (trans);
 		res = EXIT_FAILURE;
@@ -1252,13 +1266,14 @@ command_remove (int argc, const char *argv[])
 	LowTransaction *trans;
 	int i;
 	int res;
+	int counter = 0;
 
 	repo_rpmdb = low_repo_rpmdb_initialize ();
 
 	config = low_config_initialize (repo_rpmdb);
 	repos = low_repo_set_initialize_from_config (config, TRUE);
 
-	trans = low_transaction_new (repo_rpmdb, repos);
+	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback, &counter);
 
 	for (i = 0; i < argc; i++) {
 		LowPackageDependency *provides =
@@ -1282,7 +1297,6 @@ command_remove (int argc, const char *argv[])
 		low_package_dependency_free (provides);
 	}
 
-	printf ("Resolving transaction\n");
 	if (low_transaction_resolve (trans) != LOW_TRANSACTION_OK) {
 		print_transaction_problems (trans);
 		res = EXIT_FAILURE;

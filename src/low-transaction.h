@@ -31,6 +31,8 @@ typedef enum _LowTransactionResult {
 	LOW_TRANSACTION_ERROR
 } LowTransactionResult;
 
+typedef void (*LowTransactionProgressCallbackFn) (int progress, gpointer data);
+
 typedef struct _LowTransaction {
 	LowRepo *rpmdb;
 	LowRepoSet *repos;
@@ -42,6 +44,9 @@ typedef struct _LowTransaction {
 
 	/* Should this be on the struct or returned? */
 	GHashTable *unresolved;
+
+	LowTransactionProgressCallbackFn callback;
+	gpointer callback_data;
 } LowTransaction;
 
 typedef struct _LowTransactionMember {
@@ -52,8 +57,9 @@ typedef struct _LowTransactionMember {
 	LowPackage *related_pkg;
 } LowTransactionMember;
 
-LowTransaction *	low_transaction_new 	(LowRepo *rpmdb,
-						 LowRepoSet *repos);
+LowTransaction *low_transaction_new (LowRepo *rpmdb,LowRepoSet *repos,
+				     LowTransactionProgressCallbackFn callback,
+				     gpointer callback_data);
 void			low_transaction_free 	(LowTransaction *trans);
 
 //low_transaction_find_updates (LowTransaction *trans);

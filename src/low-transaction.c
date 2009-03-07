@@ -64,11 +64,17 @@ low_transaction_member_free (LowTransactionMember *member)
 }
 
 LowTransaction *
-low_transaction_new (LowRepo *repo_rpmdb, LowRepoSet *repos) {
+low_transaction_new (LowRepo *repo_rpmdb, LowRepoSet *repos,
+		     LowTransactionProgressCallbackFn callback,
+		     gpointer callback_data)
+{
 	LowTransaction *trans = malloc (sizeof (LowTransaction));
 
 	trans->rpmdb = repo_rpmdb;
 	trans->repos = repos;
+
+	trans->callback = callback;
+	trans->callback_data = callback_data;
 
 	trans->install = g_hash_table_new_full (g_str_hash, g_str_equal,
 						g_free,
@@ -820,6 +826,14 @@ low_transaction_check_removal (LowTransaction *trans,
 	return status;
 }
 
+static void
+progress (LowTransaction *trans, gboolean is_done)
+{
+	if (trans->callback) {
+		(trans->callback) (is_done ? -1 : 0, trans->callback_data);
+	}
+}
+
 static LowTransactionStatus
 low_transaction_check_requires_for_added(LowTransactionStatus status,
 					 LowTransaction *trans,
@@ -832,6 +846,8 @@ low_transaction_check_requires_for_added(LowTransactionStatus status,
 		LowTransactionMember *member =
 			(LowTransactionMember *) cur->data;
 		LowPackage *pkg = member->pkg;
+
+		progress (trans, FALSE);
 
 		if (!member->resolved) {
 			req_status = low_transaction_check_package_requires (trans,
@@ -868,6 +884,8 @@ low_transaction_check_requires_for_removing(LowTransactionStatus status,
 		LowTransactionMember *member =
 			(LowTransactionMember *) cur->data;
 		LowPackage *pkg = member->pkg;
+
+		progress (trans, FALSE);
 
 		if (!member->resolved) {
 			LowTransactionStatus rm_status;
@@ -966,6 +984,8 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 		LowPackageDependency **conflicts =
 			low_package_get_conflicts (pkg);
 		int i;
+
+		progress (trans, FALSE);
 
 		low_debug_pkg ("Checking for installed pkgs that conflict",
 			       pkg);
@@ -1086,6 +1106,7 @@ low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 		}
 	}
 
+	progress (trans, TRUE);
 
 	gettimeofday (&end, NULL);
 	low_debug ("Transaction resolved in %.2fs",

@@ -568,7 +568,7 @@ run_test (GHashTable *test)
 
 	g_hash_table_insert (repo_set->repos, available->id, available);
 
-	trans = low_transaction_new (installed, repo_set);
+	trans = low_transaction_new (installed, repo_set, NULL, NULL);
 
 	list = g_hash_table_lookup (test, "transaction");
 
