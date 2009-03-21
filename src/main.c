@@ -760,7 +760,7 @@ download_package (LowPackage *pkg, GHashTable *repo_mirrors)
 		mkdir (dirname, 0755);
 	}
 
-	low_download_if_missing (full_url, local_file, filename);
+	low_download_if_missing (full_url, local_file, filename, pkg->size);
 	free (full_url);
 	free (local_file);
 }

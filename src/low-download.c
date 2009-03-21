@@ -133,11 +133,11 @@ low_download (const char *url, const char *file, const char *basename)
 
 int
 low_download_if_missing (const char *url, const char *file,
-			 const char *basename)
+			 const char *basename, off_t size)
 {
 	struct stat buf;
 
-	if (stat (file, &buf) < 0) {
+	if (stat (file, &buf) < 0 || buf.st_size != size) {
 		return low_download (url, file, basename);
 	}
 
