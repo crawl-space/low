@@ -358,7 +358,11 @@ print_updates (LowRepo *repo_rpmdb, LowConfig *config)
 
 	compute_updates (trans, repo_rpmdb);
 
-	print_transaction_part (trans->update);
+	if (g_hash_table_size (trans->update) != 0) {
+		print_transaction_part (trans->update);
+	} else {
+		printf ("No updates available.\n");
+	}
 
 	low_transaction_free (trans);
 	low_repo_set_free (repos);
