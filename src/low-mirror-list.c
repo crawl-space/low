@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "low-mirror-list.h"
+#include "low-metalink-parser.h"
 
 LowMirrorList *
 low_mirror_list_new (void)
@@ -35,7 +36,7 @@ low_mirror_list_new (void)
 static void
 free_g_list_node (gpointer data_ptr, gpointer ignored G_GNUC_UNUSED)
 {
-	g_string_free ((GString *) data_ptr, TRUE);
+	g_free ((char *) data_ptr);
 }
 
 void
@@ -70,8 +71,9 @@ low_mirror_list_new_from_txt_file (const char *mirrorlist_txt)
 			if (url->str[0] != '#') {
 				mirrors->mirrors =
 					g_list_append (mirrors->mirrors,
-						       (gpointer) url);
+						       url->str);
 			}
+			g_string_free (url, FALSE);
 			url = g_string_new ("");
 			continue;
 		}
@@ -86,31 +88,8 @@ LowMirrorList *
 low_mirror_list_new_from_metalink (const char *mirrorlist_txt)
 {
 	LowMirrorList *mirrors = low_mirror_list_new ();
-	gchar x;
-	GString *url;
 
-	FILE *file = fopen (mirrorlist_txt, "r");
-	if (file == 0) {
-		printf ("Error opening file: %s\n", mirrorlist_txt);
-		return NULL;
-	}
-
-	url = g_string_new ("");
-	while ((x = fgetc (file)) != EOF) {
-		if (x == '\n') {
-			/* g_print ("Final string: %s\n", url->str); */
-			/* Ignore lines commented out: */
-			if (url->str[0] != '#') {
-				mirrors->mirrors =
-					g_list_append (mirrors->mirrors,
-						       (gpointer) url);
-			}
-			url = g_string_new ("");
-			continue;
-		}
-		url = g_string_append_c (url, x);
-	}
-	fclose (file);
+	mirrors->mirrors = low_metalink_parse (mirrorlist_txt);
 
 	return mirrors;
 }
@@ -129,11 +108,11 @@ const gchar *
 low_mirror_list_lookup_random_mirror (LowMirrorList *mirrors)
 {
 	int choice;
-	const GString *random_url;
+	const char *random_url;
 
 	choice = random_int (g_list_length (mirrors->mirrors) - 1);
-	random_url = (GString *) g_list_nth_data (mirrors->mirrors, choice);
+	random_url = (char *) g_list_nth_data (mirrors->mirrors, choice);
 
-	return random_url->str;
+	return random_url;
 }
 /* vim: set ts=8 sw=8 noet: */

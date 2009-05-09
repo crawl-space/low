@@ -655,11 +655,11 @@ lookup_random_mirror (LowRepo *repo)
 
 	if (strstr(repo->mirror_list, "metalink")) {
 		char *mirrors_file =
-			g_strdup_printf ("/var/cache/yum/%s/mirrorlist.txt",
+			g_strdup_printf ("/var/cache/yum/%s/metalink.xml",
 					 repo->id);
 
 		all_mirrors =
-			low_mirror_list_new_from_txt_file (mirrors_file);
+			low_mirror_list_new_from_metalink (mirrors_file);
 
 		free (mirrors_file);
 

@@ -48,6 +48,8 @@ low_SOURCES = \
 	low-download.c \
 	low-mirror-list.h \
 	low-mirror-list.c \
+	low-metalink-parser.h \
+	low-metalink-parser.c \
 	main.c \
 	$(NULL)
 
