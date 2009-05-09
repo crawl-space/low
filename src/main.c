@@ -43,6 +43,7 @@
 #include "low-transaction.h"
 #include "low-util.h"
 #include "low-download.h"
+#include "low-mirror-list.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -645,22 +646,6 @@ create_package_filepath (LowPackage *pkg)
 	return local_file;
 }
 
-/* Generate a random integer between 0 and upper bound. (inclusive) */
-static int
-random_int (int upper)
-{
-	/* Not the most random thing in the world but do we care? */
-	unsigned int iseed = (unsigned int) time (NULL);
-	srand (iseed);
-	return rand () % (upper + 1);
-}
-
-static void
-free_g_list_node (gpointer data_ptr, gpointer ignored G_GNUC_UNUSED)
-{
-	g_string_free ((GString *) data_ptr, TRUE);
-}
-
 static char *
 lookup_random_mirror (char *repo_id)
 {
@@ -668,12 +653,10 @@ lookup_random_mirror (char *repo_id)
 		g_strdup_printf ("/var/cache/yum/%s/mirrorlist.txt",
 				 repo_id);
 
-	/* List of all mirrors as GString's. */
-	GList *all_mirrors = NULL;
+	LowMirrorList *all_mirrors = low_mirror_list_new ();
 	gchar x;
 	GString *url;
-	int choice;
-	GString *random_url;
+	const gchar *random_url;
 	gchar *return_val;
 
 	FILE *file = fopen (mirrors_file, "r");
@@ -688,8 +671,9 @@ lookup_random_mirror (char *repo_id)
 			/* g_print ("Final string: %s\n", url->str); */
 			/* Ignore lines commented out: */
 			if (url->str[0] != '#') {
-				all_mirrors = g_list_append (all_mirrors,
-							     (gpointer) url);
+				all_mirrors->mirrors =
+					g_list_append (all_mirrors->mirrors,
+						       (gpointer) url);
 			}
 			url = g_string_new ("");
 			continue;
@@ -697,13 +681,11 @@ lookup_random_mirror (char *repo_id)
 		url = g_string_append_c (url, x);
 	}
 	fclose (file);
-	choice = random_int (g_list_length (all_mirrors) - 1);
-	random_url = (GString *) g_list_nth_data (all_mirrors, choice);
-	/* Copy so we can free the entire list: */
-	return_val = g_strdup (random_url->str);
 
-	g_list_foreach (all_mirrors, free_g_list_node, NULL);
-	g_list_free (all_mirrors);
+	random_url = low_mirror_list_lookup_random_mirror (all_mirrors);
+	return_val = g_strdup (random_url);
+
+	low_mirror_list_free (all_mirrors);
 	free (mirrors_file);
 
 	return return_val;

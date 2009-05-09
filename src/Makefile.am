@@ -46,6 +46,8 @@ low_SOURCES = \
 	low-util.h \
 	low-download.h \
 	low-download.c \
+	low-mirror-list.h \
+	low-mirror-list.c \
 	main.c \
 	$(NULL)
 
