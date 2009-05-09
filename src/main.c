@@ -908,6 +908,7 @@ add_installs_to_transaction (GHashTable *hash, rpmts ts)
 		int res = rpmReadPackageFile (ts, fd, NULL, &hdr);
 		Fclose (fd);
 		if (res != RPMRC_OK) {
+			printf ("%d\n", res);
 			/* XXX do something better here */
 			printf ("Unable to read %s, skipping\n", filepath);
 		} else {
@@ -1086,15 +1087,19 @@ low_show_rpm_progress (const void *arg, const rpmCallbackType what,
 static rpmts
 low_transaction_to_rpmts (LowTransaction *trans, CallbackData *data)
 {
+	int flags;
 	rpmts ts = rpmtsCreate ();
 	rpmtsSetRootDir (ts, "/");
 	rpmtsSetNotifyCallback (ts, low_show_rpm_progress, data);
 
+	flags = rpmtsSetVSFlags (ts, _RPMVSF_NOSIGNATURES | _RPMVSF_NODIGESTS);
 	add_installs_to_transaction (trans->install, ts);
 	add_installs_to_transaction (trans->update, ts);
 
 	add_removes_to_transaction (trans->remove, ts);
 	add_removes_to_transaction (trans->updated, ts);
+
+	rpmtsSetVSFlags (ts, flags);
 
 	return ts;
 }
