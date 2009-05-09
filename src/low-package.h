@@ -37,6 +37,17 @@ typedef enum {
 } LowPackageDependencySense;
 
 /**
+ * Package digest types we understand
+ */
+typedef enum {
+	DIGEST_MD5,
+	DIGEST_SHA1,
+	DIGEST_SHA256,
+	DIGEST_UNKNOWN,
+	DIGEST_NONE
+} LowDigestType;
+
+/**
  * A struct representing a package dependency.
  *
  * For instance: "foobar >= 1.2-3"
@@ -80,6 +91,9 @@ struct _LowPackage {
 	size_t size;
 	char *location_href;
 	LowRepo *repo;
+
+	char *digest;
+	LowDigestType digest_type;
 
 	LowPackageDependency **requires;
 	LowPackageDependency **provides;

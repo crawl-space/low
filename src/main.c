@@ -164,6 +164,25 @@ print_files (char **files)
 	}
 }
 
+static const char*
+digest_type_to_string (LowDigestType type)
+{
+	switch (type)
+	{
+		case DIGEST_MD5:
+			return "MD5";
+		case DIGEST_SHA1:
+			return "SHA1";
+		case DIGEST_SHA256:
+			return "SHA256";
+		case DIGEST_NONE:
+			return "NONE";
+		case DIGEST_UNKNOWN:
+		default:
+			return "UNKNOWN";
+	}
+}
+
 static void
 print_package (LowPackage *pkg, gboolean show_all)
 {
@@ -193,6 +212,12 @@ print_package (LowPackage *pkg, gboolean show_all)
 	if (show_all) {
 		LowPackageDependency **deps;
 		char **files;
+
+		if (pkg->digest != NULL) {
+			printf ("Digest Type : %s\n",
+				digest_type_to_string (pkg->digest_type));
+			printf ("Digest      : %s\n", pkg->digest);
+		}
 
 		deps = low_package_get_provides (pkg);
 		print_dependencies ("Provides", deps);

@@ -34,7 +34,9 @@ low_package_free (LowPackage *pkg)
 	g_free (pkg->epoch);
 	g_free (pkg->arch);
 
+	/* available package specific */
 	g_free (pkg->location_href);
+	g_free (pkg->digest);
 
 	if (pkg->requires) {
 		low_package_dependency_list_free (pkg->requires);

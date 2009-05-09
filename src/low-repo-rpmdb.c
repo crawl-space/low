@@ -374,6 +374,8 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	/* installed packages can't be downloaded. */
 	pkg->location_href = NULL;
+	pkg->digest = NULL;
+	pkg->digest_type = DIGEST_NONE;
 
 	pkg->provides = NULL;
 	pkg->requires = NULL;
