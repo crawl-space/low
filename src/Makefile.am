@@ -20,6 +20,7 @@
 INCLUDES = \
 	$(GLIB_CFLAGS) \
 	$(SQLITE_CFLAGS) \
+	$(NSS_CFLAGS) \
 	$(NULL)
 
 bin_PROGRAMS = low
@@ -60,4 +61,5 @@ low_LDADD = \
 	$(CURL_LIBS) \
 	$(EXPAT_LIBS) \
 	$(BZIP2_LIBS) \
+	$(NSS_LIBS) \
 	$(NULL)

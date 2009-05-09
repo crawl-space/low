@@ -747,9 +747,10 @@ create_file_url (const char *baseurl, const char *relative_file)
 }
 
 /* Repo mirrors hash is optional. */
-static void
+static gboolean
 download_package (LowPackage *pkg, GHashTable *repo_mirrors)
 {
+	int res;
 	char *baseurl = select_mirror_url (pkg->repo, repo_mirrors);
 
 	char *full_url = create_file_url (baseurl, pkg->location_href);
@@ -762,9 +763,13 @@ download_package (LowPackage *pkg, GHashTable *repo_mirrors)
 		mkdir (dirname, 0755);
 	}
 
-	low_download_if_missing (full_url, local_file, filename, pkg->size);
+	res = low_download_if_missing (full_url, local_file, filename,
+				       pkg->digest, pkg->digest_type,
+				       pkg->size);
 	free (full_url);
 	free (local_file);
+
+	return res == 0;
 }
 
 static int
@@ -787,7 +792,9 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		found_pkg = 1;
-		download_package (pkg, NULL);
+		if (!download_package (pkg, NULL)) {
+			printf ("Unable to download %s\n", pkg->name);
+		}
 		low_package_unref (pkg);
 	}
 

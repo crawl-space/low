@@ -38,6 +38,7 @@ dnl - Library dependencies
 dnl ---------------------------------------------------------------------------
 GLIB_REQUIRED=2.16.3
 CURL_REQUIRED=7.18.1
+NSS_REQUIRED=3.12.3
 CHECK_REQUIRED=0.9.5
 
 dnl ---------------------------------------------------------------------------
@@ -45,6 +46,7 @@ dnl - Make above strings available for packaging files (e.g. rpm spec files)
 dnl ---------------------------------------------------------------------------
 AC_SUBST(GLIB_REQUIRED)
 AC_SUBST(CURL_REQUIRED)
+AC_SUBST(NSS_REQUIRED)
 AC_SUBST(CHECK_REQUIRED)
 
 dnl ---------------------------------------------------------------------------
@@ -110,6 +112,11 @@ AC_CHECK_HEADERS(bzlib.h, [AC_DEFINE(HAVE_BZLIB_H)],
 AC_CHECK_LIB(bz2, BZ2_bzReadOpen, [BZIP2_LIBS="-lbz2"],
 	     [AC_MSG_ERROR([Can't find bz2 library. Please install bzip2.])])
 AC_SUBST(BZIP2_LIBS)
+
+dnl Check for nss (required)
+PKG_CHECK_MODULES(NSS, nss >= $NSS_REQUIRED)
+AC_SUBST(NSS_CFLAGS)
+AC_SUBST(NSS_LIBS)
 
 dnl Check for check (unit testing library, optional)
 PKG_CHECK_MODULES(CHECK, check >= $CHECK_REQUIRED, HAVE_CHECK=yes,

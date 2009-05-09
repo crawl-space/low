@@ -23,6 +23,7 @@
 #define _LOW_PACKAGE_H_
 
 #include "low-repo.h"
+#include "low-util.h"
 
 /**
  * Package dependency types.
@@ -35,17 +36,6 @@ typedef enum {
 	DEPENDENCY_SENSE_GT, /**< > */
 	DEPENDENCY_SENSE_NONE /**< An unversioned dependency */
 } LowPackageDependencySense;
-
-/**
- * Package digest types we understand
- */
-typedef enum {
-	DIGEST_MD5,
-	DIGEST_SHA1,
-	DIGEST_SHA256,
-	DIGEST_UNKNOWN,
-	DIGEST_NONE
-} LowDigestType;
 
 /**
  * A struct representing a package dependency.

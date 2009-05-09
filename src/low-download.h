@@ -20,6 +20,7 @@
  *  02110-1301  USA
  */
 
+#include "low-util.h"
 
 #ifndef _LOW_DOWNLOAD_H_
 #define _LOW_DOWNLOAD_H_
@@ -31,6 +32,8 @@ int      low_download 		     (const char *url,
 int      low_download_if_missing     (const char *url,
 				      const char *file,
 				      const char *basename,
+				      const char *digest,
+				      LowDigestType digest_type,
 				      off_t size);
 int      low_download_show_progress  (void *clientp,
 				      double dltotal,

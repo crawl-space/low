@@ -24,6 +24,17 @@
 
 #include <glib.h>
 
+/**
+ * Package digest types we understand
+ */
+typedef enum {
+	DIGEST_MD5,
+	DIGEST_SHA1,
+	DIGEST_SHA256,
+	DIGEST_UNKNOWN,
+	DIGEST_NONE
+} LowDigestType;
+
 char ** low_util_word_wrap (const char *text, int width);
 
 gboolean low_util_parse_nevra (const char *nevra, char **name, char **epoch,
