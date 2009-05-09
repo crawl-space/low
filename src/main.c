@@ -653,37 +653,12 @@ lookup_random_mirror (char *repo_id)
 		g_strdup_printf ("/var/cache/yum/%s/mirrorlist.txt",
 				 repo_id);
 
-	LowMirrorList *all_mirrors = low_mirror_list_new ();
-	gchar x;
-	GString *url;
-	const gchar *random_url;
-	gchar *return_val;
+	LowMirrorList *all_mirrors =
+		low_mirror_list_new_from_txt_file (mirrors_file);
 
-	FILE *file = fopen (mirrors_file, "r");
-	if (file == 0) {
-		printf ("Error opening file: %s\n", mirrors_file);
-		return NULL;
-	}
-
-	url = g_string_new ("");
-	while ((x = fgetc (file)) != EOF) {
-		if (x == '\n') {
-			/* g_print ("Final string: %s\n", url->str); */
-			/* Ignore lines commented out: */
-			if (url->str[0] != '#') {
-				all_mirrors->mirrors =
-					g_list_append (all_mirrors->mirrors,
-						       (gpointer) url);
-			}
-			url = g_string_new ("");
-			continue;
-		}
-		url = g_string_append_c (url, x);
-	}
-	fclose (file);
-
-	random_url = low_mirror_list_lookup_random_mirror (all_mirrors);
-	return_val = g_strdup (random_url);
+	const gchar *random_url =
+		low_mirror_list_lookup_random_mirror (all_mirrors);
+	gchar *return_val = g_strdup (random_url);
 
 	low_mirror_list_free (all_mirrors);
 	free (mirrors_file);

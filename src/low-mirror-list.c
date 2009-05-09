@@ -19,6 +19,7 @@
  *  02110-1301  USA
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include "low-mirror-list.h"
 
@@ -46,6 +47,39 @@ low_mirror_list_free (LowMirrorList *mirrors)
 	g_list_free (mirrors->mirrors);
 
 	g_free (mirrors);
+}
+
+LowMirrorList *
+low_mirror_list_new_from_txt_file (const char *mirrorlist_txt)
+{
+	LowMirrorList *mirrors = low_mirror_list_new ();
+	gchar x;
+	GString *url;
+
+	FILE *file = fopen (mirrorlist_txt, "r");
+	if (file == 0) {
+		printf ("Error opening file: %s\n", mirrorlist_txt);
+		return NULL;
+	}
+
+	url = g_string_new ("");
+	while ((x = fgetc (file)) != EOF) {
+		if (x == '\n') {
+			/* g_print ("Final string: %s\n", url->str); */
+			/* Ignore lines commented out: */
+			if (url->str[0] != '#') {
+				mirrors->mirrors =
+					g_list_append (mirrors->mirrors,
+						       (gpointer) url);
+			}
+			url = g_string_new ("");
+			continue;
+		}
+		url = g_string_append_c (url, x);
+	}
+	fclose (file);
+
+	return mirrors;
 }
 
 /* Generate a random integer between 0 and upper bound. (inclusive) */
