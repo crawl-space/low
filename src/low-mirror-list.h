@@ -30,6 +30,7 @@ typedef struct _LowMirrorList {
 
 LowMirrorList *low_mirror_list_new (void);
 LowMirrorList *low_mirror_list_new_from_txt_file (const char *mirrorlist_txt);
+LowMirrorList *low_mirror_list_new_from_metalink (const char *metalink);
 void low_mirror_list_free (LowMirrorList *mirrors);
 
 const gchar *low_mirror_list_lookup_random_mirror (LowMirrorList *mirrors);

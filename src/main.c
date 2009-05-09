@@ -647,21 +647,37 @@ create_package_filepath (LowPackage *pkg)
 }
 
 static char *
-lookup_random_mirror (char *repo_id)
+lookup_random_mirror (LowRepo *repo)
 {
-	char *mirrors_file =
-		g_strdup_printf ("/var/cache/yum/%s/mirrorlist.txt",
-				 repo_id);
+	LowMirrorList *all_mirrors;
+	const gchar *random_url;
+	gchar *return_val;
 
-	LowMirrorList *all_mirrors =
-		low_mirror_list_new_from_txt_file (mirrors_file);
+	if (strstr(repo->mirror_list, "metalink")) {
+		char *mirrors_file =
+			g_strdup_printf ("/var/cache/yum/%s/mirrorlist.txt",
+					 repo->id);
 
-	const gchar *random_url =
-		low_mirror_list_lookup_random_mirror (all_mirrors);
-	gchar *return_val = g_strdup (random_url);
+		all_mirrors =
+			low_mirror_list_new_from_txt_file (mirrors_file);
+
+		free (mirrors_file);
+
+	} else {
+		char *mirrors_file =
+			g_strdup_printf ("/var/cache/yum/%s/mirrorlist.txt",
+					 repo->id);
+
+		all_mirrors =
+			low_mirror_list_new_from_txt_file (mirrors_file);
+
+		free (mirrors_file);
+	}
+
+	random_url = low_mirror_list_lookup_random_mirror (all_mirrors);
+	return_val = g_strdup (random_url);
 
 	low_mirror_list_free (all_mirrors);
-	free (mirrors_file);
 
 	return return_val;
 }
@@ -679,7 +695,7 @@ select_mirror_url (LowRepo *repo, GHashTable *repo_mirrors)
 
 		/* Have we already looked up a mirror for this repo? */
 		if (!baseurl) {
-			baseurl = lookup_random_mirror (repo->id);
+			baseurl = lookup_random_mirror (repo);
 			low_debug ("Using %s mirror: %s\n", repo->id, baseurl);
 			if (repo_mirrors) {
 				g_hash_table_replace (repo_mirrors,
@@ -1358,9 +1374,22 @@ refresh_repo (LowRepo *repo)
 	LowRepomd *new_repomd;
 
 	if (repo->mirror_list) {
-		char *display = g_strdup_printf ("%s - mirrorlist.txt",
-						 repo->id);
-		local_file = create_repodata_filename (repo, "mirrorlist.txt");
+		char *display;
+		/*
+		 * copy yum's hack to decide if the mirrorlist is plain text,
+		 * or fancy metalink.
+		 */
+		if (strstr (repo->mirror_list, "metalink")) {
+			display = g_strdup_printf ("%s - metalink", repo->id);
+			local_file = create_repodata_filename (repo,
+							       "metalink.xml");
+		} else {
+			display = g_strdup_printf ("%s - mirrorlist.txt",
+						   repo->id);
+			local_file =
+				create_repodata_filename (repo,
+							  "mirrorlist.txt");
+		}
 		low_download (repo->mirror_list, local_file, display);
 
 		g_free (display);
