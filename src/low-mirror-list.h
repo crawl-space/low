@@ -27,10 +27,10 @@
 typedef struct _LowMirror {
 	char *url;
 	int weight;
+	gboolean is_bad;
 } LowMirror;
 
 typedef struct _LowMirrorList {
-	int current_weight; /** The current weight group we're on */
 	GList *mirrors;
 } LowMirrorList;
 
@@ -39,7 +39,8 @@ LowMirrorList *low_mirror_list_new_from_txt_file (const char *mirrorlist_txt);
 LowMirrorList *low_mirror_list_new_from_metalink (const char *metalink);
 void low_mirror_list_free (LowMirrorList *mirrors);
 
-const gchar *low_mirror_list_lookup_random_mirror (LowMirrorList *mirrors);
+const char *low_mirror_list_lookup_random_mirror (LowMirrorList *mirrors);
+void low_mirror_list_mark_as_bad (LowMirrorList *mirrors, const char *url);
 
 #endif /* _LOW_MIRROR_LIST_H_ */
 

@@ -86,8 +86,8 @@ low_metalink_character_data (void *data, const XML_Char *s, int len)
 			mirror = malloc (sizeof (LowMirror));
 			/* drop the 'repodata/repomd.xml' */
 			mirror->url = strndup (s, len - 19);
-			/* XXX parse this */
 			mirror->weight = ctx->weight;
+			mirror->is_bad = FALSE;
 			ctx->mirrors = g_list_append (ctx->mirrors, mirror);
 			break;
 		default:

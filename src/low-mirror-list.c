@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "low-mirror-list.h"
 #include "low-metalink-parser.h"
 
@@ -28,7 +29,6 @@ LowMirrorList *
 low_mirror_list_new (void)
 {
 	LowMirrorList *mirrors = malloc (sizeof (LowMirrorList));
-	mirrors->current_weight = 100;
 	mirrors->mirrors = NULL;
 
 	return mirrors;
@@ -77,6 +77,7 @@ low_mirror_list_new_from_txt_file (const char *mirrorlist_txt)
 				mirror->url = url->str;
 				/* txt mirrors are unweighted */
 				mirror->weight = 100;
+				mirror->is_bad = FALSE;
 				mirrors->mirrors =
 					g_list_append (mirrors->mirrors,
 						       mirror);
@@ -112,9 +113,10 @@ random_int (int upper)
 	return rand () % upper;
 }
 
-const gchar *
+const char *
 low_mirror_list_lookup_random_mirror (LowMirrorList *mirrors)
 {
+	int weight = 0;
 	int number_at_current_weight = 0;
 	int count = 0;
 	int choice;
@@ -123,7 +125,15 @@ low_mirror_list_lookup_random_mirror (LowMirrorList *mirrors)
 
 	for (cur = mirrors->mirrors; cur != NULL; cur = cur->next) {
 		mirror = (LowMirror *) cur->data;
-		if (mirror->weight == mirrors->current_weight) {
+
+		if (mirror->is_bad) {
+			continue;
+		}
+
+		if (mirror->weight > weight) {
+			weight = mirror->weight;
+			number_at_current_weight = 1;
+		} else if (mirror->weight == weight) {
 			number_at_current_weight++;
 		}
 	}
@@ -131,7 +141,12 @@ low_mirror_list_lookup_random_mirror (LowMirrorList *mirrors)
 	choice = random_int (number_at_current_weight);
 	for (cur = mirrors->mirrors; cur != NULL; cur = cur->next) {
 		mirror = (LowMirror *) cur->data;
-		if (mirror->weight == mirrors->current_weight) {
+
+		if (mirror->is_bad) {
+			continue;
+		}
+
+		if (mirror->weight == weight) {
 			if (count == choice) {
 				break;
 			} else {
@@ -140,7 +155,26 @@ low_mirror_list_lookup_random_mirror (LowMirrorList *mirrors)
 		}
 	}
 
+	if (mirror == NULL) {
+		return NULL;
+	}
+
 	return mirror->url;
+}
+
+void
+low_mirror_list_mark_as_bad (LowMirrorList *mirrors, const char *url)
+{
+	GList *cur;
+	LowMirror *mirror;
+
+	for (cur = mirrors->mirrors; cur != NULL; cur = cur->next) {
+		mirror = (LowMirror *) cur->data;
+		if (!strcmp (mirror->url, url)) {
+			mirror->is_bad = TRUE;
+			break;
+		}
+	}
 }
 
 /* vim: set ts=8 sw=8 noet: */
