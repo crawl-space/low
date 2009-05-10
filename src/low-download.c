@@ -34,7 +34,7 @@
 #include <nss3/sechash.h>
 #include "low-download.h"
 
-int
+static int
 low_download_show_progress (void *clientp, double dltotal, double dlnow,
 			    double ultotal G_GNUC_UNUSED,
 			    double ulnow G_GNUC_UNUSED)

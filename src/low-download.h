@@ -35,11 +35,6 @@ int      low_download_if_missing     (const char *url,
 				      const char *digest,
 				      LowDigestType digest_type,
 				      off_t size);
-int      low_download_show_progress  (void *clientp,
-				      double dltotal,
-				      double dlnow,
-				      double ultotal,
-				      double ulnow);
 
 #endif /* _LOW_DOWNLOAD_H_ */
 
