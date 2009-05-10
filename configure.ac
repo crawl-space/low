@@ -208,7 +208,7 @@ if test x$enable_gprof = xyes; then
 fi
 AM_CONDITIONAL(LOW_BUILD_GPROF, test x$enable_gprof = xyes)
 
-SHAVE_INIT(shave)
+SHAVE_INIT(shave, enable)
 
 dnl ---------------------------------------------------------------------------
 dnl - Makefiles, etc.
