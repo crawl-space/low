@@ -24,8 +24,14 @@
 #ifndef _LOW_MIRROR_LIST_H_
 #define _LOW_MIRROR_LIST_H_
 
+typedef struct _LowMirror {
+	char *url;
+	int weight;
+} LowMirror;
+
 typedef struct _LowMirrorList {
-    GList *mirrors;
+	int current_weight; /** The current weight group we're on */
+	GList *mirrors;
 } LowMirrorList;
 
 LowMirrorList *low_mirror_list_new (void);

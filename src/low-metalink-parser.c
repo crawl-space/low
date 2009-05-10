@@ -29,6 +29,7 @@
 #include <glib.h>
 
 #include "low-metalink-parser.h"
+#include "low-mirror-list.h"
 
 enum {
 	METALINK_STATE_URL,
@@ -38,6 +39,7 @@ enum {
 struct metalink_context {
 	int state;
 	GList *mirrors;
+	int weight;
 };
 
 static void
@@ -55,7 +57,10 @@ low_metalink_start_element (void *data, const char *name, const char **atts)
 				    strcmp (atts[i + 1], "ftp") == 0) {
 					ctx->state = METALINK_STATE_URL;
 				}
+			} else if (strcmp (atts[i], "preference") == 0) {
+				ctx->weight = atol (atts[i + 1]);
 			}
+
 		}
 	}
 }
@@ -66,6 +71,7 @@ low_metalink_end_element (void *data, const char *name G_GNUC_UNUSED)
 	struct metalink_context *ctx = data;
 
 	ctx->state = METALINK_STATE_OTHER;
+	ctx->weight = 100;
 }
 
 static void
@@ -73,13 +79,16 @@ low_metalink_character_data (void *data, const XML_Char *s, int len)
 {
 	struct metalink_context *ctx = data;
 
-	char *url;
+	LowMirror *mirror;
 
 	switch (ctx->state) {
 		case METALINK_STATE_URL:
+			mirror = malloc (sizeof (LowMirror));
 			/* drop the 'repodata/repomd.xml' */
-			url = strndup (s, len - 19);
-			ctx->mirrors = g_list_append (ctx->mirrors, url);
+			mirror->url = strndup (s, len - 19);
+			/* XXX parse this */
+			mirror->weight = ctx->weight;
+			ctx->mirrors = g_list_append (ctx->mirrors, mirror);
 			break;
 		default:
 			break;
@@ -105,6 +114,7 @@ low_metalink_parse (const char *metalink)
 
 	ctx.mirrors = NULL;
 	ctx.state = METALINK_STATE_OTHER;
+	ctx.weight = 100;
 
 	parser = XML_ParserCreate (NULL);
 	XML_SetUserData (parser, &ctx);

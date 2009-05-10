@@ -28,6 +28,7 @@ LowMirrorList *
 low_mirror_list_new (void)
 {
 	LowMirrorList *mirrors = malloc (sizeof (LowMirrorList));
+	mirrors->current_weight = 100;
 	mirrors->mirrors = NULL;
 
 	return mirrors;
@@ -36,7 +37,10 @@ low_mirror_list_new (void)
 static void
 free_g_list_node (gpointer data_ptr, gpointer ignored G_GNUC_UNUSED)
 {
-	g_free ((char *) data_ptr);
+	LowMirror *mirror = (LowMirror *) data_ptr;
+
+	free (mirror->url);
+	free (mirror);
 }
 
 void
@@ -69,9 +73,13 @@ low_mirror_list_new_from_txt_file (const char *mirrorlist_txt)
 			/* g_print ("Final string: %s\n", url->str); */
 			/* Ignore lines commented out: */
 			if (url->str[0] != '#') {
+				LowMirror *mirror = malloc (sizeof (LowMirror));
+				mirror->url = url->str;
+				/* txt mirrors are unweighted */
+				mirror->weight = 100;
 				mirrors->mirrors =
 					g_list_append (mirrors->mirrors,
-						       url->str);
+						       mirror);
 			}
 			g_string_free (url, FALSE);
 			url = g_string_new ("");
@@ -94,25 +102,45 @@ low_mirror_list_new_from_metalink (const char *mirrorlist_txt)
 	return mirrors;
 }
 
-/* Generate a random integer between 0 and upper bound. (inclusive) */
+/* Generate a random integer between 0 and upper bound, including 0 */
 static int
 random_int (int upper)
 {
 	/* Not the most random thing in the world but do we care? */
 	unsigned int iseed = (unsigned int) time (NULL);
 	srand (iseed);
-	return rand () % (upper + 1);
+	return rand () % upper;
 }
 
 const gchar *
 low_mirror_list_lookup_random_mirror (LowMirrorList *mirrors)
 {
+	int number_at_current_weight = 0;
+	int count = 0;
 	int choice;
-	const char *random_url;
+	LowMirror *mirror = NULL;
+	GList *cur;
 
-	choice = random_int (g_list_length (mirrors->mirrors) - 1);
-	random_url = (char *) g_list_nth_data (mirrors->mirrors, choice);
+	for (cur = mirrors->mirrors; cur != NULL; cur = cur->next) {
+		mirror = (LowMirror *) cur->data;
+		if (mirror->weight == mirrors->current_weight) {
+			number_at_current_weight++;
+		}
+	}
 
-	return random_url;
+	choice = random_int (number_at_current_weight);
+	for (cur = mirrors->mirrors; cur != NULL; cur = cur->next) {
+		mirror = (LowMirror *) cur->data;
+		if (mirror->weight == mirrors->current_weight) {
+			if (count == choice) {
+				break;
+			} else {
+				count++;
+			}
+		}
+	}
+
+	return mirror->url;
 }
+
 /* vim: set ts=8 sw=8 noet: */
