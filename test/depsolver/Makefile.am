@@ -17,6 +17,8 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #  02110-1301  USA
 
+EXTRA_DIST = run-depsolver-tests.sh yaml
+
 INCLUDES = \
 	-I${top_builddir}/src/ \
 	-I${top_builddir}/test/unit/ \
