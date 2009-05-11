@@ -37,7 +37,7 @@ tablint:
 # Check for all spaces before characters
 leadingspacelint:
 	@! find \( -name \*.c -o -name '*.h' -o -name 'Makefile.am' \) \
-		| xargs grep -nP "^  *\w"
+		| xargs grep -nP "^  *\w\w*[^:]$$"
 
 # Check for trailing whitespace
 trailinglint:
