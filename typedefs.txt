@@ -1,6 +1,7 @@
 CallbackData
 
 LowConfig
+LowMirrorList
 LowPackage
 LowPackageDependency
 LowPackageDetails

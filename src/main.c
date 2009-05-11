@@ -164,11 +164,10 @@ print_files (char **files)
 	}
 }
 
-static const char*
+static const char *
 digest_type_to_string (LowDigestType type)
 {
-	switch (type)
-	{
+	switch (type) {
 		case DIGEST_MD5:
 			return "MD5";
 		case DIGEST_SHA1:
@@ -380,7 +379,8 @@ print_updates (LowRepo *repo_rpmdb, LowConfig *config)
 
 	repos = low_repo_set_initialize_from_config (config, TRUE);
 
-	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback, &counter);
+	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
+				     &counter);
 
 	compute_updates (trans, repo_rpmdb);
 
@@ -678,13 +678,12 @@ lookup_random_mirror (LowRepo *repo)
 	const gchar *random_url;
 	gchar *return_val;
 
-	if (strstr(repo->mirror_list, "metalink")) {
+	if (strstr (repo->mirror_list, "metalink")) {
 		char *mirrors_file =
 			g_strdup_printf ("/var/cache/yum/%s/metalink.xml",
 					 repo->id);
 
-		all_mirrors =
-			low_mirror_list_new_from_metalink (mirrors_file);
+		all_mirrors = low_mirror_list_new_from_metalink (mirrors_file);
 
 		free (mirrors_file);
 
@@ -693,8 +692,7 @@ lookup_random_mirror (LowRepo *repo)
 			g_strdup_printf ("/var/cache/yum/%s/mirrorlist.txt",
 					 repo->id);
 
-		all_mirrors =
-			low_mirror_list_new_from_txt_file (mirrors_file);
+		all_mirrors = low_mirror_list_new_from_txt_file (mirrors_file);
 
 		free (mirrors_file);
 	}
@@ -757,9 +755,9 @@ download_package (LowPackage *pkg, GHashTable *repo_mirrors)
 	char *local_file = create_package_filepath (pkg);
 	const char *filename = get_file_basename (pkg->location_href);
 	char *dirname = g_strdup_printf ("%s/%s/packages", LOCAL_CACHE,
-					pkg->repo->id);
+					 pkg->repo->id);
 
-	if (!g_file_test(dirname, G_FILE_TEST_EXISTS)) {
+	if (!g_file_test (dirname, G_FILE_TEST_EXISTS)) {
 		mkdir (dirname, 0755);
 	}
 
@@ -1185,7 +1183,8 @@ command_install (int argc, const char *argv[])
 	config = low_config_initialize (repo_rpmdb);
 	repos = low_repo_set_initialize_from_config (config, TRUE);
 
-	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback, &counter);
+	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
+				     &counter);
 
 	for (i = 0; i < argc; i++) {
 		LowPackage *pkg;
@@ -1234,7 +1233,8 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 	config = low_config_initialize (repo_rpmdb);
 	repos = low_repo_set_initialize_from_config (config, TRUE);
 
-	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback, &counter);
+	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
+				     &counter);
 
 	for (i = 0; i < argc; i++) {
 		LowPackageDependency *provides =
@@ -1287,7 +1287,8 @@ command_remove (int argc, const char *argv[])
 	config = low_config_initialize (repo_rpmdb);
 	repos = low_repo_set_initialize_from_config (config, TRUE);
 
-	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback, &counter);
+	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
+				     &counter);
 
 	for (i = 0; i < argc; i++) {
 		LowPackageDependency *provides =

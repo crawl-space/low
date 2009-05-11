@@ -147,18 +147,17 @@ compare_digest (const char *file, const char *expected,
 	int fd;
 	HASHContext *ctx;
 
-	NSS_NoDB_Init(NULL);
+	NSS_NoDB_Init (NULL);
 
-	switch (digest_type)
-	{
+	switch (digest_type) {
 		case DIGEST_MD5:
-			ctx = HASH_Create(HASH_AlgMD5);
+			ctx = HASH_Create (HASH_AlgMD5);
 			break;
 		case DIGEST_SHA1:
-			ctx = HASH_Create(HASH_AlgSHA1);
+			ctx = HASH_Create (HASH_AlgSHA1);
 			break;
 		case DIGEST_SHA256:
-			ctx = HASH_Create(HASH_AlgSHA256);
+			ctx = HASH_Create (HASH_AlgSHA256);
 			break;
 		case DIGEST_UNKNOWN:
 		case DIGEST_NONE:
@@ -172,7 +171,7 @@ compare_digest (const char *file, const char *expected,
 
 	while (1) {
 		unsigned char buf[BUF_SIZE];
-		int cnt = read(fd, &buf, BUF_SIZE);
+		int cnt = read (fd, &buf, BUF_SIZE);
 
 		if (cnt == 0) {
 			break;
@@ -184,15 +183,15 @@ compare_digest (const char *file, const char *expected,
 	close (fd);
 	HASH_End (ctx, result, &size, BUF_SIZE);
 
-	for (i = 0; i < strlen(expected); i += 2) {
+	for (i = 0; i < strlen (expected); i += 2) {
 		char tmp[2];
 		tmp[0] = expected[i];
 		tmp[1] = expected[i + 1];
 
-		expected_raw[i/2] = strtoul(tmp, NULL, 16);
+		expected_raw[i / 2] = strtoul (tmp, NULL, 16);
 	}
 
-	return strncmp((char *) result, expected_raw, size) == 0;
+	return strncmp ((char *) result, expected_raw, size) == 0;
 }
 
 int

@@ -97,7 +97,6 @@ low_metalink_character_data (void *data, const XML_Char *s, int len)
 
 #define XML_BUFFER_SIZE 4096
 
-
 /*
  * XXX this isn't very fault tolerant
  * XXX we should also store the preference weight
