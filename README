@@ -5,9 +5,11 @@ replacement for yum.
 
 == Requirements ==
 
-* The autotools
-* gcc
-* glib > 2.16.3
-* curl
-* rpm
-* associated -devel packages
+ * The autotools
+ * gcc
+ * glib > 2.16.3
+ * curl
+ * nss
+ * rpm
+ * sqlite
+ * associated -devel packages

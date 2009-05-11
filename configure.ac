@@ -235,8 +235,6 @@ echo "
                   ====================
 
         prefix:                         ${prefix}
-        compiler:                       ${CC}
-        cflags:                         ${CFLAGS}
         Building 'check' unit tests:    ${HAVE_CHECK}
         Building depsolver tests:       ${HAVE_YAML}
         GCC coverage profiling:         ${enable_gcov}

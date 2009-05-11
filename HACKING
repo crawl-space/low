@@ -13,6 +13,9 @@ function call, ie:
 
 	indent -linux -pcs -psl
 
+You can run 'make indent' to autoindent the code, but do ensure it looks good
+before committing.
+
 == Tests ==
 
 We have two levels of tests: smoke and unit.

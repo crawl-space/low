@@ -18,6 +18,9 @@
 #  02110-1301  USA
 
 SUBDIRS = doxygen src test
+EXTRA_DIST = HACKING low.spec
+
+.PHONY: doxygen
 
 doxygen:
 	$(MAKE) -C doxygen doxygen
@@ -60,6 +63,5 @@ todo:
 smoke-test:
 	@cd test && ./smoke-test.sh && cd ../
 
-.PHONY: doxygen
-
-EXTRA_DIST = HACKING
+rpm: dist
+	rpmbuild --clean -ta ${distdir}.tar.gz

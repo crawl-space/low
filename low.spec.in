@@ -5,17 +5,20 @@ Summary:        A yum-like package manager in C
 
 Group:          System Environment/Base
 License:        GPLv2+
-URL:            http://dangerouslyinc.com
+URL:            http://github.com/jbowes/low
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:  rpm-devel
+BuildRequires:  curl-devel
 BuildRequires:  glib2-devel
-BuildRequires:  sqlite-devel
+BuildRequires:  nss-devel
+BuildRequires:  rpm-devel
+
 
 %description
 Low is a yum-like package manager, implemented in C, and with the goal
 of being a drop-in replacement for yum.
+
 
 %prep
 %setup -q
@@ -28,7 +31,7 @@ make %{?_smp_mflags}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT INSTALL="install -p"
 
 
 %clean
@@ -39,7 +42,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %doc COPYING README HACKING TODO
 %{_bindir}/low
-
 
 
 %changelog
