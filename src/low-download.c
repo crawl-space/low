@@ -33,6 +33,7 @@
 #include <nss3/nss.h>
 #include <nss3/sechash.h>
 #include "low-download.h"
+#include "low-debug.h"
 
 static int
 low_download_show_progress (void *clientp, double dltotal, double dlnow,
@@ -77,6 +78,20 @@ low_download_show_progress (void *clientp, double dltotal, double dlnow,
 	printf ("%.1fGB/%.1fGB", tmp_now, tmp_total);
 	fflush (stdout);
 	return 0;
+}
+
+static char *
+create_file_url (const char *baseurl, const char *relative_file)
+{
+	char *full_url;
+
+	if (baseurl[strlen (baseurl) - 1] != '/') {
+		full_url = g_strdup_printf ("%s/%s", baseurl, relative_file);
+	} else {
+		full_url = g_strdup_printf ("%s%s", baseurl, relative_file);
+	}
+
+	return full_url;
 }
 
 int
@@ -128,6 +143,89 @@ low_download (const char *url, const char *file, const char *basename)
 		}
 	}
 	printf ("\n");
+
+	curl_easy_cleanup (curl);
+
+	return 0;
+}
+
+int
+low_download_from_mirror (LowMirrorList *mirrors, const char *relative_path,
+			  const char *file, const char *basename)
+{
+	CURL *curl;
+	char *url;
+	const char *baseurl;
+	char error[256];
+	FILE *fp;
+	CURLcode res;
+	long response;
+
+	curl = curl_easy_init ();
+	if (curl == NULL) {
+		return 1;
+	}
+
+	curl_easy_setopt (curl, CURLOPT_FOLLOWLOCATION, 1);
+	curl_easy_setopt (curl, CURLOPT_ERRORBUFFER, error);
+	curl_easy_setopt (curl, CURLOPT_NOPROGRESS, 0);
+	curl_easy_setopt (curl, CURLOPT_PROGRESSFUNCTION,
+			  low_download_show_progress);
+	curl_easy_setopt (curl, CURLOPT_PROGRESSDATA, basename);
+
+	fp = fopen (file, "w");
+	if (fp == NULL) {
+		fprintf (stderr, "failed to open %s for writing\n", file);
+		return -1;
+	}
+
+	while (1) {
+		fseek (fp, 0, SEEK_SET);
+
+		baseurl = low_mirror_list_lookup_random_mirror (mirrors);
+		url = create_file_url (baseurl, relative_path);
+
+		curl_easy_setopt (curl, CURLOPT_WRITEDATA, fp);
+		curl_easy_setopt (curl, CURLOPT_URL, url);
+
+		res = curl_easy_perform (curl);
+		if (res != CURLE_OK) {
+			low_debug ("curl error: %s for url %s. marking as bad",
+				   error, baseurl);
+
+			low_mirror_list_mark_as_bad (mirrors, baseurl);
+			free(url);
+			continue;
+		}
+
+		res = curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE,
+					 &response);
+		if (res != CURLE_OK) {
+			low_debug ("curl error: %s for url %s. marking as bad",
+				   error, baseurl);
+
+			low_mirror_list_mark_as_bad (mirrors, baseurl);
+			free(url);
+			continue;
+		}
+
+		if (response != 200 &&
+		    !(response == 226 && strncmp ("ftp", baseurl, 3) == 0)) {
+			low_debug ("error: %ld for url %s. marking as bad",
+				   response, baseurl);
+
+			low_mirror_list_mark_as_bad (mirrors, baseurl);
+			free(url);
+			continue;
+		}
+
+		free (url);
+		break;
+	}
+
+	printf ("\n");
+
+	fclose (fp);
 
 	curl_easy_cleanup (curl);
 
@@ -195,15 +293,17 @@ compare_digest (const char *file, const char *expected,
 }
 
 int
-low_download_if_missing (const char *url, const char *file,
-			 const char *basename, const char *digest,
-			 LowDigestType digest_type, off_t size)
+low_download_if_missing (LowMirrorList *mirrors, const char *relative_path,
+			 const char *file, const char *basename,
+			 const char *digest, LowDigestType digest_type,
+			 off_t size)
 {
 	struct stat buf;
 	int res;
 
 	if (stat (file, &buf) < 0 || buf.st_size != size) {
-		res = low_download (url, file, basename);
+		res = low_download_from_mirror (mirrors, relative_path, file,
+						basename);
 		if (res != 0) {
 			unlink (file);
 			return res;

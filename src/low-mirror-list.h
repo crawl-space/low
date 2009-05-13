@@ -35,6 +35,7 @@ typedef struct _LowMirrorList {
 } LowMirrorList;
 
 LowMirrorList *low_mirror_list_new (void);
+LowMirrorList *low_mirror_list_new_from_baseurl (const char *baseurl);
 LowMirrorList *low_mirror_list_new_from_txt_file (const char *mirrorlist_txt);
 LowMirrorList *low_mirror_list_new_from_metalink (const char *metalink);
 void low_mirror_list_free (LowMirrorList *mirrors);

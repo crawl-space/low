@@ -55,6 +55,20 @@ low_mirror_list_free (LowMirrorList *mirrors)
 }
 
 LowMirrorList *
+low_mirror_list_new_from_baseurl (const char *baseurl)
+{
+	LowMirrorList *mirrors = low_mirror_list_new ();
+
+	LowMirror *mirror = malloc (sizeof (LowMirror));
+	mirror->url = strdup (baseurl);
+	mirror->weight = 100;
+	mirror->is_bad = FALSE;
+	mirrors->mirrors = g_list_append (mirrors->mirrors, mirror);
+
+	return mirrors;
+}
+
+LowMirrorList *
 low_mirror_list_new_from_txt_file (const char *mirrorlist_txt)
 {
 	LowMirrorList *mirrors = low_mirror_list_new ();

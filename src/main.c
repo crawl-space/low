@@ -671,87 +671,12 @@ create_package_filepath (LowPackage *pkg)
 	return local_file;
 }
 
-static char *
-lookup_random_mirror (LowRepo *repo)
-{
-	LowMirrorList *all_mirrors;
-	const gchar *random_url;
-	gchar *return_val;
-
-	if (strstr (repo->mirror_list, "metalink")) {
-		char *mirrors_file =
-			g_strdup_printf ("/var/cache/yum/%s/metalink.xml",
-					 repo->id);
-
-		all_mirrors = low_mirror_list_new_from_metalink (mirrors_file);
-
-		free (mirrors_file);
-
-	} else {
-		char *mirrors_file =
-			g_strdup_printf ("/var/cache/yum/%s/mirrorlist.txt",
-					 repo->id);
-
-		all_mirrors = low_mirror_list_new_from_txt_file (mirrors_file);
-
-		free (mirrors_file);
-	}
-
-	random_url = low_mirror_list_lookup_random_mirror (all_mirrors);
-	return_val = g_strdup (random_url);
-
-	low_mirror_list_free (all_mirrors);
-
-	return return_val;
-}
-
-static char *
-select_mirror_url (LowRepo *repo, GHashTable *repo_mirrors)
-{
-	char *baseurl = repo->baseurl;
-	/* baseurl will be NULL if repo is configured to use a mirror list. */
-	if (!baseurl) {
-		if (repo_mirrors) {
-			baseurl = (char *) g_hash_table_lookup (repo_mirrors,
-								repo->id);
-		}
-
-		/* Have we already looked up a mirror for this repo? */
-		if (!baseurl) {
-			baseurl = lookup_random_mirror (repo);
-			low_debug ("Using %s mirror: %s\n", repo->id, baseurl);
-			if (repo_mirrors) {
-				g_hash_table_replace (repo_mirrors,
-						      repo->id, baseurl);
-			}
-		}
-	}
-
-	return baseurl;
-}
-
-static char *
-create_file_url (const char *baseurl, const char *relative_file)
-{
-	char *full_url;
-
-	if (baseurl[strlen (baseurl) - 1] != '/') {
-		full_url = g_strdup_printf ("%s/%s", baseurl, relative_file);
-	} else {
-		full_url = g_strdup_printf ("%s%s", baseurl, relative_file);
-	}
-
-	return full_url;
-}
-
-/* Repo mirrors hash is optional. */
 static gboolean
-download_package (LowPackage *pkg, GHashTable *repo_mirrors)
+download_package (LowPackage *pkg)
 {
 	int res;
-	char *baseurl = select_mirror_url (pkg->repo, repo_mirrors);
+	LowMirrorList *mirrors = low_repo_sqlite_get_mirror_list (pkg->repo);
 
-	char *full_url = create_file_url (baseurl, pkg->location_href);
 	char *local_file = create_package_filepath (pkg);
 	const char *filename = get_file_basename (pkg->location_href);
 	char *dirname = g_strdup_printf ("%s/%s/packages", LOCAL_CACHE,
@@ -761,10 +686,9 @@ download_package (LowPackage *pkg, GHashTable *repo_mirrors)
 		mkdir (dirname, 0755);
 	}
 
-	res = low_download_if_missing (full_url, local_file, filename,
-				       pkg->digest, pkg->digest_type,
+	res = low_download_if_missing (mirrors, pkg->location_href, local_file,
+				       filename, pkg->digest, pkg->digest_type,
 				       pkg->size);
-	free (full_url);
 	free (local_file);
 
 	return res == 0;
@@ -790,7 +714,7 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
 		found_pkg = 1;
-		if (!download_package (pkg, NULL)) {
+		if (!download_package (pkg)) {
 			printf ("Unable to download %s\n", pkg->name);
 		}
 		low_package_unref (pkg);
@@ -880,14 +804,14 @@ download_required_packages (LowTransaction *trans)
 	list = g_hash_table_get_values (trans->install);
 	while (list != NULL) {
 		LowTransactionMember *member = list->data;
-		download_package (member->pkg, repo_mirrors);
+		download_package (member->pkg);
 		list = list->next;
 	}
 
 	list = g_hash_table_get_values (trans->update);
 	while (list != NULL) {
 		LowTransactionMember *member = list->data;
-		download_package (member->pkg, repo_mirrors);
+		download_package (member->pkg);
 		list = list->next;
 	}
 }
@@ -1331,10 +1255,9 @@ command_remove (int argc, const char *argv[])
 static char *
 download_repodata_file (LowRepo *repo, const char *relative_name)
 {
-	char *baseurl = select_mirror_url (repo, NULL);
+	LowMirrorList *mirrors = low_repo_sqlite_get_mirror_list (repo);
 
 	const char *basename = get_file_basename (relative_name);
-	char *full_url = create_file_url (baseurl, relative_name);
 	char *local_file = g_strdup_printf ("%s/%s/%s.tmp",
 					    LOCAL_CACHE, repo->id,
 					    basename);
@@ -1351,9 +1274,10 @@ download_repodata_file (LowRepo *repo, const char *relative_name)
 						      basename);
 	}
 
-	low_download (full_url, local_file, displayed_basename);
+	/* XXX use if_missing here for non repomd.xml */
+	low_download_from_mirror (mirrors, relative_name, local_file,
+				  displayed_basename);
 
-	g_free (full_url);
 	g_free (displayed_basename);
 
 	return local_file;

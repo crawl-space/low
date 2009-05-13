@@ -22,6 +22,7 @@
 #include <sqlite3.h>
 #include "low-repo.h"
 #include "low-package.h"
+#include "low-mirror-list.h"
 
 #ifndef _LOW_REPO_SQLITE_H_
 #define _LOW_REPO_SQLITE_H_
@@ -52,6 +53,8 @@ LowPackageIter *    low_repo_sqlite_search_files 	(LowRepo *repo,
 
 LowPackageIter *	low_repo_sqlite_search_details 	(LowRepo *repo,
 							 const char *querystr);
+
+LowMirrorList *low_repo_sqlite_get_mirror_list (LowRepo *repo);
 
 #endif /* _LOW_REPO_SQLITE_H_ */
 

@@ -34,6 +34,7 @@
 
 typedef struct _LowRepoSqlite {
 	LowRepo super;
+	LowMirrorList *mirrors;
 	sqlite3 *primary_db;
 	sqlite3 *filelists_db;
 	GHashTable *table;
@@ -177,6 +178,7 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 
 	repo->table = NULL;
 	repo->obsoletes = NULL;
+	repo->mirrors = NULL;
 
 	repo->super.id = g_strdup (id);
 	repo->super.name = g_strdup (name);
@@ -198,6 +200,10 @@ low_repo_sqlite_shutdown (LowRepo *repo)
 	free (repo->id);
 	free (repo->name);
 	free (repo->mirror_list);
+
+	if (repo_sqlite->mirrors) {
+		low_mirror_list_free (repo_sqlite->mirrors);
+	}
 
 	if (repo_sqlite->primary_db) {
 		detach_db (repo_sqlite->primary_db);
@@ -644,6 +650,46 @@ low_repo_sqlite_get_deps (LowRepo *repo, const char *stmt, LowPackage *pkg)
 	return deps;
 }
 
+static LowMirrorList *
+build_mirror_list (LowRepo *repo)
+{
+	LowMirrorList *all_mirrors;
+
+	if (repo->mirror_list == NULL) {
+		all_mirrors = low_mirror_list_new_from_baseurl (repo->baseurl);
+	} else if (strstr (repo->mirror_list, "metalink")) {
+		char *mirrors_file =
+			g_strdup_printf ("/var/cache/yum/%s/metalink.xml",
+					 repo->id);
+
+		all_mirrors = low_mirror_list_new_from_metalink (mirrors_file);
+
+		free (mirrors_file);
+
+	} else {
+		char *mirrors_file =
+			g_strdup_printf ("/var/cache/yum/%s/mirrorlist.txt",
+					 repo->id);
+
+		all_mirrors = low_mirror_list_new_from_txt_file (mirrors_file);
+
+		free (mirrors_file);
+	}
+
+	return all_mirrors;
+}
+
+LowMirrorList *
+low_repo_sqlite_get_mirror_list (LowRepo *repo)
+{
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+
+	if (repo_sqlite->mirrors == NULL) {
+		repo_sqlite->mirrors = build_mirror_list (repo);
+	}
+
+	return repo_sqlite->mirrors;
+}
 
 static LowDigestType
 digest_type_from_string (const char *string)
