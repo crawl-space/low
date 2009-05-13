@@ -1408,8 +1408,15 @@ refresh_repo (LowRepo *repo)
 	char *local_file;
 	char *tmp_file;
 	char *db_file;
+	char *dirname;
 	LowRepomd *old_repomd;
 	LowRepomd *new_repomd;
+
+	dirname = g_strdup_printf ("/var/cache/yum/%s", repo->id);
+	if (!g_file_test (dirname, G_FILE_TEST_EXISTS)) {
+		mkdir (dirname, 0755);
+	}
+	free (dirname);
 
 	if (repo->mirror_list) {
 		char *display;
