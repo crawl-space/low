@@ -234,12 +234,47 @@ low_download_from_mirror (LowMirrorList *mirrors, const char *relative_path,
 
 #define BUF_SIZE 32
 
+static void
+debug_hashes (const char *expected, const unsigned char *calculated, size_t len)
+{
+	unsigned int i;
+
+	char calculated_pretty[BUF_SIZE * 2 + 1];
+
+	for (i = 0; i < len; i++) {
+		sprintf (calculated_pretty + i * 2, "%.2x", calculated[i]);
+	}
+	calculated_pretty[i * 2 + 1] = '\0';
+
+	low_debug ("digest mismatch:\nexpected:   %s\ncalculated: %s\n",
+		   expected, calculated_pretty);
+}
+
+static unsigned short
+char_to_short (char to_convert)
+{
+	/* 0 - 9 */
+	if (to_convert >= 48 && to_convert <= 57) {
+		return to_convert - 48;
+	}
+
+	/* A - F */
+	if (to_convert >= 65 && to_convert <= 70) {
+		return to_convert - 55;
+	}
+
+	/* a - f */
+	if (to_convert >= 97 && to_convert <= 102) {
+		return to_convert - 87;
+	}
+
+	return 0;
+}
 static gboolean
 compare_digest (const char *file, const char *expected,
 		LowDigestType digest_type)
 {
 	unsigned char result[BUF_SIZE];
-	char expected_raw[BUF_SIZE];
 	unsigned int size;
 	unsigned int i;
 	int fd;
@@ -282,14 +317,16 @@ compare_digest (const char *file, const char *expected,
 	HASH_End (ctx, result, &size, BUF_SIZE);
 
 	for (i = 0; i < strlen (expected); i += 2) {
-		char tmp[2];
-		tmp[0] = expected[i];
-		tmp[1] = expected[i + 1];
+		unsigned char e = 16 * char_to_short (expected[i]) +
+			char_to_short (expected[i + 1]);
 
-		expected_raw[i / 2] = strtoul (tmp, NULL, 16);
+		if (e != result[i / 2]) {
+			debug_hashes (expected, result, size);
+			return FALSE;
+		}
 	}
 
-	return strncmp ((char *) result, expected_raw, size) == 0;
+	return TRUE;
 }
 
 int
