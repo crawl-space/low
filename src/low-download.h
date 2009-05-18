@@ -1,7 +1,7 @@
 /*
  *  Low: a yum-like package manager
  *
- *  Copyright (C) 2008 James Bowes <jbowes@dangerouslyinc.com>
+ *  Copyright (C) 2008, 2009 James Bowes <jbowes@repl.ca>
  *  Copyright (C) 2008 Devan Goodwin <dgoodwin@dangerouslyinc.com>
  *
  *  This program is free software; you can redistribute it and/or modify

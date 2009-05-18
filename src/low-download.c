@@ -4,7 +4,7 @@
  *  Download code adopted from razor:
  *  http://github.com/krh/razor/wikis
  *
- *  Copyright (C) 2008 James Bowes <jbowes@dangerouslyinc.com>
+ *  Copyright (C) 2008, 2009 James Bowes <jbowes@repl.ca>
  *  Copyright (C) 2008 Devan Goodwin <dgoodwin@dangerouslyinc.com>
  *
  *  This program is free software; you can redistribute it and/or modify
