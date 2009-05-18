@@ -27,6 +27,7 @@
 #include <glob.h>
 #include "low-debug.h"
 #include "low-repo-sqlite.h"
+#include "low-repomd-parser.h"
 
 #define SELECT_FIELDS_FROM "SELECT p.pkgKey, p.name, p.arch, p.version, " \
 			   "p.release, p.epoch, p.size_package, " \
@@ -119,27 +120,10 @@ low_repo_sqlite_regexp (sqlite3_context *ctx, int argc G_GNUC_UNUSED,
 	sqlite3_result_int (ctx, matched);
 }
 
-static char *
-find_sqlite_file (const char *pattern)
-{
-	char *match;
-	glob_t pglob;
-
-	glob (pattern, 0, NULL, &pglob);
-
-	if (pglob.gl_pathc == 0) {
-		match = g_strdup ("");
-	} else {
-		match = g_strdup (pglob.gl_pathv[0]);
-	}
-
-	globfree (&pglob);
-
-	return match;
-}
-
 typedef void (*sqlFunc) (sqlite3_context *, int, sqlite3_value **);
 typedef void (*sqlFinal) (sqlite3_context *);
+
+#define LOCAL_CACHE "/var/cache/yum"
 
 LowRepo *
 low_repo_sqlite_initialize (const char *id, const char *name,
@@ -148,20 +132,38 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 {
 	LowRepoSqlite *repo = malloc (sizeof (LowRepoSqlite));
 
-	/* XXX read this from repomd.xml */
-	char *primary_db_glob =
-		g_strdup_printf ("/var/cache/yum/%s/*primary*.sqlite", id);
-	char *filelists_db_glob =
-		g_strdup_printf ("/var/cache/yum/%s/*filelists*.sqlite", id);
+	char *repomd_file;
+	LowRepomd *repomd;
 
-	char *primary_db = find_sqlite_file (primary_db_glob);
-	char *filelists_db = find_sqlite_file (filelists_db_glob);
-
-	g_free (primary_db_glob);
-	g_free (filelists_db_glob);
+	repomd_file = g_strdup_printf (LOCAL_CACHE "/%s/repomd.xml", id);
+	repomd = low_repomd_parse (repomd_file);
+	free (repomd_file);
 
 	/* Will need a way to flick this on later */
-	if (enabled && bind_dbs) {
+	/* XXX return some error when repomd is null */
+	if (enabled && bind_dbs && repomd != NULL) {
+		/* XXX don't assume .bz2 */
+		char tmp;
+		char *primary_db;
+		char *filelists_db;
+
+		tmp = repomd->primary_db[strlen (repomd->primary_db) - 4];
+		repomd->primary_db[strlen (repomd->primary_db) - 4] = '\0';
+		/* XXX don't assume 'repodata/' */
+		primary_db = g_strdup_printf (LOCAL_CACHE "/%s/%s", id,
+					      repomd->primary_db + 9);
+		repomd->primary_db[strlen (repomd->primary_db) - 4] = tmp;
+
+		tmp = repomd->filelists_db[strlen (repomd->filelists_db) - 4];
+		repomd->filelists_db[strlen (repomd->filelists_db) - 4] = '\0';
+		filelists_db = g_strdup_printf (LOCAL_CACHE "/%s/%s", id,
+						repomd->filelists_db + 9);
+		repomd->filelists_db[strlen (repomd->filelists_db) - 4] = tmp;
+
+
+		low_debug ("Opening %s - %s\n", id, primary_db);
+		low_debug ("Opening %s - %s\n", id, filelists_db);
+
 		if (access (primary_db, R_OK) || access (filelists_db, R_OK)) {
 			printf ("Can't open db files for repo '%s'! (try running 'yum makecache')\n", id);
 			exit (1);
@@ -172,6 +174,10 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 					 SQLITE_ANY, NULL,
 					 low_repo_sqlite_regexp,
 					 (sqlFunc) NULL, (sqlFinal) NULL);
+
+		free (primary_db);
+		free (filelists_db);
+		free (repomd);
 	} else {
 		repo->primary_db = NULL;
 	}
@@ -185,9 +191,6 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 	repo->super.baseurl = g_strdup (baseurl);
 	repo->super.mirror_list = g_strdup (mirror_list);
 	repo->super.enabled = enabled;
-
-	free (primary_db);
-	free (filelists_db);
 
 	return (LowRepo *) repo;
 }
