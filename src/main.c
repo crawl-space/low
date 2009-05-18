@@ -259,7 +259,7 @@ command_info (int argc, const char *argv[])
 	LowRepoSet *repos;
 	LowPackageIter *iter;
 	LowConfig *config;
-	gchar *name;
+	char *name;
 	bool show_all = false;
 
 	/* XXX We might not want to ship with the show_all stuff; its ugly. */
@@ -293,8 +293,8 @@ command_info (int argc, const char *argv[])
 static void
 print_package_short (LowPackage *pkg)
 {
-	gchar *name_arch = g_strdup_printf ("%s.%s", pkg->name, pkg->arch);
-	gchar *version_release = g_strdup_printf ("%s-%s", pkg->version,
+	char *name_arch = g_strdup_printf ("%s.%s", pkg->name, pkg->arch);
+	char *version_release = g_strdup_printf ("%s-%s", pkg->version,
 						  pkg->release);
 
 	printf ("%-41.41s %-23.23s %s\n", name_arch, version_release,
@@ -453,7 +453,7 @@ command_search (int argc G_GNUC_UNUSED, const char *argv[])
 	LowRepoSet *repos;
 	LowPackageIter *iter;
 	LowConfig *config;
-	gchar *querystr = g_strdup (argv[0]);
+	char *querystr = g_strdup (argv[0]);
 
 	repo_rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (repo_rpmdb);
@@ -701,7 +701,7 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	LowRepoSet *repos;
 	LowPackageIter *iter;
 	LowConfig *config;
-	gchar *name = g_strdup (argv[0]);
+	char *name = g_strdup (argv[0]);
 	int found_pkg;
 
 	repo_rpmdb = low_repo_rpmdb_initialize ();

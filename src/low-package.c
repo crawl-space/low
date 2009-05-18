@@ -172,7 +172,7 @@ LowPackageDependency *
 low_package_dependency_new_from_string (const char *depstr)
 {
 	int length;
-	gchar **split;
+	char **split;
 	LowPackageDependency *dep = malloc (sizeof (LowPackageDependency));
 
 	split = g_strsplit (depstr, " ", 3);

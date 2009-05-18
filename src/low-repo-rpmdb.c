@@ -221,7 +221,7 @@ low_repo_rpmdb_search_files (LowRepo *repo, const char *file)
 static bool
 low_repo_rpmdb_search_details_filter_fn (LowPackage *pkg, gpointer data)
 {
-	gchar *querystr = (gchar *) data;
+	char *querystr = (char *) data;
 
 	/* url can be NULL, so check first. */
 	if (strstr (pkg->name, querystr)) {

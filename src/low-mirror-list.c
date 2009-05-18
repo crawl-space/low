@@ -72,7 +72,7 @@ LowMirrorList *
 low_mirror_list_new_from_txt_file (const char *mirrorlist_txt)
 {
 	LowMirrorList *mirrors = low_mirror_list_new ();
-	gchar x;
+	char x;
 	GString *url;
 
 	FILE *file = fopen (mirrorlist_txt, "r");

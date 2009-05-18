@@ -120,7 +120,7 @@ typedef struct _LowRepoSetPackageIter {
 	GHashTableIter *repo_iter;
 	LowPackageIter *current_repo_iter;
 	LowRepo *current_repo;
-	const gchar *search_data;
+	const char *search_data;
 	LowRepoSetIterSearchFunc search_func;
 } LowRepoSetPackageIter;
 

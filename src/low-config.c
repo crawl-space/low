@@ -29,15 +29,15 @@
 
 #define RELEASE_PKG "redhat-release"
 
-static gchar *
+static char *
 low_config_load_repo_configs (void)
 {
 	/* FIXME:  need this to grow */
-	gchar *config;
-	gchar *joined_config;
-	gchar *old_joined_config;
-	gchar *path;
-	const gchar *config_dir_path = "/etc/yum.repos.d";
+	char *config;
+	char *joined_config;
+	char *old_joined_config;
+	char *path;
+	const char *config_dir_path = "/etc/yum.repos.d";
 	GDir *config_dir = g_dir_open (config_dir_path, 0, NULL);
 	const char *file_name;
 
@@ -66,9 +66,9 @@ LowConfig *
 low_config_initialize (LowRepo *repo_rpmdb)
 {
 	LowConfig *config = malloc (sizeof (LowConfig));
-	gchar *main_config;
-	gchar *repo_configs;
-	gchar *joined_config;
+	char *main_config;
+	char *repo_configs;
+	char *joined_config;
 	GError *error = NULL;
 
 	config->rpmdb = repo_rpmdb;
@@ -100,9 +100,9 @@ char **
 low_config_get_repo_names (LowConfig *config)
 {
 	unsigned int i, j;
-	gchar **repo_names = g_key_file_get_groups (config->config, NULL);
-	gchar **new_repo_names =
-		g_malloc (sizeof (gchar *) * g_strv_length (repo_names));
+	char **repo_names = g_key_file_get_groups (config->config, NULL);
+	char **new_repo_names =
+		g_malloc (sizeof (char *) * g_strv_length (repo_names));
 
 	j = 0;
 	for (i = 0; i < g_strv_length (repo_names); i++) {
