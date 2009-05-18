@@ -22,6 +22,7 @@
 #ifndef _LOW_CONFIG_H_
 #define _LOW_CONFIG_H_
 
+#include <stdbool.h>
 #include <glib.h>
 #include "low-repo.h"
 
@@ -38,7 +39,7 @@ char **         low_config_get_repo_names   (LowConfig *config);
 char *          low_config_get_string       (LowConfig *config,
 					     const char *group,
 					     const char *key);
-gboolean        low_config_get_boolean      (LowConfig *config,
+bool            low_config_get_boolean      (LowConfig *config,
 					     const char *group,
 					     const char *key);
 

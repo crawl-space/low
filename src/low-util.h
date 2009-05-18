@@ -22,7 +22,7 @@
 #ifndef _LOW_UTIL_H_
 #define _LOW_UTIL_H_
 
-#include <glib.h>
+#include <stdbool.h>
 
 /**
  * Package digest types we understand
@@ -37,7 +37,7 @@ typedef enum {
 
 char ** low_util_word_wrap (const char *text, int width);
 
-gboolean low_util_parse_nevra (const char *nevra, char **name, char **epoch,
+bool low_util_parse_nevra (const char *nevra, char **name, char **epoch,
 			       char **version, char **release, char **arch);
 
 int low_util_evr_cmp (const char *evr1, const char *evr2);

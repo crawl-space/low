@@ -116,11 +116,11 @@ low_transaction_pkg_compare_func (gconstpointer data1, gconstpointer data2)
 
 }
 */
-static gboolean
+static bool
 low_transaction_add_to_hash (GHashTable *hash, LowPackage *pkg,
 			     LowPackage *related_pkg)
 {
-	gboolean res;
+	bool res;
 	char *key;
 	LowTransactionMember *member;
 
@@ -137,16 +137,16 @@ low_transaction_add_to_hash (GHashTable *hash, LowPackage *pkg,
 		member = malloc (sizeof (LowTransactionMember));
 		member->pkg = pkg;
 		member->related_pkg = related_pkg;
-		member->resolved = FALSE;
+		member->resolved = false;
 
 		g_hash_table_insert (hash, key, member);
-		res = TRUE;
+		res = true;
 	} else {
 		/* XXX not the right place for this */
 //              low_package_unref (pkg);
 
 		free (key);
-		res = FALSE;
+		res = false;
 	}
 
 	//free (key);
@@ -177,11 +177,11 @@ low_transaction_remove_from_hash (GHashTable *hash, LowPackage *pkg)
 	free (key);
 }
 
-static gboolean
+static bool
 low_transaction_is_pkg_in_hash (GHashTable *hash, LowPackage *pkg)
 {
 	char *key;
-	gboolean ret;
+	bool ret;
 
 	if (pkg->epoch) {
 		key = g_strdup_printf ("%s-%s:%s-%s.%s", pkg->name,
@@ -192,41 +192,41 @@ low_transaction_is_pkg_in_hash (GHashTable *hash, LowPackage *pkg)
 				       pkg->version, pkg->release, pkg->arch);
 	}
 
-	ret = g_hash_table_lookup (hash, key) != 0 ? TRUE : FALSE;
+	ret = g_hash_table_lookup (hash, key) != 0 ? true : false;
 
 	g_free (key);
 
 	return ret;
 }
 
-gboolean
+bool
 low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
 {
 	if (low_transaction_add_to_hash (trans->install, to_install, NULL)) {
 		low_debug_pkg ("Adding for install", to_install);
-		return TRUE;
+		return true;
 	} else {
 		low_debug_pkg ("Not adding already added pkg for install",
 			       to_install);
-		return FALSE;
+		return false;
 	}
 }
 
-static gboolean
+static bool
 arch_is_compatible (LowPackage *target, LowPackage *pkg)
 {
 	if (strcmp (target->arch, pkg->arch) == 0) {
-		return TRUE;
+		return true;
 	}
 
 	if (strcmp (target->arch, "noarch") == 0) {
-		return TRUE;
+		return true;
 	}
 	if (strcmp (pkg->arch, "noarch") == 0) {
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
 static LowPackage *
@@ -256,7 +256,7 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 	LowPackage *best = to_update;
 	LowPackageIter *iter;
 	char *best_evr = low_package_evr_as_string (to_update);
-	gboolean found;
+	bool found;
 
 	LowPackageDependency *obsoletes =
 		low_package_dependency_new (to_update->name,
@@ -318,7 +318,7 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 	}
 
 	/* Ensure we don't already have it */
-	found = FALSE;
+	found = false;
 	iter = low_repo_rpmdb_list_by_name (repo_rpmdb, best->name);
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
@@ -326,7 +326,7 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 			char *this_evr = low_package_evr_as_string (iter->pkg);
 
 			if (low_util_evr_cmp (best_evr, this_evr) == 0) {
-				found = TRUE;
+				found = true;
 			}
 
 			g_free (this_evr);
@@ -344,7 +344,7 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 	return best;
 }
 
-static gboolean
+static bool
 add_update_worker (LowTransaction *trans, LowPackage *to_update,
 		   LowPackage *updating_to)
 {
@@ -359,15 +359,15 @@ add_update_worker (LowTransaction *trans, LowPackage *to_update,
 		low_transaction_add_to_hash (trans->updated, to_update,
 					     updating_to);
 		low_debug_pkg ("Adding for update", updating_to);
-		return TRUE;
+		return true;
 	} else {
 		low_debug_pkg ("Not adding already added pkg for update",
 			       updating_to);
-		return FALSE;
+		return false;
 	}
 }
 
-gboolean
+bool
 low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
 {
 	LowPackage *updating_to = choose_best_for_update (trans->rpmdb,
@@ -376,7 +376,7 @@ low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
 
 	if (updating_to == NULL) {
 		low_debug_pkg ("No available update for", to_update);
-		return FALSE;
+		return false;
 	}
 
 	return add_update_worker (trans, to_update, updating_to);
@@ -387,7 +387,7 @@ find_updated (LowRepo *repo_rpmdb, LowPackage *updating)
 {
 	LowPackage *updated = NULL;
 	LowPackageIter *iter;
-	gboolean found = FALSE;
+	bool found = false;
 	char *updating_evr = low_package_evr_as_string (updating);
 
 	iter = low_repo_rpmdb_list_by_name (repo_rpmdb, updating->name);
@@ -401,7 +401,7 @@ find_updated (LowRepo *repo_rpmdb, LowPackage *updating)
 		    (strcmp (iter->pkg->arch, updating->arch) == 0 ||
 		     strcmp (updating->arch, "noarch") == 0)) {
 			updated = iter->pkg;
-			found = TRUE;
+			found = true;
 		} else {
 			low_package_unref (iter->pkg);
 		}
@@ -417,7 +417,7 @@ find_updated (LowRepo *repo_rpmdb, LowPackage *updating)
 /**
  * Install a package, or mark it for update if it updates an installed package
  **/
-static gboolean
+static bool
 low_transaction_add_install_or_update (LowTransaction *trans,
 				       LowPackage *to_install)
 {
@@ -429,23 +429,23 @@ low_transaction_add_install_or_update (LowTransaction *trans,
 	}
 }
 
-gboolean
+bool
 low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove)
 {
 	if (low_transaction_add_to_hash (trans->remove, to_remove, NULL)) {
 		low_debug_pkg ("Adding for remove", to_remove);
-		return TRUE;
+		return true;
 	} else {
 		low_debug_pkg ("Not adding already added pkg for remove",
 			       to_remove);
-		return FALSE;
+		return false;
 	}
 }
 
 /**
  * Check if a requires is in a list of provides
  */
-static gboolean
+static bool
 low_transaction_dep_in_deplist (const LowPackageDependency *needle,
 				LowPackageDependency **haystack)
 {
@@ -457,14 +457,14 @@ low_transaction_dep_in_deplist (const LowPackageDependency *needle,
 		    ((needle->evr == NULL && haystack[i]->evr == NULL) ||
 		     (needle->evr != NULL && haystack[i]->evr != NULL &&
 		      low_util_evr_cmp (needle->evr, haystack[i]->evr) == 0))) {
-			return TRUE;
+			return true;
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
-static gboolean
+static bool
 low_transaction_dep_satisfied_by_deplist (const LowPackageDependency *needle,
 					  LowPackageDependency **haystack)
 {
@@ -472,33 +472,33 @@ low_transaction_dep_satisfied_by_deplist (const LowPackageDependency *needle,
 
 	for (i = 0; haystack[i] != NULL; i++) {
 		if (low_package_dependency_satisfies (needle, haystack[i])) {
-			return TRUE;
+			return true;
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
 /**
  * Check if a requires is in a list of files
  */
-static gboolean
+static bool
 low_transaction_dep_in_filelist (const char *needle, char **haystack)
 {
 	int i;
 
 	for (i = 0; haystack[i] != NULL; i++) {
 		if (!strcmp (needle, haystack[i])) {
-			return TRUE;
+			return true;
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
 static LowTransactionStatus
 select_best_provides (LowTransaction *trans, LowPackage *pkg,
-		      LowPackageIter *iter, gboolean check_for_existing)
+		      LowPackageIter *iter, bool check_for_existing)
 {
 	LowTransactionStatus status = LOW_TRANSACTION_UNRESOLVABLE;
 	LowPackage *best = NULL;
@@ -556,15 +556,15 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 
 static LowTransactionStatus
 low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
-					gboolean check_available)
+					bool check_available)
 {
 	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
 	LowPackageDependency **requires;
 	LowPackageDependency **provides;
 	char **files;
 	int i;
-	gboolean found;
-	gboolean pkgs_added = FALSE;
+	bool found;
+	bool pkgs_added = false;
 
 	low_debug_pkg ("Checking requires for", pkg);
 
@@ -594,7 +594,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 			low_repo_rpmdb_search_provides (trans->rpmdb,
 							requires[i]);
 
-		found = FALSE;
+		found = false;
 		while (providing = low_package_iter_next (providing),
 		       providing != NULL) {
 			if (!found) {
@@ -605,7 +605,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 					low_debug ("Providing package is being removed");
 				} else {
 					low_debug_pkg ("Provided by", providing->pkg);
-					found = TRUE;
+					found = true;
 				}
 
 			}
@@ -620,7 +620,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 				low_repo_rpmdb_search_files (trans->rpmdb,
 							     requires[i]->name);
 
-			found = FALSE;
+			found = false;
 			while (providing = low_package_iter_next (providing),
 			       providing != NULL) {
 				if (!found) {
@@ -631,7 +631,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 						low_debug ("Providing package is being removed");
 					} else {
 						low_debug_pkg ("Provided by", providing->pkg);
-						found = TRUE;
+						found = true;
 					}
 
 				}
@@ -650,7 +650,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 		status = select_best_provides (trans, pkg, providing,
 					       !check_available);
 		if (status == LOW_TRANSACTION_PACKAGES_ADDED) {
-			pkgs_added = TRUE;
+			pkgs_added = true;
 		}
 		if (status == LOW_TRANSACTION_UNRESOLVABLE &&
 		    requires[i]->name[0] == '/') {
@@ -661,7 +661,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 			status = select_best_provides (trans, pkg, providing,
 						       !check_available);
 			if (status == LOW_TRANSACTION_PACKAGES_ADDED) {
-				pkgs_added = TRUE;
+				pkgs_added = true;
 			}
 			if (status != LOW_TRANSACTION_UNRESOLVABLE) {
 				continue;
@@ -689,7 +689,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 static LowTransactionStatus
 low_transaction_check_removal (LowTransaction *trans,
 			       LowTransactionMember *member,
-			       gboolean from_update)
+			       bool from_update)
 {
 	LowPackage *pkg = member->pkg;
 	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
@@ -743,7 +743,7 @@ low_transaction_check_removal (LowTransaction *trans,
 
 			if (low_transaction_check_package_requires (trans,
 								    iter->pkg,
-								    FALSE) ==
+								    false) ==
 			    LOW_TRANSACTION_NO_CHANGE) {
 				low_debug ("Requiring package satisfied by installed package");
 				continue;
@@ -822,7 +822,7 @@ low_transaction_check_removal (LowTransaction *trans,
 }
 
 static void
-progress (LowTransaction *trans, gboolean is_done)
+progress (LowTransaction *trans, bool is_done)
 {
 	if (trans->callback) {
 		(trans->callback) (is_done ? -1 : 0, trans->callback_data);
@@ -842,12 +842,12 @@ low_transaction_check_requires_for_added (LowTransactionStatus status,
 			(LowTransactionMember *) cur->data;
 		LowPackage *pkg = member->pkg;
 
-		progress (trans, FALSE);
+		progress (trans, false);
 
 		if (!member->resolved) {
 			req_status = low_transaction_check_package_requires (trans,
 									     pkg,
-									     TRUE);
+									     true);
 
 			if (req_status == LOW_TRANSACTION_UNRESOLVABLE) {
 				low_debug_pkg ("Adding to unresolved", pkg);
@@ -858,7 +858,7 @@ low_transaction_check_requires_for_added (LowTransactionStatus status,
 				status = LOW_TRANSACTION_PACKAGES_ADDED;
 			}
 
-			member->resolved = TRUE;
+			member->resolved = true;
 		}
 
 		cur = cur->next;
@@ -871,7 +871,7 @@ static LowTransactionStatus
 low_transaction_check_requires_for_removing (LowTransactionStatus status,
 					     LowTransaction *trans,
 					     GHashTable *hash,
-					     gboolean from_update)
+					     bool from_update)
 {
 	GList *cur = g_hash_table_get_values (hash);
 
@@ -880,7 +880,7 @@ low_transaction_check_requires_for_removing (LowTransactionStatus status,
 			(LowTransactionMember *) cur->data;
 		LowPackage *pkg = member->pkg;
 
-		progress (trans, FALSE);
+		progress (trans, false);
 
 		if (!member->resolved) {
 			LowTransactionStatus rm_status;
@@ -903,7 +903,7 @@ low_transaction_check_requires_for_removing (LowTransactionStatus status,
 				status = LOW_TRANSACTION_PACKAGES_ADDED;
 			}
 
-			member->resolved = TRUE;
+			member->resolved = true;
 		}
 
 		cur = cur->next;
@@ -924,10 +924,10 @@ low_transaction_check_all_requires (LowTransaction *trans)
 
 	status = low_transaction_check_requires_for_removing (status, trans,
 							      trans->remove,
-							      FALSE);
+							      false);
 	status = low_transaction_check_requires_for_removing (status, trans,
 							      trans->updated,
-							      TRUE);
+							      true);
 
 	return status;
 }
@@ -980,7 +980,7 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 			low_package_get_conflicts (pkg);
 		int i;
 
-		progress (trans, FALSE);
+		progress (trans, false);
 
 		low_debug_pkg ("Checking for installed pkgs that conflict",
 			       pkg);
@@ -1100,7 +1100,7 @@ low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 		}
 	}
 
-	progress (trans, TRUE);
+	progress (trans, true);
 
 	gettimeofday (&end, NULL);
 	low_debug ("Transaction resolved in %.2fs",

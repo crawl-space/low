@@ -19,7 +19,7 @@
  *  02110-1301  USA
  */
 
-#include <glib.h>
+#include <stdbool.h>
 
 #ifndef _LOW_REPO_H_
 #define _LOW_REPO_H_
@@ -29,7 +29,7 @@ typedef struct _LowRepo {
 	char * name;
 	char * baseurl;
 	char * mirror_list;
-	gboolean enabled;
+	bool enabled;
 } LowRepo;
 
 #endif /* _LOW_REPO_H__ */

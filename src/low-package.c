@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <glib.h>
 #include <rpm/rpmds.h>
 #include "low-package.h"
 
@@ -237,7 +238,7 @@ low_dependency_sense_to_rpm (LowPackageDependencySense sense)
 	}
 }
 
-gboolean
+bool
 low_package_dependency_satisfies (const LowPackageDependency *needs,
 				  const LowPackageDependency *satisfies)
 {
@@ -258,7 +259,7 @@ low_package_dependency_satisfies (const LowPackageDependency *needs,
 	rpmdsFree (rpm_needs);
 	rpmdsFree (rpm_satisfies);
 
-	return res == 1 ? TRUE : FALSE;
+	return res == 1 ? true : false;
 }
 
 char *

@@ -80,7 +80,7 @@ START_TEST (test_low_package_dependency_satisfies_unversioned)
 {
 	LowPackageDependency *dep =
 		low_package_dependency_new_from_string ("foo");
-	gboolean res = low_package_dependency_satisfies (dep, dep);
+	bool res = low_package_dependency_satisfies (dep, dep);
 	fail_unless (res, "Unversioned dep does not satisfy self");
 
 	low_package_dependency_free (dep);
@@ -93,7 +93,7 @@ START_TEST (test_low_package_dependency_satisfies_unversioned_not_satisfied)
 	LowPackageDependency *dep2 =
 		low_package_dependency_new_from_string ("bar");
 
-	gboolean res = low_package_dependency_satisfies (dep1, dep2);
+	bool res = low_package_dependency_satisfies (dep1, dep2);
 	fail_unless (!res, "Unversioned dep satisfied");
 
 	low_package_dependency_free (dep1);
@@ -107,7 +107,7 @@ START_TEST (test_low_package_dependency_satisfies_needs_versioned_satisfies_not)
 	LowPackageDependency *dep2 =
 		low_package_dependency_new_from_string ("foo");
 
-	gboolean res = low_package_dependency_satisfies (dep1, dep2);
+	bool res = low_package_dependency_satisfies (dep1, dep2);
 	fail_unless (res, "Versioned dep not satisfied by unversioned");
 
 	low_package_dependency_free (dep1);
@@ -121,7 +121,7 @@ START_TEST (test_low_package_dependency_satisfies_satisfies_versioned_needs_not)
 	LowPackageDependency *dep2 =
 		low_package_dependency_new_from_string ("foo = 0.0.4");
 
-	gboolean res = low_package_dependency_satisfies (dep1, dep2);
+	bool res = low_package_dependency_satisfies (dep1, dep2);
 	fail_unless (res, "Unversioned dep not satisfied by versioned");
 
 	low_package_dependency_free (dep1);
@@ -139,7 +139,7 @@ START_TEST (test_low_package_dependency_satisfies_both_versioned_satisfied)
 	LowPackageDependency *dep2;
 
 	for (i = 0; deps1[i] != NULL; i++) {
-		gboolean res;
+		bool res;
 
 		dep1 = low_package_dependency_new_from_string (deps1[i]);
 		dep2 = low_package_dependency_new_from_string (deps2[i]);
@@ -164,7 +164,7 @@ START_TEST (test_low_package_dependency_satisfies_both_versioned_not_satisfied)
 	LowPackageDependency *dep2;
 
 	for (i = 0; deps1[i] != NULL; i++) {
-		gboolean res;
+		bool res;
 
 		dep1 = low_package_dependency_new_from_string (deps1[i]);
 		dep2 = low_package_dependency_new_from_string (deps2[i]);
@@ -196,7 +196,7 @@ START_TEST (test_low_util_word_wrap_wrap_one_line_to_two)
 START_TEST (test_low_util_parse_nevra_empty_string)
 {
 	const char *input = "";
-	gboolean result = low_util_parse_nevra (input, NULL, NULL, NULL, NULL,
+	bool result = low_util_parse_nevra (input, NULL, NULL, NULL, NULL,
 						NULL);
 	fail_unless (!result, "parse_nevra did not error on an empty string");
 } END_TEST
@@ -205,7 +205,7 @@ START_TEST (test_low_util_parse_nevra_just_name)
 {
 	const char *input = "zsh";
 	char *name;
-	gboolean result = low_util_parse_nevra (input, &name, NULL, NULL, NULL,
+	bool result = low_util_parse_nevra (input, &name, NULL, NULL, NULL,
 						NULL);
 	fail_unless (result, "parse_nevra did not errored");
 	fail_unless (!strcmp ("zsh", name),
@@ -245,7 +245,7 @@ START_TEST (test_low_repo_set_search_single_repo_no_packages)
 								 "test repo",
 								 "test url",
 								 "mirror",
-								 TRUE, TRUE);
+								 true, TRUE);
 	packages[0] = NULL;
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
@@ -276,7 +276,7 @@ START_TEST (test_low_repo_set_search_two_repos_no_packages)
 								 "test repo",
 								 "test url",
 								 "mirror",
-								 TRUE, TRUE);
+								 true, TRUE);
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
@@ -284,7 +284,7 @@ START_TEST (test_low_repo_set_search_two_repos_no_packages)
 								 "test repo",
 								 "test url",
 								 "mirror",
-								 TRUE, TRUE);
+								 true, TRUE);
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
@@ -313,7 +313,7 @@ START_TEST (test_low_repo_set_search_single_repo_one_package)
 								 "test repo",
 								 "test url",
 								 "mirror",
-								 TRUE, TRUE);
+								 true, TRUE);
 	packages[0] = &package;
 	packages[1] = NULL;
 	repo->packages = packages;
@@ -347,7 +347,7 @@ START_TEST (test_low_repo_set_search_two_repos_two_packages)
 								 "test repo",
 								 "test url",
 								 "mirror",
-								 TRUE, TRUE);
+								 true, TRUE);
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 
@@ -355,7 +355,7 @@ START_TEST (test_low_repo_set_search_two_repos_two_packages)
 								 "test repo",
 								 "test url",
 								 "mirror",
-								 TRUE, TRUE);
+								 true, TRUE);
 	repo->packages = packages;
 	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
 

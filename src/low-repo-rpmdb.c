@@ -24,6 +24,7 @@
 #include <string.h>
 #include <rpm/rpmlib.h>
 #include <rpm/rpmdb.h>
+#include <glib.h>
 #include "low-debug.h"
 #include "low-repo-rpmdb.h"
 
@@ -33,7 +34,7 @@ typedef struct _LowRepoRpmdb {
 } LowRepoRpmdb;
 
 /* XXX clean these up */
-typedef gboolean (*LowPackageIterFilterFn) (LowPackage *pkg, gpointer data);
+typedef bool (*LowPackageIterFilterFn) (LowPackage *pkg, gpointer data);
 typedef void (*LowPackageIterFilterDataFree) (gpointer data);
 
 typedef struct _LowPackageIterRpmdb {
@@ -62,7 +63,7 @@ low_repo_rpmdb_initialize (void)
 
 	repo->super.id = g_strdup ("installed");
 	repo->super.name = g_strdup ("Installed Packages");
-	repo->super.enabled = TRUE;
+	repo->super.enabled = true;
 
 	rpmReadConfigFiles (NULL, NULL);
 	if (rpmdbOpen ("", &repo->db, O_RDONLY, 0644) != 0) {
@@ -135,18 +136,18 @@ dep_filter_data_free_fn (gpointer data)
 	free (filter_data);
 }
 
-static gboolean
+static bool
 low_repo_rpmdb_search_dep_filter_fn (LowPackage *pkg, gpointer data)
 {
 	DepFilterData *filter_data = (DepFilterData *) data;
-	gboolean res = FALSE;
+	bool res = false;
 	LowPackageDependency **deps = (filter_data->dep_func) (pkg);
 	int i;
 
 	for (i = 0; deps[i] != NULL; i++) {
 		if (low_package_dependency_satisfies (filter_data->dep,
 						      deps[i])) {
-			res = TRUE;
+			res = true;
 			break;
 		}
 	}
@@ -217,24 +218,24 @@ low_repo_rpmdb_search_files (LowRepo *repo, const char *file)
 	return low_repo_rpmdb_search (repo, RPMTAG_BASENAMES, file);
 }
 
-static gboolean
+static bool
 low_repo_rpmdb_search_details_filter_fn (LowPackage *pkg, gpointer data)
 {
 	gchar *querystr = (gchar *) data;
 
 	/* url can be NULL, so check first. */
 	if (strstr (pkg->name, querystr)) {
-		return TRUE;
+		return true;
 	} else {
-		gboolean res;
+		bool res;
 		LowPackageDetails *details = low_package_get_details (pkg);
 
 		if (strstr (details->summary, querystr) ||
 		    strstr (details->description, querystr) ||
 		    (details->url != NULL && strstr (details->url, querystr))) {
-			res = TRUE;
+			res = true;
 		} else {
-			res = FALSE;
+			res = false;
 		}
 
 		low_package_details_free (details);
@@ -276,13 +277,13 @@ id_hash_func (gconstpointer key)
 	return *((guint *) key);
 }
 
-static gboolean
+static bool
 id_equal_func (gconstpointer key1, gconstpointer key2)
 {
 	if (!strncmp (key1, key2, 16)) {
-		return TRUE;
+		return true;
 	} else {
-		return FALSE;
+		return false;
 	}
 }
 
@@ -301,7 +302,8 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	if (!table) {
 		low_debug ("initializing hash table\n");
-		table = g_hash_table_new_full (id_hash_func, id_equal_func,
+		table = g_hash_table_new_full (id_hash_func,
+					       (GEqualFunc) id_equal_func,
 					       NULL, (GDestroyNotify)
 					       low_package_unref);
 	}

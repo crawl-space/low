@@ -20,12 +20,13 @@
  */
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <glib.h>
 #include "low-debug.h"
 
-static gboolean debugging_enabled = FALSE;
+static bool debugging_enabled = false;
 
 void
 low_debug_impl (const char *file, const char *func, const int line,
@@ -52,7 +53,7 @@ low_debug_init (void)
 	char *debug = getenv ("LOW_DEBUG");
 
 	if (debug != NULL) {
-		debugging_enabled = TRUE;
+		debugging_enabled = true;
 	}
 }
 

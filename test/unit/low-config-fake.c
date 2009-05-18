@@ -56,12 +56,12 @@ low_config_get_string (LowConfig *config G_GNUC_UNUSED,
 	return g_strdup ("test string");
 }
 
-gboolean
+bool
 low_config_get_boolean (LowConfig *config G_GNUC_UNUSED,
 			const char *group G_GNUC_UNUSED,
 			const char *key G_GNUC_UNUSED)
 {
-	return TRUE;
+	return true;
 }
 
 void

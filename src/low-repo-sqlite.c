@@ -43,7 +43,7 @@ typedef struct _LowRepoSqlite {
 } LowRepoSqlite;
 
 /* XXX clean these up */
-typedef gboolean (*LowPackageIterFilterFn) (LowPackage *pkg, gpointer data);
+typedef bool (*LowPackageIterFilterFn) (LowPackage *pkg, gpointer data);
 typedef void (*LowPackageIterFilterDataFree) (gpointer data);
 
 typedef struct _LowPackageIterSqlite {
@@ -106,7 +106,7 @@ static void
 low_repo_sqlite_regexp (sqlite3_context *ctx, int argc G_GNUC_UNUSED,
 			sqlite3_value **args)
 {
-	gboolean matched;
+	bool matched;
 
 	const char *expr = (const char *) sqlite3_value_text (args[0]);
 	const char *item = (const char *) sqlite3_value_text (args[1]);
@@ -124,7 +124,7 @@ typedef void (*sqlFinal) (sqlite3_context *);
 LowRepo *
 low_repo_sqlite_initialize (const char *id, const char *name,
 			    const char *baseurl, const char *mirror_list,
-			    gboolean enabled, gboolean bind_dbs)
+			    bool enabled, bool bind_dbs)
 {
 	LowRepoSqlite *repo = malloc (sizeof (LowRepoSqlite));
 
@@ -270,18 +270,18 @@ dep_filter_data_free_fn (gpointer data)
 	free (filter_data);
 }
 
-static gboolean
+static bool
 low_repo_sqlite_search_dep_filter_fn (LowPackage *pkg, gpointer data)
 {
 	DepFilterData *filter_data = (DepFilterData *) data;
-	gboolean res = FALSE;
+	bool res = false;
 	LowPackageDependency **deps = (filter_data->dep_func) (pkg);
 	int i;
 
 	for (i = 0; deps[i] != NULL; i++) {
 		if (low_package_dependency_satisfies (filter_data->dep,
 						      deps[i])) {
-			res = TRUE;
+			res = true;
 			break;
 		}
 	}

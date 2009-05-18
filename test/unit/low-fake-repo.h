@@ -32,7 +32,7 @@ typedef struct _LowFakeRepo {
 } LowFakeRepo;
 LowRepo *		low_fake_repo_initialize 	(const char *id,
 							 const char *name,
-							 gboolean enabled);
+							 bool enabled);
 void 			low_fake_repo_shutdown 		(LowRepo *repo);
 
 LowPackageIter *	low_fake_repo_list_all 	(LowRepo *repo);
@@ -126,8 +126,8 @@ char **			low_fake_repo_get_files 	(LowRepo *repo,
 	low_repo_sqlite_initialize (const char *name, const char *id, \
 				    const char *baseurl G_GNUC_UNUSED, \
 				    const char *mirror_list G_GNUC_UNUSED, \
-				    gboolean enabled, \
-				    gboolean bind_dbs G_GNUC_UNUSED) { \
+				    bool enabled, \
+				    bool bind_dbs G_GNUC_UNUSED) { \
 		return low_fake_repo_initialize (name, id, enabled); \
 	}
 
@@ -136,7 +136,7 @@ char **			low_fake_repo_get_files 	(LowRepo *repo,
 	\
 	LowRepo * \
 	low_repo_rpmdb_initialize (void) { \
-		return low_fake_repo_initialize ("rpmdb", "installed", TRUE); \
+		return low_fake_repo_initialize ("rpmdb", "installed", true); \
 	}
 
 #endif /* _LOW_FAKE_REPO_H_ */

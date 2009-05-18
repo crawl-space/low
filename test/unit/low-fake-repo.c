@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <glib.h>
 
 #include "low-fake-repo.h"
 
@@ -30,7 +31,7 @@
  */
 
 LowRepo *
-low_fake_repo_initialize (const char *id, const char *name, gboolean enabled)
+low_fake_repo_initialize (const char *id, const char *name, bool enabled)
 {
 	LowFakeRepo *repo = malloc (sizeof (LowFakeRepo));
 
@@ -50,7 +51,7 @@ low_fake_repo_shutdown (LowRepo *repo)
 	free (repo);
 }
 
-typedef gboolean (*LowFakePackageIterFilterFn) (LowPackage *pkg, gpointer data);
+typedef bool (*LowFakePackageIterFilterFn) (LowPackage *pkg, gpointer data);
 
 typedef struct _LowFakePackageIter {
 	LowPackageIter super;
@@ -98,16 +99,16 @@ low_fake_repo_list_all (LowRepo *repo)
 	return (LowPackageIter *) iter;
 }
 
-static gboolean
+static bool
 low_fake_repo_list_by_name_filter_fn (LowPackage *pkg, gpointer data)
 {
 	const char *name = (const char *) data;
 
 	if (strcmp (pkg->name, name) == 0) {
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
 LowPackageIter *
@@ -125,7 +126,7 @@ low_fake_repo_list_by_name (LowRepo *repo, const char *name)
 	return (LowPackageIter *) iter;
 }
 
-static gboolean
+static bool
 low_fake_repo_search_provides_filter_fn (LowPackage *pkg, gpointer data)
 {
 	int i;
@@ -135,11 +136,11 @@ low_fake_repo_search_provides_filter_fn (LowPackage *pkg, gpointer data)
 
 	for (i = 0; deps[i] != NULL; i++) {
 		if (low_package_dependency_satisfies (query_dep, deps[i])) {
-			return TRUE;
+			return true;
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
 LowPackageIter *
@@ -160,7 +161,7 @@ low_fake_repo_search_provides (LowRepo *repo,
 	return (LowPackageIter *) iter;
 }
 
-static gboolean
+static bool
 low_fake_repo_search_requires_filter_fn (LowPackage *pkg, gpointer data)
 {
 	int i;
@@ -170,11 +171,11 @@ low_fake_repo_search_requires_filter_fn (LowPackage *pkg, gpointer data)
 
 	for (i = 0; deps[i] != NULL; i++) {
 		if (low_package_dependency_satisfies (query_dep, deps[i])) {
-			return TRUE;
+			return true;
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
 LowPackageIter *
@@ -195,7 +196,7 @@ low_fake_repo_search_requires (LowRepo *repo,
 	return (LowPackageIter *) iter;
 }
 
-static gboolean
+static bool
 low_fake_repo_search_conflicts_filter_fn (LowPackage *pkg, gpointer data)
 {
 	int i;
@@ -205,11 +206,11 @@ low_fake_repo_search_conflicts_filter_fn (LowPackage *pkg, gpointer data)
 
 	for (i = 0; deps[i] != NULL; i++) {
 		if (low_package_dependency_satisfies (query_dep, deps[i])) {
-			return TRUE;
+			return true;
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
 LowPackageIter *
@@ -230,7 +231,7 @@ low_fake_repo_search_conflicts (LowRepo *repo,
 	return (LowPackageIter *) iter;
 }
 
-static gboolean
+static bool
 low_fake_repo_search_obsoletes_filter_fn (LowPackage *pkg, gpointer data)
 {
 	int i;
@@ -240,11 +241,11 @@ low_fake_repo_search_obsoletes_filter_fn (LowPackage *pkg, gpointer data)
 
 	for (i = 0; deps[i] != NULL; i++) {
 		if (low_package_dependency_satisfies (query_dep, deps[i])) {
-			return TRUE;
+			return true;
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
 LowPackageIter *
@@ -265,7 +266,7 @@ low_fake_repo_search_obsoletes (LowRepo *repo,
 	return (LowPackageIter *) iter;
 }
 
-static gboolean
+static bool
 low_fake_repo_search_files_filter_fn (LowPackage *pkg, gpointer data)
 {
 	int i;
@@ -274,11 +275,11 @@ low_fake_repo_search_files_filter_fn (LowPackage *pkg, gpointer data)
 
 	for (i = 0; deps[i] != NULL; i++) {
 		if (!strcmp (querystr, deps[i])) {
-			return TRUE;
+			return true;
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
 LowPackageIter *

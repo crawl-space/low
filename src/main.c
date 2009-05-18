@@ -183,7 +183,7 @@ digest_type_to_string (LowDigestType type)
 }
 
 static void
-print_package (LowPackage *pkg, gboolean show_all)
+print_package (LowPackage *pkg, bool show_all)
 {
 	LowPackageDetails *details = low_package_get_details (pkg);
 
@@ -242,7 +242,7 @@ print_package (LowPackage *pkg, gboolean show_all)
 }
 
 static void
-print_all_packages (LowPackageIter *iter, gboolean show_all)
+print_all_packages (LowPackageIter *iter, bool show_all)
 {
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
@@ -260,12 +260,12 @@ command_info (int argc, const char *argv[])
 	LowPackageIter *iter;
 	LowConfig *config;
 	gchar *name;
-	gboolean show_all = FALSE;
+	bool show_all = false;
 
 	/* XXX We might not want to ship with the show_all stuff; its ugly. */
 	if (argc == 2) {
 		/* XXX do option parsing */
-		show_all = TRUE;
+		show_all = true;
 		name = g_strdup (argv[1]);
 	} else {
 		name = g_strdup (argv[0]);
@@ -277,7 +277,7 @@ command_info (int argc, const char *argv[])
 	iter = low_repo_rpmdb_list_by_name (repo_rpmdb, name);
 	print_all_packages (iter, show_all);
 
-	repos = low_repo_set_initialize_from_config (config, TRUE);
+	repos = low_repo_set_initialize_from_config (config, true);
 
 	iter = low_repo_set_list_by_name (repos, name);
 	print_all_packages (iter, show_all);
@@ -377,7 +377,7 @@ print_updates (LowRepo *repo_rpmdb, LowConfig *config)
 	LowTransaction *trans;
 	int counter = 0;
 
-	repos = low_repo_set_initialize_from_config (config, TRUE);
+	repos = low_repo_set_initialize_from_config (config, true);
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
@@ -420,7 +420,7 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 	if (argc == 0 || !strcmp (argv[0], "all") ||
 	    !strcmp (argv[0], "available")) {
 		LowRepoSet *repos =
-			low_repo_set_initialize_from_config (config, TRUE);
+			low_repo_set_initialize_from_config (config, true);
 
 		iter = low_repo_set_list_all (repos);
 		print_all_packages_short (iter);
@@ -432,7 +432,7 @@ command_list (int argc G_GNUC_UNUSED, const char *argv[])
 		iter = low_repo_rpmdb_list_by_name (repo_rpmdb, argv[0]);
 		print_all_packages_short (iter);
 
-		repos = low_repo_set_initialize_from_config (config, TRUE);
+		repos = low_repo_set_initialize_from_config (config, true);
 
 		iter = low_repo_set_list_by_name (repos, argv[0]);
 		print_all_packages_short (iter);
@@ -461,7 +461,7 @@ command_search (int argc G_GNUC_UNUSED, const char *argv[])
 	iter = low_repo_rpmdb_search_details (repo_rpmdb, querystr);
 	print_all_packages_short (iter);
 
-	repos = low_repo_set_initialize_from_config (config, TRUE);
+	repos = low_repo_set_initialize_from_config (config, true);
 
 	iter = low_repo_set_search_details (repos, querystr);
 	print_all_packages_short (iter);
@@ -511,7 +511,7 @@ command_repolist (int argc, const char *argv[])
 
 	print_repo (repo_rpmdb);
 
-	repos = low_repo_set_initialize_from_config (config, TRUE);
+	repos = low_repo_set_initialize_from_config (config, true);
 	low_repo_set_for_each (repos, filter, (LowRepoSetFunc) print_repo,
 			       NULL);
 	low_repo_set_free (repos);
@@ -542,7 +542,7 @@ command_whatprovides (int argc G_GNUC_UNUSED, const char *argv[])
 		print_all_packages_short (iter);
 	}
 
-	repos = low_repo_set_initialize_from_config (config, TRUE);
+	repos = low_repo_set_initialize_from_config (config, true);
 
 	iter = low_repo_set_search_provides (repos, provides);
 	print_all_packages_short (iter);
@@ -576,7 +576,7 @@ command_whatrequires (int argc G_GNUC_UNUSED, const char *argv[])
 	iter = low_repo_rpmdb_search_requires (repo_rpmdb, requires);
 	print_all_packages_short (iter);
 
-	repos = low_repo_set_initialize_from_config (config, TRUE);
+	repos = low_repo_set_initialize_from_config (config, true);
 
 	iter = low_repo_set_search_requires (repos, requires);
 	print_all_packages_short (iter);
@@ -605,7 +605,7 @@ command_whatconflicts (int argc G_GNUC_UNUSED, const char *argv[])
 	iter = low_repo_rpmdb_search_conflicts (repo_rpmdb, conflicts);
 	print_all_packages_short (iter);
 
-	repos = low_repo_set_initialize_from_config (config, TRUE);
+	repos = low_repo_set_initialize_from_config (config, true);
 
 	iter = low_repo_set_search_conflicts (repos, conflicts);
 	print_all_packages_short (iter);
@@ -634,7 +634,7 @@ command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 	iter = low_repo_rpmdb_search_obsoletes (repo_rpmdb, obsoletes);
 	print_all_packages_short (iter);
 
-	repos = low_repo_set_initialize_from_config (config, TRUE);
+	repos = low_repo_set_initialize_from_config (config, true);
 
 	iter = low_repo_set_search_obsoletes (repos, obsoletes);
 	print_all_packages_short (iter);
@@ -671,7 +671,7 @@ create_package_filepath (LowPackage *pkg)
 	return local_file;
 }
 
-static gboolean
+static bool
 download_package (LowPackage *pkg)
 {
 	int res;
@@ -707,7 +707,7 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	repo_rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (repo_rpmdb);
 
-	repos = low_repo_set_initialize_from_config (config, TRUE);
+	repos = low_repo_set_initialize_from_config (config, true);
 
 	iter = low_repo_set_list_by_name (repos, name);
 	found_pkg = 0;
@@ -775,7 +775,7 @@ print_transaction_problems (LowTransaction *trans)
 	print_transaction_part (trans->unresolved);
 }
 
-static gboolean
+static bool
 prompt_confirmed (void)
 {
 	char input;
@@ -785,10 +785,10 @@ prompt_confirmed (void)
 	input = getchar ();
 
 	if (input == 'y' || input == 'Y') {
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
 static void
@@ -872,7 +872,7 @@ typedef enum _CallbackState {
 } CallbackState;
 
 typedef struct _CallbackData {
-	gboolean verbose;
+	bool verbose;
 	char *name;
 	int total_rpms;
 	int current_rpm;
@@ -910,7 +910,7 @@ low_show_rpm_progress (const void *arg, const rpmCallbackType what,
 	int xx;
 
 	CallbackData *callback = (CallbackData *) data;
-	gboolean verbose = callback->verbose;
+	bool verbose = callback->verbose;
 
 	switch (what) {
 		case RPMCALLBACK_INST_OPEN_FILE:
@@ -1044,7 +1044,7 @@ run_transaction (LowTransaction *trans)
 		int rc;
 		CallbackData data;
 		data.name = NULL;
-		data.verbose = TRUE;
+		data.verbose = true;
 
 		printf ("Running\n");
 		download_required_packages (trans);
@@ -1105,7 +1105,7 @@ command_install (int argc, const char *argv[])
 	repo_rpmdb = low_repo_rpmdb_initialize ();
 
 	config = low_config_initialize (repo_rpmdb);
-	repos = low_repo_set_initialize_from_config (config, TRUE);
+	repos = low_repo_set_initialize_from_config (config, true);
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
@@ -1155,7 +1155,7 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 	repo_rpmdb = low_repo_rpmdb_initialize ();
 
 	config = low_config_initialize (repo_rpmdb);
-	repos = low_repo_set_initialize_from_config (config, TRUE);
+	repos = low_repo_set_initialize_from_config (config, true);
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
@@ -1209,7 +1209,7 @@ command_remove (int argc, const char *argv[])
 	repo_rpmdb = low_repo_rpmdb_initialize ();
 
 	config = low_config_initialize (repo_rpmdb);
-	repos = low_repo_set_initialize_from_config (config, TRUE);
+	repos = low_repo_set_initialize_from_config (config, true);
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
@@ -1414,7 +1414,7 @@ command_refresh (int argc G_GNUC_UNUSED, const char **argv G_GNUC_UNUSED)
 	repo_rpmdb = low_repo_rpmdb_initialize ();
 
 	config = low_config_initialize (repo_rpmdb);
-	repos = low_repo_set_initialize_from_config (config, FALSE);
+	repos = low_repo_set_initialize_from_config (config, false);
 
 	low_repo_set_for_each (repos, filter, (LowRepoSetFunc) refresh_repo,
 			       NULL);

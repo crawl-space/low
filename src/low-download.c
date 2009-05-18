@@ -271,7 +271,7 @@ char_to_short (char to_convert)
 	return 0;
 }
 
-static gboolean
+static bool
 compare_digest (const char *file, const char *expected,
 		LowDigestType digest_type)
 {
@@ -296,7 +296,7 @@ compare_digest (const char *file, const char *expected,
 		case DIGEST_UNKNOWN:
 		case DIGEST_NONE:
 		default:
-			return FALSE;
+			return false;
 	}
 
 	fd = open (file, O_RDONLY);
@@ -323,11 +323,11 @@ compare_digest (const char *file, const char *expected,
 
 		if (e != result[i / 2]) {
 			debug_hashes (expected, result, size);
-			return FALSE;
+			return false;
 		}
 	}
 
-	return TRUE;
+	return true;
 }
 
 int

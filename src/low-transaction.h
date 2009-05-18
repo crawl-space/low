@@ -51,7 +51,7 @@ typedef struct _LowTransaction {
 
 typedef struct _LowTransactionMember {
 	LowPackage *pkg;
-	gboolean resolved;
+	bool resolved;
 
 	/* Overloaded for either updated or updating */
 	LowPackage *related_pkg;
@@ -69,11 +69,11 @@ void			low_transaction_free 	(LowTransaction *trans);
  * function calls.
  */
 
-gboolean 	low_transaction_add_install 	(LowTransaction *trans,
+bool 	low_transaction_add_install 	(LowTransaction *trans,
 						 LowPackage *to_install);
-gboolean 	low_transaction_add_update 	(LowTransaction *trans,
+bool 	low_transaction_add_update 	(LowTransaction *trans,
 						 LowPackage *to_update);
-gboolean 	low_transaction_add_remove 	(LowTransaction *trans,
+bool 	low_transaction_add_remove 	(LowTransaction *trans,
 						 LowPackage *to_remove);
 
 //low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove);

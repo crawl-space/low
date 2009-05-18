@@ -190,7 +190,7 @@ low_config_get_string (LowConfig *config, const char *group, const char *key)
 	return value_subbed;
 }
 
-gboolean
+bool
 low_config_get_boolean (LowConfig *config, const char *group, const char *key)
 {
 	return g_key_file_get_boolean (config->config, group, key, NULL);

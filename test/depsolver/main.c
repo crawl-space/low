@@ -339,7 +339,7 @@ low_package_from_hash (GHashTable *hash)
 }
 
 static LowRepo *
-low_repo_from_list (const char *name, const char *id, gboolean enabled,
+low_repo_from_list (const char *name, const char *id, bool enabled,
 		    GSList *list)
 {
 	LowRepo *repo = low_fake_repo_initialize (name, id, enabled);
@@ -556,11 +556,11 @@ run_test (GHashTable *test)
 	int res;
 
 	installed =
-		low_repo_from_list ("installed", "installed", TRUE,
+		low_repo_from_list ("installed", "installed", true,
 				    g_hash_table_lookup (test, "installed"));
 
 	available =
-		low_repo_from_list ("available", "available", TRUE,
+		low_repo_from_list ("available", "available", true,
 				    g_hash_table_lookup (test, "available"));
 
 	repo_set = malloc (sizeof (LowRepoSet));

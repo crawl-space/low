@@ -25,7 +25,7 @@
 #include "low-repo-set.h"
 
 LowRepoSet *
-low_repo_set_initialize_from_config (LowConfig *config, gboolean bind_dbs)
+low_repo_set_initialize_from_config (LowConfig *config, bool bind_dbs)
 {
 	unsigned int i;
 	char **repo_names;
@@ -43,7 +43,7 @@ low_repo_set_initialize_from_config (LowConfig *config, gboolean bind_dbs)
 		char *mirror_list = low_config_get_string (config,
 							   repo_names[i],
 							   "mirrorlist");
-		gboolean enabled = low_config_get_boolean (config,
+		bool enabled = low_config_get_boolean (config,
 							   repo_names[i],
 							   "enabled");
 		LowRepo *repo = low_repo_sqlite_initialize (id, name, baseurl,

@@ -31,8 +31,8 @@ LowRepo *           low_repo_sqlite_initialize   (const char *id,
 						  const char *name,
 						  const char *baseurl,
 						  const char *mirror_list,
-						  gboolean enabled,
-						  gboolean bind_dbs);
+						  bool enabled,
+						  bool bind_dbs);
 void                low_repo_sqlite_shutdown     (LowRepo *repo);
 
 LowPackageIter *    low_repo_sqlite_list_all     (LowRepo *repo);

@@ -62,7 +62,7 @@ low_mirror_list_new_from_baseurl (const char *baseurl)
 	LowMirror *mirror = malloc (sizeof (LowMirror));
 	mirror->url = strdup (baseurl);
 	mirror->weight = 100;
-	mirror->is_bad = FALSE;
+	mirror->is_bad = false;
 	mirrors->mirrors = g_list_append (mirrors->mirrors, mirror);
 
 	return mirrors;
@@ -91,12 +91,12 @@ low_mirror_list_new_from_txt_file (const char *mirrorlist_txt)
 				mirror->url = url->str;
 				/* txt mirrors are unweighted */
 				mirror->weight = 100;
-				mirror->is_bad = FALSE;
+				mirror->is_bad = false;
 				mirrors->mirrors =
 					g_list_append (mirrors->mirrors,
 						       mirror);
 			}
-			g_string_free (url, FALSE);
+			g_string_free (url, false);
 			url = g_string_new ("");
 			continue;
 		}
@@ -185,7 +185,7 @@ low_mirror_list_mark_as_bad (LowMirrorList *mirrors, const char *url)
 	for (cur = mirrors->mirrors; cur != NULL; cur = cur->next) {
 		mirror = (LowMirror *) cur->data;
 		if (!strcmp (mirror->url, url)) {
-			mirror->is_bad = TRUE;
+			mirror->is_bad = true;
 			break;
 		}
 	}

@@ -19,6 +19,7 @@
  *  02110-1301  USA
  */
 
+#include <stdbool.h>
 #include <glib.h>
 
 #ifndef _LOW_MIRROR_LIST_H_
@@ -27,7 +28,7 @@
 typedef struct _LowMirror {
 	char *url;
 	int weight;
-	gboolean is_bad;
+	bool is_bad;
 } LowMirror;
 
 typedef struct _LowMirrorList {
