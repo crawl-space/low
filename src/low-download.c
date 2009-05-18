@@ -194,7 +194,7 @@ low_download_from_mirror (LowMirrorList *mirrors, const char *relative_path,
 				   error, baseurl);
 
 			low_mirror_list_mark_as_bad (mirrors, baseurl);
-			free(url);
+			free (url);
 			continue;
 		}
 
@@ -205,7 +205,7 @@ low_download_from_mirror (LowMirrorList *mirrors, const char *relative_path,
 				   error, baseurl);
 
 			low_mirror_list_mark_as_bad (mirrors, baseurl);
-			free(url);
+			free (url);
 			continue;
 		}
 
@@ -215,7 +215,7 @@ low_download_from_mirror (LowMirrorList *mirrors, const char *relative_path,
 				   response, baseurl);
 
 			low_mirror_list_mark_as_bad (mirrors, baseurl);
-			free(url);
+			free (url);
 			continue;
 		}
 
@@ -270,6 +270,7 @@ char_to_short (char to_convert)
 
 	return 0;
 }
+
 static gboolean
 compare_digest (const char *file, const char *expected,
 		LowDigestType digest_type)
