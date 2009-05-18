@@ -44,7 +44,7 @@ typedef struct _LowRepoSqlite {
 
 /* XXX clean these up */
 typedef gboolean (*LowPackageIterFilterFn) (LowPackage *pkg, gpointer data);
-typedef void 	 (*LowPackageIterFilterDataFree) (gpointer data);
+typedef void (*LowPackageIterFilterDataFree) (gpointer data);
 
 typedef struct _LowPackageIterSqlite {
 	LowPackageIter super;
@@ -54,26 +54,22 @@ typedef struct _LowPackageIterSqlite {
 	LowPackageIterFilterDataFree filter_data_free_func;
 } LowPackageIterSqlite;
 
-LowPackageIter * low_sqlite_package_iter_next	(LowPackageIter *iter);
+LowPackageIter *low_sqlite_package_iter_next (LowPackageIter *iter);
 
-LowPackageDetails *	low_sqlite_package_get_details	(LowPackage *pkg);
+LowPackageDetails *low_sqlite_package_get_details (LowPackage *pkg);
 
-LowPackageDependency **	low_sqlite_package_get_provides	 (LowPackage *pkg);
-LowPackageDependency **	low_sqlite_package_get_requires	 (LowPackage *pkg);
-LowPackageDependency **	low_sqlite_package_get_conflicts (LowPackage *pkg);
-LowPackageDependency **	low_sqlite_package_get_obsoletes (LowPackage *pkg);
+LowPackageDependency **low_sqlite_package_get_provides (LowPackage *pkg);
+LowPackageDependency **low_sqlite_package_get_requires (LowPackage *pkg);
+LowPackageDependency **low_sqlite_package_get_conflicts (LowPackage *pkg);
+LowPackageDependency **low_sqlite_package_get_obsoletes (LowPackage *pkg);
 
-char **		low_sqlite_package_get_files		(LowPackage *pkg);
-
+char **low_sqlite_package_get_files (LowPackage *pkg);
 
 static void
 low_repo_sqlite_open_db (const char *db_file, sqlite3 **db)
 {
 	if (sqlite3_open (db_file, db)) {
-//		fprintf (stderr, "Can't open database '%s': %s\n",
-//				 primary_db, sqlite3_errmsg (repo->primary_db));
 		sqlite3_close (*db);
-//		exit(1);
 	}
 }
 
@@ -160,7 +156,6 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 						repomd->filelists_db + 9);
 		repomd->filelists_db[strlen (repomd->filelists_db) - 4] = tmp;
 
-
 		low_debug ("Opening %s - %s\n", id, primary_db);
 		low_debug ("Opening %s - %s\n", id, filelists_db);
 
@@ -211,7 +206,6 @@ low_repo_sqlite_shutdown (LowRepo *repo)
 	if (repo_sqlite->primary_db) {
 		detach_db (repo_sqlite->primary_db);
 		sqlite3_close (repo_sqlite->primary_db);
-	//	sqlite3_close (repo_sqlite->filelists_db);
 	}
 
 	if (repo_sqlite->table) {
@@ -262,7 +256,6 @@ low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
 	return (LowPackageIter *) iter;
 }
 
-
 /* XXX duplicated */
 typedef struct _DepFilterData {
 	LowPackageDependency *dep;
@@ -270,7 +263,8 @@ typedef struct _DepFilterData {
 } DepFilterData;
 
 static void
-dep_filter_data_free_fn (gpointer data) {
+dep_filter_data_free_fn (gpointer data)
+{
 	DepFilterData *filter_data = (DepFilterData *) data;
 	low_package_dependency_free (filter_data->dep);
 	free (filter_data);
@@ -291,8 +285,6 @@ low_repo_sqlite_search_dep_filter_fn (LowPackage *pkg, gpointer data)
 			break;
 		}
 	}
-
-//	low_package_dependency_list_free (deps);
 
 	return res;
 }
@@ -697,13 +689,13 @@ low_repo_sqlite_get_mirror_list (LowRepo *repo)
 static LowDigestType
 digest_type_from_string (const char *string)
 {
-	if (!strcmp(string, "md5")) {
+	if (!strcmp (string, "md5")) {
 		return DIGEST_MD5;
-	} else if (!strcmp(string, "sha")) {
+	} else if (!strcmp (string, "sha")) {
 		return DIGEST_SHA1;
-	} else if (!strcmp(string, "sha1")) {
+	} else if (!strcmp (string, "sha1")) {
 		return DIGEST_SHA1;
-	} else if (!strcmp(string, "sha256")) {
+	} else if (!strcmp (string, "sha256")) {
 		return DIGEST_SHA256;
 	} else {
 		low_debug ("%s\n", string);
@@ -726,7 +718,8 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 		repo_sqlite->table =
 			g_hash_table_new_full (g_int_hash, g_int_equal,
 					       NULL,
-					       (GDestroyNotify) low_package_unref);
+					       (GDestroyNotify)
+					       low_package_unref);
 	}
 
 	key = sqlite3_column_int (pp_stmt, 0);
@@ -764,9 +757,9 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 
 	pkg->digest =
 		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-	pkg->digest_type =
-		digest_type_from_string ((const char *)
-					 sqlite3_column_text (pp_stmt, i++));
+	pkg->digest_type = digest_type_from_string ((const char *)
+						    sqlite3_column_text
+						    (pp_stmt, i++));
 
 	pkg->get_details = low_sqlite_package_get_details;
 
@@ -802,7 +795,7 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 	}
 
 	iter->pkg = low_package_sqlite_new_from_row (iter_sqlite->pp_stmt,
-												 iter->repo);
+						     iter->repo);
 	if (iter_sqlite->func != NULL) {
 		/* move on to the next package if this one fails the filter */
 		if (!(iter_sqlite->func) (iter->pkg, iter_sqlite->filter_data)) {

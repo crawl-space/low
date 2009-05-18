@@ -34,7 +34,7 @@ typedef struct _LowRepoRpmdb {
 
 /* XXX clean these up */
 typedef gboolean (*LowPackageIterFilterFn) (LowPackage *pkg, gpointer data);
-typedef void 	 (*LowPackageIterFilterDataFree) (gpointer data);
+typedef void (*LowPackageIterFilterDataFree) (gpointer data);
 
 typedef struct _LowPackageIterRpmdb {
 	LowPackageIter super;
@@ -44,16 +44,16 @@ typedef struct _LowPackageIterRpmdb {
 	LowPackageIterFilterDataFree filter_data_free_func;
 } LowPackageIterRpmdb;
 
-LowPackageIter * low_package_iter_rpmdb_next (LowPackageIter *iter);
+LowPackageIter *low_package_iter_rpmdb_next (LowPackageIter *iter);
 
-LowPackageDetails *	low_rpmdb_package_get_details	(LowPackage *pkg);
+LowPackageDetails *low_rpmdb_package_get_details (LowPackage *pkg);
 
-LowPackageDependency **	low_rpmdb_package_get_provides	(LowPackage *pkg);
-LowPackageDependency **	low_rpmdb_package_get_requires	(LowPackage *pkg);
-LowPackageDependency **	low_rpmdb_package_get_conflicts	(LowPackage *pkg);
-LowPackageDependency **	low_rpmdb_package_get_obsoletes	(LowPackage *pkg);
+LowPackageDependency **low_rpmdb_package_get_provides (LowPackage *pkg);
+LowPackageDependency **low_rpmdb_package_get_requires (LowPackage *pkg);
+LowPackageDependency **low_rpmdb_package_get_conflicts (LowPackage *pkg);
+LowPackageDependency **low_rpmdb_package_get_obsoletes (LowPackage *pkg);
 
-char **		low_rpmdb_package_get_files 		(LowPackage *pkg);
+char **low_rpmdb_package_get_files (LowPackage *pkg);
 
 LowRepo *
 low_repo_rpmdb_initialize (void)
@@ -302,8 +302,7 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	if (!table) {
 		low_debug ("initializing hash table\n");
 		table = g_hash_table_new_full (id_hash_func, id_equal_func,
-					       NULL,
-					       (GDestroyNotify)
+					       NULL, (GDestroyNotify)
 					       low_package_unref);
 	}
 
@@ -348,7 +347,6 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	headerGet (header, RPMTAG_ARCH, arch, HEADERGET_MINMEM);
 
 	headerGet (header, RPMTAG_SIZE, size, HEADERGET_MINMEM);
-
 
 	pkg = malloc (sizeof (LowPackage));
 
@@ -420,7 +418,8 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 		rpmdbFreeIterator (iter_rpmdb->rpm_iter);
 
 		if (iter_rpmdb->filter_data_free_func) {
-			(iter_rpmdb->filter_data_free_func) (iter_rpmdb->filter_data);
+			(iter_rpmdb->filter_data_free_func) (iter_rpmdb->
+							     filter_data);
 		}
 
 		free (iter);

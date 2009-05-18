@@ -77,29 +77,25 @@ low_transaction_new (LowRepo *repo_rpmdb, LowRepoSet *repos,
 	trans->callback_data = callback_data;
 
 	trans->install = g_hash_table_new_full (g_str_hash, g_str_equal,
-						g_free,
-						(GDestroyNotify)
+						g_free, (GDestroyNotify)
 						low_transaction_member_free);
 	trans->update = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free,
-					       (GDestroyNotify)
+					       g_free, (GDestroyNotify)
 					       low_transaction_member_free);
 	trans->updated = g_hash_table_new_full (g_str_hash, g_str_equal,
-						g_free,
-						(GDestroyNotify)
+						g_free, (GDestroyNotify)
 						low_transaction_member_free);
 	trans->remove = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free,
-					       (GDestroyNotify)
+					       g_free, (GDestroyNotify)
 					       low_transaction_member_free);
 
 	trans->unresolved = g_hash_table_new_full (g_str_hash, g_str_equal,
-						   g_free,
-						   (GDestroyNotify)
+						   g_free, (GDestroyNotify)
 						   low_transaction_member_free);
 
 	return trans;
 }
+
 /*
 static int
 low_transaction_pkg_compare_func (gconstpointer data1, gconstpointer data2)
@@ -134,8 +130,7 @@ low_transaction_add_to_hash (GHashTable *hash, LowPackage *pkg,
 				       pkg->release, pkg->arch);
 	} else {
 		key = g_strdup_printf ("%s-%s-%s.%s", pkg->name,
-				       pkg->version, pkg->release,
-				       pkg->arch);
+				       pkg->version, pkg->release, pkg->arch);
 	}
 
 	if (!g_hash_table_lookup (hash, key)) {
@@ -148,7 +143,7 @@ low_transaction_add_to_hash (GHashTable *hash, LowPackage *pkg,
 		res = TRUE;
 	} else {
 		/* XXX not the right place for this */
-//		low_package_unref (pkg);
+//              low_package_unref (pkg);
 
 		free (key);
 		res = FALSE;
@@ -171,8 +166,7 @@ low_transaction_remove_from_hash (GHashTable *hash, LowPackage *pkg)
 				       pkg->release, pkg->arch);
 	} else {
 		key = g_strdup_printf ("%s-%s-%s.%s", pkg->name,
-				       pkg->version, pkg->release,
-				       pkg->arch);
+				       pkg->version, pkg->release, pkg->arch);
 	}
 
 	found_pkg = g_hash_table_lookup (hash, key);
@@ -195,8 +189,7 @@ low_transaction_is_pkg_in_hash (GHashTable *hash, LowPackage *pkg)
 				       pkg->release, pkg->arch);
 	} else {
 		key = g_strdup_printf ("%s-%s-%s.%s", pkg->name,
-				       pkg->version, pkg->release,
-				       pkg->arch);
+				       pkg->version, pkg->release, pkg->arch);
 	}
 
 	ret = g_hash_table_lookup (hash, key) != 0 ? TRUE : FALSE;
@@ -262,7 +255,7 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 {
 	LowPackage *best = to_update;
 	LowPackageIter *iter;
-	char *best_evr = low_package_evr_as_string(to_update);
+	char *best_evr = low_package_evr_as_string (to_update);
 	gboolean found;
 
 	LowPackageDependency *obsoletes =
@@ -279,7 +272,8 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 		/* XXX arch cmp here has to be better */
 		if ((cmp > 0 && arch_is_compatible (to_update, iter->pkg)) ||
 		    (cmp == 0 &&
-		     choose_best_arch (to_update, best, iter->pkg) == iter->pkg)) {
+		     choose_best_arch (to_update, best,
+				       iter->pkg) == iter->pkg)) {
 			low_package_unref (best);
 			best = iter->pkg;
 
@@ -301,7 +295,8 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 		/* XXX arch cmp here has to be better */
 		if ((cmp > 0 && arch_is_compatible (to_update, iter->pkg)) ||
 		    (cmp == 0 &&
-		     choose_best_arch (to_update, best, iter->pkg) == iter->pkg)) {
+		     choose_best_arch (to_update, best,
+				       iter->pkg) == iter->pkg)) {
 			low_package_unref (best);
 			best = iter->pkg;
 
@@ -328,7 +323,7 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		if (!found) {
-			char *this_evr = low_package_evr_as_string(iter->pkg);
+			char *this_evr = low_package_evr_as_string (iter->pkg);
 
 			if (low_util_evr_cmp (best_evr, this_evr) == 0) {
 				found = TRUE;
@@ -360,8 +355,7 @@ add_update_worker (LowTransaction *trans, LowPackage *to_update,
 		return low_transaction_add_install (trans, updating_to);
 	}
 
-	if (low_transaction_add_to_hash (trans->update, updating_to,
-					 to_update)) {
+	if (low_transaction_add_to_hash (trans->update, updating_to, to_update)) {
 		low_transaction_add_to_hash (trans->updated, to_update,
 					     updating_to);
 		low_debug_pkg ("Adding for update", updating_to);
@@ -394,7 +388,7 @@ find_updated (LowRepo *repo_rpmdb, LowPackage *updating)
 	LowPackage *updated = NULL;
 	LowPackageIter *iter;
 	gboolean found = FALSE;
-	char *updating_evr = low_package_evr_as_string(updating);
+	char *updating_evr = low_package_evr_as_string (updating);
 
 	iter = low_repo_rpmdb_list_by_name (repo_rpmdb, updating->name);
 
@@ -419,6 +413,7 @@ find_updated (LowRepo *repo_rpmdb, LowPackage *updating)
 
 	return updated;
 }
+
 /**
  * Install a package, or mark it for update if it updates an installed package
  **/
@@ -460,8 +455,8 @@ low_transaction_dep_in_deplist (const LowPackageDependency *needle,
 		if (!strcmp (needle->name, haystack[i]->name) &&
 		    needle->sense == haystack[i]->sense &&
 		    ((needle->evr == NULL && haystack[i]->evr == NULL) ||
-		    (needle->evr != NULL && haystack[i]->evr != NULL &&
-		    low_util_evr_cmp (needle->evr, haystack[i]->evr) == 0))) {
+		     (needle->evr != NULL && haystack[i]->evr != NULL &&
+		      low_util_evr_cmp (needle->evr, haystack[i]->evr) == 0))) {
 			return TRUE;
 		}
 	}
@@ -517,8 +512,9 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 		if ((cmp > 0 && arch_is_compatible (pkg, iter->pkg)) ||
 		    (cmp == 0 &&
 		     choose_best_arch (pkg, best, iter->pkg) == iter->pkg) ||
-		    low_transaction_is_pkg_in_hash (trans->install, iter->pkg) ||
-		    low_transaction_is_pkg_in_hash (trans->update, iter->pkg)) {
+		    low_transaction_is_pkg_in_hash (trans->install, iter->pkg)
+		    || low_transaction_is_pkg_in_hash (trans->update,
+						       iter->pkg)) {
 			if (best) {
 				low_package_unref (best);
 			}
@@ -538,8 +534,10 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 	if (best) {
 		/* XXX clean this up */
 		if (check_for_existing) {
-			if (low_transaction_is_pkg_in_hash (trans->install, best) ||
-			    low_transaction_is_pkg_in_hash (trans->update, best)) {
+			if (low_transaction_is_pkg_in_hash
+			    (trans->install, best)
+			    || low_transaction_is_pkg_in_hash (trans->update,
+							       best)) {
 				return LOW_TRANSACTION_NO_CHANGE;
 			} else {
 				return LOW_TRANSACTION_UNRESOLVABLE;
@@ -580,10 +578,10 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 		if (low_transaction_dep_satisfied_by_deplist (requires[i],
 							      provides)
 		    || low_transaction_dep_in_filelist (requires[i]->name,
-						        files)) {
-		    low_debug ("Self provided requires %s, skipping",
-			       requires[i]->name);
-		    continue;
+							files)) {
+			low_debug ("Self provided requires %s, skipping",
+				   requires[i]->name);
+			continue;
 		}
 		low_debug ("Checking requires %s", requires[i]->name);
 
@@ -678,8 +676,8 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 		return LOW_TRANSACTION_UNRESOLVABLE;
 	}
 
-//	low_package_dependency_list_free (provides);
-//	low_package_dependency_list_free (requires);
+//      low_package_dependency_list_free (provides);
+//      low_package_dependency_list_free (requires);
 	g_strfreev (files);
 
 	if (pkgs_added) {
@@ -712,16 +710,15 @@ low_transaction_check_removal (LowTransaction *trans,
 		update_files = low_package_get_files (member->related_pkg);
 	}
 
-
 	for (i = 0; provides[i] != NULL; i++) {
 		LowPackageIter *iter;
 
 		if (from_update &&
 		    low_transaction_dep_in_deplist (provides[i],
 						    update_provides)) {
-		    low_debug ("Provides provided by update %s",
-			       provides[i]->name);
-		    continue;
+			low_debug ("Provides provided by update %s",
+				   provides[i]->name);
+			continue;
 		}
 
 		low_debug ("Checking provides %s", provides[i]->name);
@@ -775,10 +772,9 @@ low_transaction_check_removal (LowTransaction *trans,
 
 		if (from_update &&
 		    low_transaction_dep_in_filelist (files[i], update_files)) {
-		    low_debug ("File contained in update");
-		    continue;
+			low_debug ("File contained in update");
+			continue;
 		}
-
 
 		file_dep = low_package_dependency_new (files[i],
 						       DEPENDENCY_SENSE_NONE,
@@ -786,8 +782,7 @@ low_transaction_check_removal (LowTransaction *trans,
 
 		low_debug ("Checking file %s", files[i]);
 
-		iter = low_repo_rpmdb_search_requires (trans->rpmdb,
-						       file_dep);
+		iter = low_repo_rpmdb_search_requires (trans->rpmdb, file_dep);
 		while (iter = low_package_iter_next (iter), iter != NULL) {
 			/* It's a self-requires, skip */
 			if (pkg == iter->pkg) {
@@ -820,7 +815,7 @@ low_transaction_check_removal (LowTransaction *trans,
 		low_package_dependency_free (file_dep);
 	}
 
-//	low_package_dependency_list_free (provides);
+//      low_package_dependency_list_free (provides);
 	g_strfreev (files);
 
 	return status;
@@ -835,9 +830,9 @@ progress (LowTransaction *trans, gboolean is_done)
 }
 
 static LowTransactionStatus
-low_transaction_check_requires_for_added(LowTransactionStatus status,
-					 LowTransaction *trans,
-					 GHashTable *hash)
+low_transaction_check_requires_for_added (LowTransactionStatus status,
+					  LowTransaction *trans,
+					  GHashTable *hash)
 {
 	GList *cur = g_hash_table_get_values (hash);
 
@@ -873,10 +868,10 @@ low_transaction_check_requires_for_added(LowTransactionStatus status,
 }
 
 static LowTransactionStatus
-low_transaction_check_requires_for_removing(LowTransactionStatus status,
-					    LowTransaction *trans,
-					    GHashTable *hash,
-					    gboolean from_update)
+low_transaction_check_requires_for_removing (LowTransactionStatus status,
+					     LowTransaction *trans,
+					     GHashTable *hash,
+					     gboolean from_update)
 {
 	GList *cur = g_hash_table_get_values (hash);
 
@@ -931,8 +926,8 @@ low_transaction_check_all_requires (LowTransaction *trans)
 							      trans->remove,
 							      FALSE);
 	status = low_transaction_check_requires_for_removing (status, trans,
-							     trans->updated,
-							     TRUE);
+							      trans->updated,
+							      TRUE);
 
 	return status;
 }
@@ -956,12 +951,12 @@ low_transaction_search_provides (GHashTable *hash, char *query)
 
 		for (i = 0; provides[i] != NULL; i++) {
 			if (!strcmp (query, provides[i]->name)) {
-//				low_package_dependency_list_free (provides);
+//                              low_package_dependency_list_free (provides);
 				return member->pkg;
 			}
 		}
 
-//		low_package_dependency_list_free (provides);
+//              low_package_dependency_list_free (provides);
 
 	}
 
@@ -1070,7 +1065,6 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 			low_transaction_remove_from_hash (trans->install, pkg);
 			return status;
 		}
-
 
 		cur = cur->next;
 	}
