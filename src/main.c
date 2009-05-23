@@ -295,7 +295,7 @@ print_package_short (LowPackage *pkg)
 {
 	char *name_arch = g_strdup_printf ("%s.%s", pkg->name, pkg->arch);
 	char *version_release = g_strdup_printf ("%s-%s", pkg->version,
-						  pkg->release);
+						 pkg->release);
 
 	printf ("%-41.41s %-23.23s %s\n", name_arch, version_release,
 		pkg->repo->id);
