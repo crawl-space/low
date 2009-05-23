@@ -271,10 +271,10 @@ union rpm_entry {
 	uint32_t *integer;
 };
 
-static guint
+static uint
 id_hash_func (gconstpointer key)
 {
-	return *((guint *) key);
+	return *((uint *) key);
 }
 
 static bool

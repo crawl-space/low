@@ -736,9 +736,9 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 static void
 print_transaction (LowTransaction *trans)
 {
-	guint update_size = g_hash_table_size (trans->update);
-	guint install_size = g_hash_table_size (trans->install);
-	guint remove_size = g_hash_table_size (trans->remove);
+	uint update_size = g_hash_table_size (trans->update);
+	uint install_size = g_hash_table_size (trans->install);
+	uint remove_size = g_hash_table_size (trans->remove);
 
 	if (update_size > 0) {
 		printf ("Update:\n");
