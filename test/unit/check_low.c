@@ -259,18 +259,11 @@ START_TEST (test_low_repo_set_search_single_repo_no_packages)
 	low_repo_set_free (repo_set);
 } END_TEST
 
-START_TEST (test_low_repo_set_search_two_repos_no_packages)
+static GHashTable *
+initialize_repos (LowPackage **packages)
 {
-	int i = 0;
-	LowPackage **packages = malloc (sizeof (LowPackage *));
 	LowRepoSqliteFake *repo;
-	LowPackageIter *iter;
-
-	/* Should this be part of low_repo_set's interface? */
-	LowRepoSet *repo_set = malloc (sizeof (LowRepoSet));
-	repo_set->repos = g_hash_table_new (NULL, NULL);
-
-	packages[0] = NULL;
+	GHashTable *repos = g_hash_table_new (NULL, NULL);
 
 	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test1",
 								 "test repo",
@@ -278,7 +271,7 @@ START_TEST (test_low_repo_set_search_two_repos_no_packages)
 								 "mirror",
 								 true, TRUE);
 	repo->packages = packages;
-	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
+	g_hash_table_insert (repos, repo->super.id, repo);
 
 	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test2",
 								 "test repo",
@@ -286,7 +279,23 @@ START_TEST (test_low_repo_set_search_two_repos_no_packages)
 								 "mirror",
 								 true, TRUE);
 	repo->packages = packages;
-	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
+	g_hash_table_insert (repos, repo->super.id, repo);
+
+	return repos;
+}
+
+START_TEST (test_low_repo_set_search_two_repos_no_packages)
+{
+	int i = 0;
+	LowPackage **packages = malloc (sizeof (LowPackage *));
+	LowPackageIter *iter;
+	LowRepoSet *repo_set;
+
+	packages[0] = NULL;
+
+	/* Should this be part of low_repo_set's interface? */
+	repo_set = malloc (sizeof (LowRepoSet));
+	repo_set->repos = initialize_repos (packages);
 
 	iter = low_repo_set_list_all (repo_set);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
@@ -333,31 +342,15 @@ START_TEST (test_low_repo_set_search_two_repos_two_packages)
 	int i = 0;
 	LowPackage **packages = malloc (sizeof (LowPackage *) * 2);
 	LowPackage package;
-	LowRepoSqliteFake *repo;
 	LowPackageIter *iter;
-
-	/* Should this be part of low_repo_set's interface? */
-	LowRepoSet *repo_set = malloc (sizeof (LowRepoSet));
-	repo_set->repos = g_hash_table_new (NULL, NULL);
+	LowRepoSet *repo_set;
 
 	packages[0] = &package;
 	packages[1] = NULL;
 
-	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test1",
-								 "test repo",
-								 "test url",
-								 "mirror",
-								 true, TRUE);
-	repo->packages = packages;
-	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
-
-	repo = (LowRepoSqliteFake *) low_repo_sqlite_initialize ("test2",
-								 "test repo",
-								 "test url",
-								 "mirror",
-								 true, TRUE);
-	repo->packages = packages;
-	g_hash_table_insert (repo_set->repos, repo->super.id, repo);
+	/* Should this be part of low_repo_set's interface? */
+	repo_set = malloc (sizeof (LowRepoSet));
+	repo_set->repos = initialize_repos (packages);
 
 	iter = low_repo_set_list_all (repo_set);
 	while (iter = low_package_iter_next (iter), iter != NULL) {
