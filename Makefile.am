@@ -49,6 +49,13 @@ trailinglint:
 
 whitespacelint: tablint trailinglint leadingspacelint
 
+CLASSPATH=/usr/share/java/pmd.jar
+cpd:
+	@CLASSPATH=$(CLASSPATH) java net.sourceforge.pmd.cpd.CPD  --language c \
+		--minimum-tokens 100 \
+		--files src \
+		--files test
+
 TAGS=$(shell awk 'BEGIN{RS=""} { for(i=1;i<=NF;i++) printf "-T "$$(i)" "; print ""}' typedefs.txt)
 
 # XXX watch for pointers and custom typedefs with this
