@@ -20,8 +20,8 @@
 EXTRA_DIST = run-depsolver-tests.sh yaml
 
 INCLUDES = \
-	-I${top_builddir}/src/ \
-	-I${top_builddir}/test/unit/ \
+	-I${top_srcdir}/src/ \
+	-I${top_srcdir}/test/unit/ \
 	$(GLIB_CFLAGS) \
 	$(NULL)
 

@@ -19,7 +19,7 @@
 
 INCLUDES = \
 	@CHECK_CFLAGS@ \
-	-I${top_builddir}/src/ \
+	-I${top_srcdir}/src/ \
 	$(GLIB_CFLAGS) \
 	$(NULL)
 
