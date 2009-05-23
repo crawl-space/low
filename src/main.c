@@ -1323,7 +1323,39 @@ create_repodata_filename (LowRepo *repo, const char *relative_name)
 {
 	const char *basename = get_file_basename (relative_name);
 	return g_strdup_printf ("%s/%s/%s", LOCAL_CACHE, repo->id, basename);
+}
 
+static bool
+repodata_missing (LowRepo *repo, const char *relative_name)
+{
+	char *filename = create_repodata_filename (repo, relative_name);
+	char *uncompressed_name = malloc (strlen (filename) - 3);
+	strncpy (uncompressed_name, filename, strlen (filename) - 4);
+	uncompressed_name[strlen (filename) - 4] = '\0';
+
+	/* XXX verify checksum */
+	if (!g_file_test (uncompressed_name, G_FILE_TEST_EXISTS)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+static void
+fetch_repodata_file (LowRepo *repo, const char *relative_name)
+{
+	char *tmp_file;
+	char *local_file;
+	char *db_file;
+
+	tmp_file = download_repodata_file (repo, relative_name);
+	local_file = create_repodata_filename (repo, relative_name);
+	rename (tmp_file, local_file);
+	db_file = uncompress_file (local_file);
+
+	g_free (local_file);
+	g_free (tmp_file);
+	g_free (db_file);
 }
 
 static void
@@ -1331,7 +1363,6 @@ refresh_repo (LowRepo *repo)
 {
 	char *local_file;
 	char *tmp_file;
-	char *db_file;
 	char *dirname;
 	LowRepomd *old_repomd;
 	LowRepomd *new_repomd;
@@ -1371,36 +1402,22 @@ refresh_repo (LowRepo *repo)
 	tmp_file = download_repodata_file (repo, "repodata/repomd.xml");
 	new_repomd = low_repomd_parse (tmp_file);
 
-	if (old_repomd != NULL &&
-	    old_repomd->primary_db_time >= new_repomd->primary_db_time &&
-	    old_repomd->filelists_db_time >= new_repomd->filelists_db_time) {
-		g_free (local_file);
-		g_free (tmp_file);
-
-		return;
+	if (old_repomd == NULL ||
+	    old_repomd->primary_db_time < new_repomd->primary_db_time ||
+	    old_repomd->filelists_db_time < new_repomd->filelists_db_time) {
+		rename (tmp_file, local_file);
 	}
 
-	rename (tmp_file, local_file);
 	g_free (local_file);
 	g_free (tmp_file);
 
-	tmp_file = download_repodata_file (repo, new_repomd->primary_db);
-	local_file = create_repodata_filename (repo, new_repomd->primary_db);
-	rename (tmp_file, local_file);
-	db_file = uncompress_file (local_file);
+	if (repodata_missing (repo, new_repomd->primary_db)) {
+		fetch_repodata_file (repo, new_repomd->primary_db);
+	}
 
-	g_free (local_file);
-	g_free (tmp_file);
-	g_free (db_file);
-
-	tmp_file = download_repodata_file (repo, new_repomd->filelists_db);
-	local_file = create_repodata_filename (repo, new_repomd->filelists_db);
-	rename (tmp_file, local_file);
-	db_file = uncompress_file (local_file);
-
-	g_free (local_file);
-	g_free (tmp_file);
-	g_free (db_file);
+	if (repodata_missing (repo, new_repomd->filelists_db)) {
+		fetch_repodata_file (repo, new_repomd->filelists_db);
+	}
 }
 
 static int
