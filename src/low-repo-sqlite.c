@@ -476,13 +476,13 @@ low_repo_sqlite_search_obsoletes (LowRepo *repo,
 		while (obs != NULL) {
 			tmp2 = g_strdup_printf ("%s, %d", tmp,
 						GPOINTER_TO_INT (obs->data));
-			g_free (tmp);
+			free (tmp);
 			tmp = tmp2;
 			obs = obs->next;
 		}
 
 		tmp2 = g_strdup_printf ("%s)", tmp);
-		g_free (tmp);
+		free (tmp);
 		tmp = tmp2;
 	}
 	stmt = g_strdup_printf (SELECT_FIELDS_FROM "packages p "
@@ -503,7 +503,7 @@ low_repo_sqlite_search_obsoletes (LowRepo *repo,
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
 			 NULL);
-	g_free (stmt);
+	free (stmt);
 
 	return (LowPackageIter *) iter;
 }

@@ -77,20 +77,20 @@ low_transaction_new (LowRepo *repo_rpmdb, LowRepoSet *repos,
 	trans->callback_data = callback_data;
 
 	trans->install = g_hash_table_new_full (g_str_hash, g_str_equal,
-						g_free, (GDestroyNotify)
+						free, (GDestroyNotify)
 						low_transaction_member_free);
 	trans->update = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free, (GDestroyNotify)
+					       free, (GDestroyNotify)
 					       low_transaction_member_free);
 	trans->updated = g_hash_table_new_full (g_str_hash, g_str_equal,
-						g_free, (GDestroyNotify)
+						free, (GDestroyNotify)
 						low_transaction_member_free);
 	trans->remove = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free, (GDestroyNotify)
+					       free, (GDestroyNotify)
 					       low_transaction_member_free);
 
 	trans->unresolved = g_hash_table_new_full (g_str_hash, g_str_equal,
-						   g_free, (GDestroyNotify)
+						   free, (GDestroyNotify)
 						   low_transaction_member_free);
 
 	return trans;
@@ -194,7 +194,7 @@ low_transaction_is_pkg_in_hash (GHashTable *hash, LowPackage *pkg)
 
 	ret = g_hash_table_lookup (hash, key) != 0 ? true : false;
 
-	g_free (key);
+	free (key);
 
 	return ret;
 }
@@ -277,11 +277,11 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 			low_package_unref (best);
 			best = iter->pkg;
 
-			g_free (best_evr);
+			free (best_evr);
 			best_evr = new_evr;
 		} else {
 			low_package_unref (iter->pkg);
-			g_free (new_evr);
+			free (new_evr);
 		}
 
 	}
@@ -300,11 +300,11 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 			low_package_unref (best);
 			best = iter->pkg;
 
-			g_free (best_evr);
+			free (best_evr);
 			best_evr = new_evr;
 		} else {
 			low_package_unref (iter->pkg);
-			g_free (new_evr);
+			free (new_evr);
 		}
 
 	}
@@ -313,7 +313,7 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 
 	/* We haven't found anything better */
 	if (to_update == best) {
-		g_free (best_evr);
+		free (best_evr);
 		return NULL;
 	}
 
@@ -329,13 +329,13 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 				found = true;
 			}
 
-			g_free (this_evr);
+			free (this_evr);
 		}
 
 		low_package_unref (iter->pkg);
 	}
 
-	g_free (best_evr);
+	free (best_evr);
 
 	if (found) {
 		return NULL;
@@ -405,11 +405,11 @@ find_updated (LowRepo *repo_rpmdb, LowPackage *updating)
 		} else {
 			low_package_unref (iter->pkg);
 		}
-		g_free (updated_evr);
+		free (updated_evr);
 
 	}
 
-	g_free (updating_evr);
+	free (updating_evr);
 
 	return updated;
 }
@@ -519,17 +519,17 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 				low_package_unref (best);
 			}
 
-			g_free (best_evr);
+			free (best_evr);
 			best = iter->pkg;
 			best_evr = new_evr;
 		} else {
 			low_package_unref (iter->pkg);
-			g_free (new_evr);
+			free (new_evr);
 		}
 
 	}
 
-	g_free (best_evr);
+	free (best_evr);
 
 	if (best) {
 		/* XXX clean this up */

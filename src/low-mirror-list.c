@@ -51,7 +51,7 @@ low_mirror_list_free (LowMirrorList *mirrors)
 	g_list_foreach (mirrors->mirrors, free_g_list_node, NULL);
 	g_list_free (mirrors->mirrors);
 
-	g_free (mirrors);
+	free (mirrors);
 }
 
 LowMirrorList *

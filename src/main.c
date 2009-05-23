@@ -1075,17 +1075,17 @@ select_package_for_install (LowPackageIter *iter)
 				low_package_unref (best);
 			}
 
-			g_free (best_evr);
+			free (best_evr);
 			best = iter->pkg;
 			best_evr = new_evr;
 		} else {
 			low_package_unref (iter->pkg);
-			g_free (new_evr);
+			free (new_evr);
 		}
 
 	}
 
-	g_free (best_evr);
+	free (best_evr);
 
 	return best;
 }
@@ -1278,7 +1278,7 @@ download_repodata_file (LowRepo *repo, const char *relative_name)
 	low_download_from_mirror (mirrors, relative_name, local_file,
 				  displayed_basename);
 
-	g_free (displayed_basename);
+	free (displayed_basename);
 
 	return local_file;
 }
@@ -1353,9 +1353,9 @@ fetch_repodata_file (LowRepo *repo, const char *relative_name)
 	rename (tmp_file, local_file);
 	db_file = uncompress_file (local_file);
 
-	g_free (local_file);
-	g_free (tmp_file);
-	g_free (db_file);
+	free (local_file);
+	free (tmp_file);
+	free (db_file);
 }
 
 static void
@@ -1392,8 +1392,8 @@ refresh_repo (LowRepo *repo)
 		}
 		low_download (repo->mirror_list, local_file, display);
 
-		g_free (display);
-		g_free (local_file);
+		free (display);
+		free (local_file);
 	}
 
 	local_file = create_repodata_filename (repo, "repodata/repomd.xml");
@@ -1408,8 +1408,8 @@ refresh_repo (LowRepo *repo)
 		rename (tmp_file, local_file);
 	}
 
-	g_free (local_file);
-	g_free (tmp_file);
+	free (local_file);
+	free (tmp_file);
 
 	if (repodata_missing (repo, new_repomd->primary_db)) {
 		fetch_repodata_file (repo, new_repomd->primary_db);

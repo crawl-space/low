@@ -52,9 +52,9 @@ low_config_load_repo_configs (void)
 			g_file_get_contents (path, &config, NULL, NULL);
 			joined_config =
 				g_strjoin ("\n", joined_config, config, NULL);
-			g_free (path);
-			g_free (old_joined_config);
-			g_free (config);
+			free (path);
+			free (old_joined_config);
+			free (config);
 		}
 	}
 	g_dir_close (config_dir);
@@ -89,9 +89,9 @@ low_config_initialize (LowRepo *repo_rpmdb)
 		exit (1);
 	}
 
-	g_free (main_config);
-	g_free (repo_configs);
-	g_free (joined_config);
+	free (main_config);
+	free (repo_configs);
+	free (joined_config);
 
 	return config;
 }

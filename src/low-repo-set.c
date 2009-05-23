@@ -51,9 +51,9 @@ low_repo_set_initialize_from_config (LowConfig *config, bool bind_dbs)
 							    enabled,
 							    bind_dbs);
 
-		g_free (name);
-		g_free (baseurl);
-		g_free (mirror_list);
+		free (name);
+		free (baseurl);
+		free (mirror_list);
 
 		g_hash_table_insert (repo_set->repos, id, repo);
 	}
