@@ -48,6 +48,25 @@ create_file_url (const char *baseurl, const char *relative_file)
 	return full_url;
 }
 
+static CURL *
+init_curl (char *error, const char *basename, LowDownloadCallback callback)
+{
+	CURL *curl;
+
+	curl = curl_easy_init ();
+	if (curl == NULL) {
+		return curl;
+	}
+
+	curl_easy_setopt (curl, CURLOPT_FOLLOWLOCATION, 1);
+	curl_easy_setopt (curl, CURLOPT_ERRORBUFFER, error);
+	curl_easy_setopt (curl, CURLOPT_NOPROGRESS, 0);
+	curl_easy_setopt (curl, CURLOPT_PROGRESSFUNCTION, callback);
+	curl_easy_setopt (curl, CURLOPT_PROGRESSDATA, basename);
+
+	return curl;
+}
+
 int
 low_download (const char *url, const char *file, const char *basename,
 	      LowDownloadCallback callback)
@@ -58,16 +77,10 @@ low_download (const char *url, const char *file, const char *basename,
 	CURLcode res;
 	long response;
 
-	curl = curl_easy_init ();
+	curl = init_curl (error, basename, callback);
 	if (curl == NULL) {
 		return 1;
 	}
-
-	curl_easy_setopt (curl, CURLOPT_FOLLOWLOCATION, 1);
-	curl_easy_setopt (curl, CURLOPT_ERRORBUFFER, error);
-	curl_easy_setopt (curl, CURLOPT_NOPROGRESS, 0);
-	curl_easy_setopt (curl, CURLOPT_PROGRESSFUNCTION, callback);
-	curl_easy_setopt (curl, CURLOPT_PROGRESSDATA, basename);
 
 	fp = fopen (file, "w");
 	if (fp == NULL) {
@@ -116,16 +129,10 @@ low_download_from_mirror (LowMirrorList *mirrors, const char *relative_path,
 	CURLcode res;
 	long response;
 
-	curl = curl_easy_init ();
+	curl = init_curl (error, basename, callback);
 	if (curl == NULL) {
 		return 1;
 	}
-
-	curl_easy_setopt (curl, CURLOPT_FOLLOWLOCATION, 1);
-	curl_easy_setopt (curl, CURLOPT_ERRORBUFFER, error);
-	curl_easy_setopt (curl, CURLOPT_NOPROGRESS, 0);
-	curl_easy_setopt (curl, CURLOPT_PROGRESSFUNCTION, callback);
-	curl_easy_setopt (curl, CURLOPT_PROGRESSDATA, basename);
 
 	fp = fopen (file, "w");
 	if (fp == NULL) {
