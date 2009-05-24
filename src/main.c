@@ -673,8 +673,7 @@ create_package_filepath (LowPackage *pkg)
 
 static int
 download_callback (void *clientp, double dltotal, double dlnow,
-			    double ultotal G_GNUC_UNUSED,
-			    double ulnow G_GNUC_UNUSED)
+		   double ultotal G_GNUC_UNUSED, double ulnow G_GNUC_UNUSED)
 {
 	const char *file = clientp;
 
