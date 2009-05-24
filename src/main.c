@@ -671,6 +671,51 @@ create_package_filepath (LowPackage *pkg)
 	return local_file;
 }
 
+static int
+download_callback (void *clientp, double dltotal, double dlnow,
+			    double ultotal G_GNUC_UNUSED,
+			    double ulnow G_GNUC_UNUSED)
+{
+	const char *file = clientp;
+
+	float tmp_now = dlnow;
+	float tmp_total = dltotal;
+
+	if (dlnow > dltotal || dltotal == 0) {
+		return 0;
+	}
+
+	printf ("\rdownloading %s, ", file);
+
+	if (tmp_total < 1023) {
+		printf ("%.0fB/%.0fB", tmp_now, tmp_total);
+		fflush (stdout);
+		return 0;
+	}
+
+	tmp_now /= 1024;
+	tmp_total /= 1024;
+	if (tmp_total < 1023) {
+		printf ("%.1fKB/%.1fKB", tmp_now, tmp_total);
+		fflush (stdout);
+		return 0;
+	}
+
+	tmp_now /= 1024;
+	tmp_total /= 1024;
+	if (tmp_total < 1023) {
+		printf ("%.1fMB/%.1fMB", tmp_now, tmp_total);
+		fflush (stdout);
+		return 0;
+	}
+
+	tmp_now /= 1024;
+	tmp_total /= 1024;
+	printf ("%.1fGB/%.1fGB", tmp_now, tmp_total);
+	fflush (stdout);
+	return 0;
+}
+
 static bool
 download_package (LowPackage *pkg)
 {
@@ -688,7 +733,7 @@ download_package (LowPackage *pkg)
 
 	res = low_download_if_missing (mirrors, pkg->location_href, local_file,
 				       filename, pkg->digest, pkg->digest_type,
-				       pkg->size);
+				       pkg->size, download_callback);
 	free (local_file);
 
 	return res == 0;
@@ -1276,7 +1321,7 @@ download_repodata_file (LowRepo *repo, const char *relative_name)
 
 	/* XXX use if_missing here for non repomd.xml */
 	low_download_from_mirror (mirrors, relative_name, local_file,
-				  displayed_basename);
+				  displayed_basename, download_callback);
 
 	free (displayed_basename);
 
@@ -1390,7 +1435,8 @@ refresh_repo (LowRepo *repo)
 				create_repodata_filename (repo,
 							  "mirrorlist.txt");
 		}
-		low_download (repo->mirror_list, local_file, display);
+		low_download (repo->mirror_list, local_file, display,
+			      download_callback);
 
 		free (display);
 		free (local_file);

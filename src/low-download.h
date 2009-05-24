@@ -26,14 +26,20 @@
 #ifndef _LOW_DOWNLOAD_H_
 #define _LOW_DOWNLOAD_H_
 
+typedef int (*LowDownloadCallback) (void *clientp, double dltotal,
+					    double dlnow, double ultotal,
+					    double ulnow);
+
 int      low_download 		     (const char *url,
 				      const char *file,
-				      const char *basename);
+				      const char *basename,
+				      LowDownloadCallback callback);
 
 int      low_download_from_mirror    (LowMirrorList *mirrors,
 				      const char *relative_path,
 				      const char *file,
-				      const char *basename);
+				      const char *basename,
+				      LowDownloadCallback callback);
 
 int      low_download_if_missing     (LowMirrorList *mirrors,
 				      const char *relative_path,
@@ -41,7 +47,8 @@ int      low_download_if_missing     (LowMirrorList *mirrors,
 				      const char *basename,
 				      const char *digest,
 				      LowDigestType digest_type,
-				      off_t size);
+				      off_t size,
+				      LowDownloadCallback callback);
 
 #endif /* _LOW_DOWNLOAD_H_ */
 

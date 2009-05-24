@@ -23,7 +23,6 @@
  *  02110-1301  USA
  */
 
-#include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -34,51 +33,6 @@
 #include <nss3/sechash.h>
 #include "low-download.h"
 #include "low-debug.h"
-
-static int
-low_download_show_progress (void *clientp, double dltotal, double dlnow,
-			    double ultotal G_GNUC_UNUSED,
-			    double ulnow G_GNUC_UNUSED)
-{
-	const char *file = clientp;
-
-	float tmp_now = dlnow;
-	float tmp_total = dltotal;
-
-	if (dlnow > dltotal || dltotal == 0) {
-		return 0;
-	}
-
-	printf ("\rdownloading %s, ", file);
-
-	if (tmp_total < 1023) {
-		printf ("%.0fB/%.0fB", tmp_now, tmp_total);
-		fflush (stdout);
-		return 0;
-	}
-
-	tmp_now /= 1024;
-	tmp_total /= 1024;
-	if (tmp_total < 1023) {
-		printf ("%.1fKB/%.1fKB", tmp_now, tmp_total);
-		fflush (stdout);
-		return 0;
-	}
-
-	tmp_now /= 1024;
-	tmp_total /= 1024;
-	if (tmp_total < 1023) {
-		printf ("%.1fMB/%.1fMB", tmp_now, tmp_total);
-		fflush (stdout);
-		return 0;
-	}
-
-	tmp_now /= 1024;
-	tmp_total /= 1024;
-	printf ("%.1fGB/%.1fGB", tmp_now, tmp_total);
-	fflush (stdout);
-	return 0;
-}
 
 static char *
 create_file_url (const char *baseurl, const char *relative_file)
@@ -95,7 +49,8 @@ create_file_url (const char *baseurl, const char *relative_file)
 }
 
 int
-low_download (const char *url, const char *file, const char *basename)
+low_download (const char *url, const char *file, const char *basename,
+	      LowDownloadCallback callback)
 {
 	CURL *curl;
 	char error[256];
@@ -111,8 +66,7 @@ low_download (const char *url, const char *file, const char *basename)
 	curl_easy_setopt (curl, CURLOPT_FOLLOWLOCATION, 1);
 	curl_easy_setopt (curl, CURLOPT_ERRORBUFFER, error);
 	curl_easy_setopt (curl, CURLOPT_NOPROGRESS, 0);
-	curl_easy_setopt (curl, CURLOPT_PROGRESSFUNCTION,
-			  low_download_show_progress);
+	curl_easy_setopt (curl, CURLOPT_PROGRESSFUNCTION, callback);
 	curl_easy_setopt (curl, CURLOPT_PROGRESSDATA, basename);
 
 	fp = fopen (file, "w");
@@ -151,7 +105,8 @@ low_download (const char *url, const char *file, const char *basename)
 
 int
 low_download_from_mirror (LowMirrorList *mirrors, const char *relative_path,
-			  const char *file, const char *basename)
+			  const char *file, const char *basename,
+			  LowDownloadCallback callback)
 {
 	CURL *curl;
 	char *url;
@@ -169,8 +124,7 @@ low_download_from_mirror (LowMirrorList *mirrors, const char *relative_path,
 	curl_easy_setopt (curl, CURLOPT_FOLLOWLOCATION, 1);
 	curl_easy_setopt (curl, CURLOPT_ERRORBUFFER, error);
 	curl_easy_setopt (curl, CURLOPT_NOPROGRESS, 0);
-	curl_easy_setopt (curl, CURLOPT_PROGRESSFUNCTION,
-			  low_download_show_progress);
+	curl_easy_setopt (curl, CURLOPT_PROGRESSFUNCTION, callback);
 	curl_easy_setopt (curl, CURLOPT_PROGRESSDATA, basename);
 
 	fp = fopen (file, "w");
@@ -334,14 +288,14 @@ int
 low_download_if_missing (LowMirrorList *mirrors, const char *relative_path,
 			 const char *file, const char *basename,
 			 const char *digest, LowDigestType digest_type,
-			 off_t size)
+			 off_t size, LowDownloadCallback callback)
 {
 	struct stat buf;
 	int res;
 
 	if (stat (file, &buf) < 0 || buf.st_size != size) {
 		res = low_download_from_mirror (mirrors, relative_path, file,
-						basename);
+						basename, callback);
 		if (res != 0) {
 			unlink (file);
 			return res;
