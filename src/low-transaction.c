@@ -250,6 +250,39 @@ choose_best_arch (LowPackage *target, LowPackage *pkg1, LowPackage *pkg2)
 }
 
 static LowPackage *
+low_transaction_search_iter_for_update(LowPackage *to_update,
+				       LowPackageIter *iter)
+{
+	LowPackage *best = to_update;
+	char *best_evr = low_package_evr_as_string (to_update);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		char *new_evr = low_package_evr_as_string (iter->pkg);
+		int cmp = low_util_evr_cmp (new_evr, best_evr);
+
+		/* XXX arch cmp here has to be better */
+		if ((cmp > 0 && arch_is_compatible (to_update, iter->pkg)) ||
+		    (cmp == 0 &&
+		     choose_best_arch (to_update, best,
+				       iter->pkg) == iter->pkg)) {
+			low_package_unref (best);
+			best = iter->pkg;
+
+			free (best_evr);
+			best_evr = new_evr;
+		} else {
+			low_package_unref (iter->pkg);
+			free (new_evr);
+		}
+
+	}
+
+	free (best_evr);
+
+	return best;
+}
+
+static LowPackage *
 choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 			LowPackage *to_update)
 {
@@ -263,59 +296,22 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 					    DEPENDENCY_SENSE_EQ,
 					    best_evr);
 
+	free (best_evr);
+
 	iter = low_repo_set_list_by_name (repos, to_update->name);
-
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		char *new_evr = low_package_evr_as_string (iter->pkg);
-		int cmp = low_util_evr_cmp (new_evr, best_evr);
-
-		/* XXX arch cmp here has to be better */
-		if ((cmp > 0 && arch_is_compatible (to_update, iter->pkg)) ||
-		    (cmp == 0 &&
-		     choose_best_arch (to_update, best,
-				       iter->pkg) == iter->pkg)) {
-			low_package_unref (best);
-			best = iter->pkg;
-
-			free (best_evr);
-			best_evr = new_evr;
-		} else {
-			low_package_unref (iter->pkg);
-			free (new_evr);
-		}
-
-	}
+	best = low_transaction_search_iter_for_update (best, iter);
 
 	iter = low_repo_set_search_obsoletes (repos, obsoletes);
-
-	while (iter = low_package_iter_next (iter), iter != NULL) {
-		char *new_evr = low_package_evr_as_string (iter->pkg);
-		int cmp = low_util_evr_cmp (new_evr, best_evr);
-
-		/* XXX arch cmp here has to be better */
-		if ((cmp > 0 && arch_is_compatible (to_update, iter->pkg)) ||
-		    (cmp == 0 &&
-		     choose_best_arch (to_update, best,
-				       iter->pkg) == iter->pkg)) {
-			low_package_unref (best);
-			best = iter->pkg;
-
-			free (best_evr);
-			best_evr = new_evr;
-		} else {
-			low_package_unref (iter->pkg);
-			free (new_evr);
-		}
-
-	}
+	best = low_transaction_search_iter_for_update (best, iter);
 
 	low_package_dependency_free (obsoletes);
 
 	/* We haven't found anything better */
 	if (to_update == best) {
-		free (best_evr);
 		return NULL;
 	}
+
+	best_evr = low_package_evr_as_string (best);
 
 	/* Ensure we don't already have it */
 	found = false;
