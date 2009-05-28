@@ -1410,6 +1410,7 @@ refresh_repo (LowRepo *repo)
 	char *dirname;
 	LowRepomd *old_repomd;
 	LowRepomd *new_repomd;
+	LowRepomd *repomd;
 
 	dirname = g_strdup_printf ("/var/cache/yum/%s", repo->id);
 	if (!g_file_test (dirname, G_FILE_TEST_EXISTS)) {
@@ -1451,17 +1452,20 @@ refresh_repo (LowRepo *repo)
 	    old_repomd->primary_db_time < new_repomd->primary_db_time ||
 	    old_repomd->filelists_db_time < new_repomd->filelists_db_time) {
 		rename (tmp_file, local_file);
+		repomd = new_repomd;
+	} else {
+		repomd = old_repomd;
 	}
 
 	free (local_file);
 	free (tmp_file);
 
-	if (repodata_missing (repo, new_repomd->primary_db)) {
-		fetch_repodata_file (repo, new_repomd->primary_db);
+	if (repodata_missing (repo, repomd->primary_db)) {
+		fetch_repodata_file (repo, repomd->primary_db);
 	}
 
-	if (repodata_missing (repo, new_repomd->filelists_db)) {
-		fetch_repodata_file (repo, new_repomd->filelists_db);
+	if (repodata_missing (repo, repomd->filelists_db)) {
+		fetch_repodata_file (repo, repomd->filelists_db);
 	}
 }
 
