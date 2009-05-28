@@ -1108,7 +1108,7 @@ static LowPackage *
 select_package_for_install (LowPackageIter *iter)
 {
 	LowPackage *best = NULL;
-	char *best_evr = g_strdup ("0");
+	char *best_evr = g_strdup ("");
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		char *new_evr = low_package_evr_as_string (iter->pkg);

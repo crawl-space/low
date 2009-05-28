@@ -498,7 +498,7 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 {
 	LowTransactionStatus status = LOW_TRANSACTION_UNRESOLVABLE;
 	LowPackage *best = NULL;
-	char *best_evr = g_strdup ("0");
+	char *best_evr = g_strdup ("");
 
 	/* XXX this is duplicated in main.c */
 	while (iter = low_package_iter_next (iter), iter != NULL) {
