@@ -929,7 +929,7 @@ low_transaction_check_all_requires (LowTransaction *trans)
 }
 
 static LowPackage *
-low_transaction_search_provides (GHashTable *hash, char *query)
+low_transaction_search_provides (GHashTable *hash, LowPackageDependency *query)
 {
 	/*
 	 * XXX would it be faster to search the repos then compare against
@@ -946,7 +946,9 @@ low_transaction_search_provides (GHashTable *hash, char *query)
 		int i;
 
 		for (i = 0; provides[i] != NULL; i++) {
-			if (!strcmp (query, provides[i]->name)) {
+			if (!strcmp (query->name, provides[i]->name) &&
+			    low_package_dependency_satisfies (query,
+							      provides[i])) {
 //                              low_package_dependency_list_free (provides);
 				return member->pkg;
 			}
@@ -1032,7 +1034,7 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 		for (i = 0; conflicts[i] != NULL; i++) {
 			LowPackage *conflicting =
 				low_transaction_search_provides (trans->install,
-								 conflicts[i]->name);
+								 conflicts[i]);
 			if (conflicting) {
 				low_debug_pkg ("Conflicts with installing",
 					   conflicting);
