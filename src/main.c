@@ -376,6 +376,7 @@ print_updates (LowRepo *repo_rpmdb, LowConfig *config)
 	LowRepoSet *repos;
 	LowTransaction *trans;
 	int counter = 0;
+	bool found_updates = false;
 
 	repos = low_repo_set_initialize_from_config (config, true);
 
@@ -386,7 +387,17 @@ print_updates (LowRepo *repo_rpmdb, LowConfig *config)
 
 	if (g_hash_table_size (trans->update) != 0) {
 		print_transaction_part (trans->update);
-	} else {
+		found_updates = true;
+	}
+
+	/* XXX need to sort this in with updates for printing */
+	/* For installonly packages. ie the kernel */
+	if (g_hash_table_size (trans->install) != 0) {
+		print_transaction_part (trans->install);
+		found_updates = true;
+	}
+
+	if (!found_updates) {
 		printf ("No updates available.\n");
 	}
 
