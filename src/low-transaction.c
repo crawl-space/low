@@ -199,11 +199,67 @@ low_transaction_is_pkg_in_hash (GHashTable *hash, LowPackage *pkg)
 	return ret;
 }
 
+static void
+low_transaction_check_install_only_n (LowTransaction *trans, LowPackage *pkg)
+{
+	/* XXX read from config */
+	int max_installed = 3;
+	int found = 0;
+	LowPackageIter *iter;
+	LowPackage **to_keep;
+
+	if (strcmp (pkg->name, "kernel") != 0 &&
+	    strcmp (pkg->name, "kernel-devel") != 0) {
+		return;
+	}
+
+	low_debug_pkg ("Checking installonlyn rules for", pkg);
+
+	to_keep = malloc (sizeof (LowPackage *) * (max_installed - 1));
+
+	iter = low_repo_rpmdb_list_by_name (trans->rpmdb, pkg->name);
+
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		int i;
+		LowPackage *to_remove;
+
+		if (found != (max_installed - 1)) {
+			to_keep[found] = iter->pkg;
+			found++;
+			continue;
+		}
+
+		to_remove = iter->pkg;
+
+		for (i = 0; i < max_installed - 1; i++) {
+			char *remove_evr =
+				low_package_evr_as_string (to_remove);
+			char *keep_evr =
+				low_package_evr_as_string (to_keep[i]);
+
+			if (low_util_evr_cmp (remove_evr, keep_evr) > 0) {
+				LowPackage *tmp = to_remove;
+				to_remove = to_keep[i];
+				to_keep[i] = tmp;
+			}
+
+			free (remove_evr);
+			free (keep_evr);
+		}
+
+		low_transaction_add_remove (trans, to_remove);
+
+	}
+
+	free (to_keep);
+}
+
 bool
 low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
 {
 	if (low_transaction_add_to_hash (trans->install, to_install, NULL)) {
 		low_debug_pkg ("Adding for install", to_install);
+		low_transaction_check_install_only_n (trans, to_install);
 		return true;
 	} else {
 		low_debug_pkg ("Not adding already added pkg for install",

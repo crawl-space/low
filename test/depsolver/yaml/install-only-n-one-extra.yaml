@@ -1,0 +1,17 @@
+test: Install a pkg under installonlyn rules where there is one extra version
+      of the pkg.
+
+installed:
+    - package: { name: kernel, evr: 0:0.3.0-1, arch: i386 }
+    - package: { name: kernel, evr: 0:0.4.0-1, arch: i386 }
+    - package: { name: kernel, evr: 0:0.5.0-1, arch: i386 }
+
+available:
+    - package: { name: kernel, evr: 0:0.6.0-1, arch: i386 }
+
+transaction:
+    - install: { name: kernel }
+
+results:
+    - install: { name: kernel, evr: 0:0.6.0-1, arch: i386 }
+    - remove: { name: kernel, evr: 0:0.3.0-1, arch: i386 }
