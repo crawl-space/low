@@ -130,7 +130,6 @@ low_repomd_parse (const char *repodata)
 	XML_Parser parser;
 	XML_ParsingStatus status;
 
-	ctx.repomd = malloc (sizeof (LowRepomd));
 	ctx.state = REPODATA_STATE_BEGIN;
 
 	parser = XML_ParserCreate (NULL);
@@ -142,8 +141,12 @@ low_repomd_parse (const char *repodata)
 
 	repodata_file = open (repodata, O_RDONLY);
 	if (repodata_file < 0) {
+		XML_ParserFree (parser);
 		return NULL;
 	}
+
+	ctx.repomd = malloc (sizeof (LowRepomd));
+	memset (ctx.repomd, 0, sizeof (LowRepomd));
 
 	do {
 		XML_GetParsingStatus (parser, &status);
@@ -158,6 +161,8 @@ low_repomd_parse (const char *repodata)
 					fprintf (stderr,
 						 "couldn't read input: %s\n",
 						 strerror (errno));
+					XML_ParserFree (parser);
+					low_repomd_free (ctx.repomd);
 					return NULL;
 				}
 
@@ -173,6 +178,17 @@ low_repomd_parse (const char *repodata)
 
 	close (repodata_file);
 	return ctx.repomd;
+}
+
+
+void
+low_repomd_free (LowRepomd *repomd)
+{
+	if (repomd != NULL) {
+		free (repomd->primary_db);
+		free (repomd->filelists_db);
+		free (repomd);
+	}
 }
 
 /* vim: set ts=8 sw=8 noet: */

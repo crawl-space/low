@@ -172,7 +172,6 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 
 		free (primary_db);
 		free (filelists_db);
-		free (repomd);
 	} else {
 		repo->primary_db = NULL;
 	}
@@ -186,6 +185,8 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 	repo->super.baseurl = g_strdup (baseurl);
 	repo->super.mirror_list = g_strdup (mirror_list);
 	repo->super.enabled = enabled;
+
+	low_repomd_free (repomd);
 
 	return (LowRepo *) repo;
 }
