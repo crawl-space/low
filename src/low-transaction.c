@@ -608,7 +608,9 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 
 static LowTransactionStatus
 low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
-					bool check_available)
+					bool check_available,
+					LowPackageDependency *dep,
+					LowPackageDependency **updates)
 {
 	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
 	LowPackageDependency **requires;
@@ -627,6 +629,11 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 	for (i = 0; requires[i] != NULL; i++) {
 		LowPackageIter *providing;
 
+		if (dep && strcmp (dep->name, requires[i]->name) != 0) {
+			low_debug ("skipping requires not matching given dep");
+			continue;
+		}
+
 		if (low_transaction_dep_satisfied_by_deplist (requires[i],
 							      provides)
 		    || low_transaction_dep_in_filelist (requires[i]->name,
@@ -642,6 +649,11 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 			continue;
 		}
 
+		if (updates && low_transaction_dep_satisfied_by_deplist (requires[i],
+									 updates)) {
+			low_debug ("Requires %s provided by update", requires[i]->name);
+			continue;
+		}
 		providing =
 			low_repo_rpmdb_search_provides (trans->rpmdb,
 							requires[i]);
@@ -795,7 +807,9 @@ low_transaction_check_removal (LowTransaction *trans,
 
 			if (low_transaction_check_package_requires (trans,
 								    iter->pkg,
-								    false) ==
+								    false,
+								    provides[i],
+								    update_provides) ==
 			    LOW_TRANSACTION_NO_CHANGE) {
 				low_debug ("Requiring package satisfied by installed package");
 				continue;
@@ -899,7 +913,9 @@ low_transaction_check_requires_for_added (LowTransactionStatus status,
 		if (!member->resolved) {
 			req_status = low_transaction_check_package_requires (trans,
 									     pkg,
-									     true);
+									     true,
+									     NULL,
+									     NULL);
 
 			if (req_status == LOW_TRANSACTION_UNRESOLVABLE) {
 				low_debug_pkg ("Adding to unresolved", pkg);
