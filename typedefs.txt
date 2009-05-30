@@ -6,6 +6,7 @@ LowPackage
 LowPackageDependency
 LowPackageDetails
 LowPackageIter
+LowRepomd
 LowRepo
 LowRepoSet
 LowRepoRpmdb

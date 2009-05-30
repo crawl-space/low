@@ -19,11 +19,10 @@
  *  02110-1301  USA
  */
 
-
 #ifndef _LOW_METALINK_PARSER_H_
 #define _LOW_METALINK_PARSER_H_
 
-GList * low_metalink_parse(const char *metalink);
+GList *low_metalink_parse (const char *metalink);
 
 #endif /* _LOW_METALINK_PARSER_H_ */
 

@@ -19,7 +19,6 @@
  *  02110-1301  USA
  */
 
-
 #ifndef _LOW_REPOMD_PARSER_H_
 #define _LOW_REPOMD_PARSER_H_
 
@@ -31,7 +30,7 @@ typedef struct _LowRepomd {
 	time_t filelists_db_time;
 } LowRepomd;
 
-LowRepomd * low_repomd_parse (const char *repodata);
+LowRepomd *low_repomd_parse (const char *repodata);
 void low_repomd_free (LowRepomd *repomd);
 
 #endif /* _LOW_REPOMD_PARSER_H_ */

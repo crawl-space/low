@@ -104,8 +104,7 @@ low_mirror_list_new_from_txt_file (const char *mirrorlist_txt)
 			mirror->weight = 100;
 			mirror->is_bad = false;
 			mirrors->mirrors =
-				g_list_append (mirrors->mirrors,
-					       mirror);
+				g_list_append (mirrors->mirrors, mirror);
 		}
 	}
 

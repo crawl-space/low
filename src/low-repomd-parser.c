@@ -180,7 +180,6 @@ low_repomd_parse (const char *repodata)
 	return ctx.repomd;
 }
 
-
 void
 low_repomd_free (LowRepomd *repomd)
 {
