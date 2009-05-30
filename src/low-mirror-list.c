@@ -68,12 +68,14 @@ low_mirror_list_new_from_baseurl (const char *baseurl)
 	return mirrors;
 }
 
+#define BUF_SIZE 1024
 LowMirrorList *
 low_mirror_list_new_from_txt_file (const char *mirrorlist_txt)
 {
 	LowMirrorList *mirrors = low_mirror_list_new ();
-	char x;
-	GString *url;
+	char *line;
+	size_t length;
+	ssize_t read;
 
 	FILE *file = fopen (mirrorlist_txt, "r");
 	if (file == 0) {
@@ -81,28 +83,34 @@ low_mirror_list_new_from_txt_file (const char *mirrorlist_txt)
 		return NULL;
 	}
 
-	url = g_string_new ("");
-	while ((x = fgetc (file)) != EOF) {
-		if (x == '\n') {
-			/* g_print ("Final string: %s\n", url->str); */
-			/* Ignore lines commented out: */
-			if (url->str[0] != '#') {
-				LowMirror *mirror = malloc (sizeof (LowMirror));
-				mirror->url = url->str;
-				/* txt mirrors are unweighted */
-				mirror->weight = 100;
-				mirror->is_bad = false;
-				mirrors->mirrors =
-					g_list_append (mirrors->mirrors,
-						       mirror);
+	length = BUF_SIZE;
+	line = malloc (sizeof (char) * length);
+
+	while ((read = getline (&line, &length, file)) != -1) {
+		/* Ignore comments and blank lines */
+		if (line[0] != '#' && read > 1) {
+			size_t to_copy = read + 1;
+			LowMirror *mirror = malloc (sizeof (LowMirror));
+
+			if (line[to_copy - 2] == '\n') {
+				line[to_copy - 2] = '\0';
+				to_copy--;
 			}
-			g_string_free (url, false);
-			url = g_string_new ("");
-			continue;
+
+			mirror->url = malloc (sizeof (char) * to_copy);
+			strncpy (mirror->url, line, to_copy);
+
+			/* txt mirrors are unweighted */
+			mirror->weight = 100;
+			mirror->is_bad = false;
+			mirrors->mirrors =
+				g_list_append (mirrors->mirrors,
+					       mirror);
 		}
-		url = g_string_append_c (url, x);
 	}
+
 	fclose (file);
+	free (line);
 
 	return mirrors;
 }
