@@ -40,6 +40,9 @@ struct metalink_context {
 	int state;
 	GList *mirrors;
 	int weight;
+	char *buf;
+	size_t buf_size;
+	size_t str_len;
 };
 
 static void
@@ -70,6 +73,19 @@ low_metalink_end_element (void *data, const char *name G_GNUC_UNUSED)
 {
 	struct metalink_context *ctx = data;
 
+	if (ctx->state == METALINK_STATE_URL) {
+		LowMirror *mirror;
+
+		mirror = malloc (sizeof (LowMirror));
+		/* XXX hardcoded drop of 'repodata/repomd.xml' */
+		mirror->url = strndup (ctx->buf, ctx->str_len - 19);
+		mirror->weight = ctx->weight;
+		mirror->is_bad = false;
+		ctx->mirrors = g_list_append (ctx->mirrors, mirror);
+
+		ctx->str_len = 0;
+	}
+
 	ctx->state = METALINK_STATE_OTHER;
 	ctx->weight = 100;
 }
@@ -79,16 +95,18 @@ low_metalink_character_data (void *data, const XML_Char *s, int len)
 {
 	struct metalink_context *ctx = data;
 
-	LowMirror *mirror;
 
 	switch (ctx->state) {
 		case METALINK_STATE_URL:
-			mirror = malloc (sizeof (LowMirror));
-			/* drop the 'repodata/repomd.xml' */
-			mirror->url = strndup (s, len - 19);
-			mirror->weight = ctx->weight;
-			mirror->is_bad = false;
-			ctx->mirrors = g_list_append (ctx->mirrors, mirror);
+			if (ctx->str_len + len > ctx->buf_size) {
+				ctx->buf = realloc (ctx->buf,
+						    ctx->buf_size + len);
+				ctx->buf_size += len;
+			}
+
+			strncpy (ctx->buf + ctx->str_len, s, len);
+			ctx->str_len += len;
+
 			break;
 		default:
 			break;
@@ -114,6 +132,10 @@ low_metalink_parse (const char *metalink)
 	ctx.mirrors = NULL;
 	ctx.state = METALINK_STATE_OTHER;
 	ctx.weight = 100;
+
+	ctx.buf = NULL;
+	ctx.buf_size = 0;
+	ctx.str_len = 0;
 
 	parser = XML_ParserCreate (NULL);
 	XML_SetUserData (parser, &ctx);
@@ -152,8 +174,9 @@ low_metalink_parse (const char *metalink)
 	} while (status.parsing != XML_FINISHED);
 
 	XML_ParserFree (parser);
-
 	close (metalink_file);
+	free (ctx.buf);
+
 	return ctx.mirrors;
 }
 

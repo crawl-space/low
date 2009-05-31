@@ -1388,10 +1388,14 @@ repodata_missing (LowRepo *repo, const char *relative_name)
 	strncpy (uncompressed_name, filename, strlen (filename) - 4);
 	uncompressed_name[strlen (filename) - 4] = '\0';
 
+	free (filename);
+
 	/* XXX verify checksum */
 	if (!g_file_test (uncompressed_name, G_FILE_TEST_EXISTS)) {
+		free (uncompressed_name);
 		return true;
 	} else {
+		free (uncompressed_name);
 		return false;
 	}
 }
@@ -1464,8 +1468,10 @@ refresh_repo (LowRepo *repo)
 	    old_repomd->filelists_db_time < new_repomd->filelists_db_time) {
 		rename (tmp_file, local_file);
 		repomd = new_repomd;
+		low_repomd_free (old_repomd);
 	} else {
 		repomd = old_repomd;
+		low_repomd_free (new_repomd);
 	}
 
 	free (local_file);
@@ -1478,6 +1484,8 @@ refresh_repo (LowRepo *repo)
 	if (repodata_missing (repo, repomd->filelists_db)) {
 		fetch_repodata_file (repo, repomd->filelists_db);
 	}
+
+	low_repomd_free (repomd);
 }
 
 static int
