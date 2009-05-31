@@ -95,20 +95,6 @@ low_util_word_wrap (const char *text, int width)
 	return output;
 }
 
-bool
-low_util_parse_nevra (const char *nevra, char **name G_GNUC_UNUSED,
-		      char **epoch G_GNUC_UNUSED, char **version G_GNUC_UNUSED,
-		      char **release G_GNUC_UNUSED, char **arch G_GNUC_UNUSED)
-{
-	/* XXX fill me in */
-	if (strlen (nevra) == 0) {
-		return false;
-	}
-	*name = g_strdup (nevra);
-
-	return true;
-}
-
 static int
 low_util_evr_cmp_worker (const char *e1, const char *v1, const char *r1,
 			 const char *e2, const char *v2, const char *r2)

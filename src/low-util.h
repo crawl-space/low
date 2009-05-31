@@ -37,9 +37,6 @@ typedef enum {
 
 char **low_util_word_wrap (const char *text, int width);
 
-bool low_util_parse_nevra (const char *nevra, char **name, char **epoch,
-			   char **version, char **release, char **arch);
-
 int low_util_evr_cmp (const char *evr1, const char *evr2);
 
 #endif /* _LOW_UTIL_H_ */
