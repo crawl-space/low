@@ -212,11 +212,8 @@ AC_ARG_ENABLE(shave, AS_HELP_STRING([--enable-shave],
               [use the 'shave' automake output pretty printer]),
               enable_shave=$enableval,enable_shave=yes)
 
-if test x$enable_gprof = xyes; then
+if test x$enable_shave = xyes; then
     SHAVE_INIT(shave, enable)
-	AC_MSG_RESULT($enable_gprof)
-else
-    SHAVE_INIT(shave, disable)
 fi
 AM_CONDITIONAL(LOW_SHAVE, test x$enable_shave = xyes)
 

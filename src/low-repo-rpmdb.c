@@ -31,6 +31,7 @@
 typedef struct _LowRepoRpmdb {
 	LowRepo super;
 	rpmdb db;
+	GHashTable *table;
 } LowRepoRpmdb;
 
 /* XXX clean these up */
@@ -71,11 +72,10 @@ low_repo_rpmdb_initialize (void)
 		exit (1);
 	}
 
+	repo->table = NULL;
+
 	return (LowRepo *) repo;
 }
-
-/* XXX add this to the rpmdb repo struct */
-static GHashTable *table = NULL;
 
 void
 low_repo_rpmdb_shutdown (LowRepo *repo)
@@ -88,8 +88,8 @@ low_repo_rpmdb_shutdown (LowRepo *repo)
 	free (repo->id);
 	free (repo->name);
 
-	if (table) {
-		g_hash_table_destroy (table);
+	if (repo_rpmdb->table) {
+		g_hash_table_destroy (repo_rpmdb->table);
 	}
 
 	free (repo);
@@ -300,9 +300,12 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	rpmtd arch;
 	rpmtd size;
 
-	if (!table) {
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
+
+	if (!repo_rpmdb->table) {
 		low_debug ("initializing hash table\n");
-		table = g_hash_table_new_full (id_hash_func,
+		repo_rpmdb->table =
+			g_hash_table_new_full (id_hash_func,
 					       (GEqualFunc) id_equal_func,
 					       NULL, (GDestroyNotify)
 					       low_package_unref);
@@ -324,7 +327,7 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	headerGet (header, RPMTAG_PKGID, id, HEADERGET_MINMEM);
 
-	pkg = g_hash_table_lookup (table, id->data);
+	pkg = g_hash_table_lookup (repo_rpmdb->table, id->data);
 	if (pkg) {
 		rpmtdFreeData (name);
 		rpmtdFreeData (id);
@@ -354,7 +357,7 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	pkg->id = g_memdup (id->data, 16);
 
-	g_hash_table_insert (table, pkg->id, pkg);
+	g_hash_table_insert (repo_rpmdb->table, pkg->id, pkg);
 	low_package_ref_init (pkg);
 	low_package_ref (pkg);
 
