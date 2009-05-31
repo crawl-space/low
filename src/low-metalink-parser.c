@@ -95,7 +95,6 @@ low_metalink_character_data (void *data, const XML_Char *s, int len)
 {
 	struct metalink_context *ctx = data;
 
-
 	switch (ctx->state) {
 		case METALINK_STATE_URL:
 			if (ctx->str_len + len > ctx->buf_size) {

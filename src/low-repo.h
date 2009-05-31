@@ -25,10 +25,10 @@
 #define _LOW_REPO_H_
 
 typedef struct _LowRepo {
-	char * id;
-	char * name;
-	char * baseurl;
-	char * mirror_list;
+	char *id;
+	char *name;
+	char *baseurl;
+	char *mirror_list;
 	bool enabled;
 } LowRepo;
 

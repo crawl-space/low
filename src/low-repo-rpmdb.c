@@ -423,8 +423,8 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 		rpmdbFreeIterator (iter_rpmdb->rpm_iter);
 
 		if (iter_rpmdb->filter_data_free_func) {
-			(iter_rpmdb->filter_data_free_func) (iter_rpmdb->
-							     filter_data);
+			gpointer data = iter_rpmdb->filter_data;
+			(iter_rpmdb->filter_data_free_func) (data);
 		}
 
 		free (iter);

@@ -57,7 +57,7 @@ typedef struct _LowPackageDetails {
 
 typedef struct _LowPackage LowPackage;
 
-typedef void * signature;
+typedef void *signature;
 
 typedef LowPackageDetails *	(*LowPackageGetDetails)	(LowPackage *);
 
