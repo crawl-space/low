@@ -1507,6 +1507,8 @@ NOT_IMPLEMENTED (int argc G_GNUC_UNUSED, const char **argv G_GNUC_UNUSED)
 	return EXIT_FAILURE;
 }
 
+#define NO_USAGE ""
+
 typedef struct _SubCommand {
 	const char *name;
 	const char *usage;
@@ -1515,17 +1517,17 @@ typedef struct _SubCommand {
 } SubCommand;
 
 const SubCommand commands[] = {
-	{"refresh", NULL, "Download new metadata", command_refresh},
+	{"refresh", NO_USAGE, "Download new metadata", command_refresh},
 	{"install", "PACKAGE", "Install a package", command_install},
 	{"update", "[PACKAGE]", "Update or install a package",
 	 command_update},
 	{"remove", "PACKAGE", "Remove a package", command_remove},
-	{"clean", NULL, "Remove cached data", NOT_IMPLEMENTED},
+	{"clean", NO_USAGE, "Remove cached data", NOT_IMPLEMENTED},
 	{"info", "PACKAGE", "Display package details", command_info},
 	{"list", "[all|installed|PACKAGE]", "Display a group of packages",
 	 command_list},
-	{"download", NULL, "Download (but don't install) a list of packages",
-	 command_download},
+	{"download", NO_USAGE,
+	 "Download (but don't install) a list of packages", command_download},
 	{"search", "PATTERN",
 	 "Search package information for the given string", command_search},
 	{"repolist", "[all|enabled|disabled]",
@@ -1540,7 +1542,7 @@ const SubCommand commands[] = {
 	{"whatobsoletes", "PATTERN",
 	 "Find what package obsoletes the given value",
 	 command_whatobsoletes},
-	{"version", NULL, "Display version information", command_version},
+	{"version", NO_USAGE, "Display version information", command_version},
 	{"help", "COMMAND", "Display a helpful usage message", command_help}
 };
 
@@ -1552,7 +1554,7 @@ show_help (const char *command)
 	for (i = 0; i < ARRAY_SIZE (commands); i++) {
 		if (!strcmp (command, commands[i].name)) {
 			printf ("Usage: %s %s\n", commands[i].name,
-				commands[i].usage ? commands[i].usage : "");
+				commands[i].usage);
 			printf ("\n%s\n", commands[i].summary);
 		}
 	}
