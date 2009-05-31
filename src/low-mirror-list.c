@@ -46,8 +46,6 @@ free_g_list_node (gpointer data_ptr, gpointer ignored G_GNUC_UNUSED)
 void
 low_mirror_list_free (LowMirrorList *mirrors)
 {
-	/* XXX free list entries */
-
 	g_list_foreach (mirrors->mirrors, free_g_list_node, NULL);
 	g_list_free (mirrors->mirrors);
 

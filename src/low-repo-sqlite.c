@@ -704,8 +704,6 @@ digest_type_from_string (const char *string)
 	}
 }
 
-/* XXX add this to the rpmdb repo struct */
-
 static LowPackage *
 low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 {
