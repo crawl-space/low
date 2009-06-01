@@ -606,6 +606,32 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 	return status;
 }
 
+static bool
+low_transaction_check_providing_is_installed (LowTransaction *trans,
+					      LowPackageIter *providing)
+{
+	bool found = false;
+
+	while (providing = low_package_iter_next (providing),
+	       providing != NULL) {
+		if (!found) {
+			if (low_transaction_is_pkg_in_hash (trans->remove,
+							    providing->pkg) ||
+			    low_transaction_is_pkg_in_hash (trans->updated,
+							    providing->pkg)) {
+				low_debug ("Providing package is being removed");
+			} else {
+				low_debug_pkg ("Provided by", providing->pkg);
+				found = true;
+			}
+		}
+
+		low_package_unref (providing->pkg);
+	}
+
+	return found;
+}
+
 static LowTransactionStatus
 low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 					bool check_available,
@@ -617,7 +643,6 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 	LowPackageDependency **provides;
 	char **files;
 	int i;
-	bool found;
 	bool pkgs_added = false;
 
 	low_debug_pkg ("Checking requires for", pkg);
@@ -649,63 +674,32 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 			continue;
 		}
 
-		if (updates && low_transaction_dep_satisfied_by_deplist (requires[i],
-									 updates)) {
-			low_debug ("Requires %s provided by update", requires[i]->name);
+		if (updates &&
+		    low_transaction_dep_satisfied_by_deplist (requires[i],
+							      updates)) {
+			low_debug ("Requires %s provided by update",
+				   requires[i]->name);
 			continue;
 		}
+
 		providing =
 			low_repo_rpmdb_search_provides (trans->rpmdb,
 							requires[i]);
 
-		found = false;
-		while (providing = low_package_iter_next (providing),
-		       providing != NULL) {
-			if (!found) {
-				if (low_transaction_is_pkg_in_hash (trans->remove,
-								    providing->pkg) ||
-				    low_transaction_is_pkg_in_hash (trans->updated,
-								    providing->pkg)) {
-					low_debug ("Providing package is being removed");
-				} else {
-					low_debug_pkg ("Provided by", providing->pkg);
-					found = true;
-				}
-
-			}
-
-			low_package_unref (providing->pkg);
-		}
-		if (found) {
+		if (low_transaction_check_providing_is_installed(trans,
+								 providing)) {
 			continue;
+		}
+
 		/* Check files if appropriate */
-		} else if (requires[i]->name[0] == '/') {
+		if (requires[i]->name[0] == '/') {
 			providing =
 				low_repo_rpmdb_search_files (trans->rpmdb,
 							     requires[i]->name);
-
-			found = false;
-			while (providing = low_package_iter_next (providing),
-			       providing != NULL) {
-				if (!found) {
-					if (low_transaction_is_pkg_in_hash (trans->remove,
-									    providing->pkg) ||
-					    low_transaction_is_pkg_in_hash (trans->updated,
-									    providing->pkg)) {
-						low_debug ("Providing package is being removed");
-					} else {
-						low_debug_pkg ("Provided by", providing->pkg);
-						found = true;
-					}
-
-				}
-
-				low_package_unref (providing->pkg);
-			}
-			if (found) {
+			if (low_transaction_check_providing_is_installed(trans,
+									 providing)) {
 				continue;
 			}
-
 		}
 
 		/* Check available packages */
