@@ -234,8 +234,7 @@ low_transaction_check_install_only_n (LowTransaction *trans, LowPackage *pkg)
 		for (i = 0; i < max_installed - 1; i++) {
 			char *remove_evr =
 				low_package_evr_as_string (to_remove);
-			char *keep_evr =
-				low_package_evr_as_string (to_keep[i]);
+			char *keep_evr = low_package_evr_as_string (to_keep[i]);
 
 			if (low_util_evr_cmp (remove_evr, keep_evr) > 0) {
 				LowPackage *tmp = to_remove;
@@ -306,8 +305,8 @@ choose_best_arch (LowPackage *target, LowPackage *pkg1, LowPackage *pkg2)
 }
 
 static LowPackage *
-low_transaction_search_iter_for_update(LowPackage *to_update,
-				       LowPackageIter *iter)
+low_transaction_search_iter_for_update (LowPackage *to_update,
+					LowPackageIter *iter)
 {
 	LowPackage *best = to_update;
 	char *best_evr = low_package_evr_as_string (to_update);
@@ -686,8 +685,8 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 			low_repo_rpmdb_search_provides (trans->rpmdb,
 							requires[i]);
 
-		if (low_transaction_check_providing_is_installed(trans,
-								 providing)) {
+		if (low_transaction_check_providing_is_installed (trans,
+								  providing)) {
 			continue;
 		}
 
@@ -696,8 +695,8 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 			providing =
 				low_repo_rpmdb_search_files (trans->rpmdb,
 							     requires[i]->name);
-			if (low_transaction_check_providing_is_installed(trans,
-									 providing)) {
+			if (low_transaction_check_providing_is_installed (trans,
+									  providing)) {
 				continue;
 			}
 		}
@@ -746,8 +745,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 
 static LowTransactionStatus
 low_transaction_check_removal (LowTransaction *trans,
-			       LowTransactionMember *member,
-			       bool from_update)
+			       LowTransactionMember *member, bool from_update)
 {
 	LowPackage *pkg = member->pkg;
 	LowTransactionStatus status = LOW_TRANSACTION_NO_CHANGE;
@@ -905,15 +903,17 @@ low_transaction_check_requires_for_added (LowTransactionStatus status,
 		progress (trans, false);
 
 		if (!member->resolved) {
-			req_status = low_transaction_check_package_requires (trans,
-									     pkg,
-									     true,
-									     NULL,
-									     NULL);
+			req_status =
+				low_transaction_check_package_requires (trans,
+									pkg,
+									true,
+									NULL,
+									NULL);
 
 			if (req_status == LOW_TRANSACTION_UNRESOLVABLE) {
 				low_debug_pkg ("Adding to unresolved", pkg);
-				low_transaction_add_to_hash (trans->unresolved, pkg, NULL);
+				low_transaction_add_to_hash (trans->unresolved,
+							     pkg, NULL);
 				low_transaction_remove_from_hash (hash, pkg);
 				return req_status;
 			} else if (req_status == LOW_TRANSACTION_PACKAGES_ADDED) {
@@ -932,8 +932,7 @@ low_transaction_check_requires_for_added (LowTransactionStatus status,
 static LowTransactionStatus
 low_transaction_check_requires_for_removing (LowTransactionStatus status,
 					     LowTransaction *trans,
-					     GHashTable *hash,
-					     bool from_update)
+					     GHashTable *hash, bool from_update)
 {
 	GList *cur = g_hash_table_get_values (hash);
 
@@ -1103,7 +1102,7 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 								 conflicts[i]);
 			if (conflicting) {
 				low_debug_pkg ("Conflicts with installing",
-					   conflicting);
+					       conflicting);
 
 				low_debug_pkg ("Adding to unresolved",
 					       conflicting);
