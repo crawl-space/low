@@ -95,43 +95,43 @@ low_package_details_free (LowPackageDetails *details)
 LowPackageDetails *
 low_package_get_details (LowPackage *pkg)
 {
-	return (pkg->get_details) (pkg);
+	return pkg->get_details (pkg);
 }
 
 LowPackageDependency **
 low_package_get_provides (LowPackage *pkg)
 {
-	return (pkg->get_provides) (pkg);
+	return pkg->get_provides (pkg);
 }
 
 LowPackageDependency **
 low_package_get_requires (LowPackage *pkg)
 {
-	return (pkg->get_requires) (pkg);
+	return pkg->get_requires (pkg);
 }
 
 LowPackageDependency **
 low_package_get_conflicts (LowPackage *pkg)
 {
-	return (pkg->get_conflicts) (pkg);
+	return pkg->get_conflicts (pkg);
 }
 
 LowPackageDependency **
 low_package_get_obsoletes (LowPackage *pkg)
 {
-	return (pkg->get_obsoletes) (pkg);
+	return pkg->get_obsoletes (pkg);
 }
 
 char **
 low_package_get_files (LowPackage *pkg)
 {
-	return (pkg->get_files) (pkg);
+	return pkg->get_files (pkg);
 }
 
 LowPackageIter *
 low_package_iter_next (LowPackageIter *iter)
 {
-	return (iter->next_func) (iter);
+	return iter->next_func (iter);
 }
 
 LowPackageDependency *
@@ -245,14 +245,14 @@ low_package_dependency_satisfies (const LowPackageDependency *needs,
 	int res;
 
 	/* The tag type doesn't matter for comparison, so just use a default */
-	rpmds rpm_needs = rpmdsSingle (RPMTAG_PROVIDES, needs->name,
-				       needs->evr ? needs->evr : "",
-				       low_dependency_sense_to_rpm
-				       (needs->sense));
-	rpmds rpm_satisfies = rpmdsSingle (RPMTAG_PROVIDES, satisfies->name,
-					   satisfies->evr ? satisfies->evr : "",
-					   low_dependency_sense_to_rpm
-					   (satisfies->sense));
+	rpmds rpm_needs =
+		rpmdsSingle (RPMTAG_PROVIDES, needs->name,
+			     needs->evr ? needs->evr : "",
+			     low_dependency_sense_to_rpm (needs->sense));
+	rpmds rpm_satisfies =
+		rpmdsSingle (RPMTAG_PROVIDES, satisfies->name,
+			     satisfies->evr ? satisfies->evr : "",
+			     low_dependency_sense_to_rpm (satisfies->sense));
 
 	res = rpmdsCompare (rpm_needs, rpm_satisfies);
 

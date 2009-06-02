@@ -141,7 +141,7 @@ low_repo_rpmdb_search_dep_filter_fn (LowPackage *pkg, gpointer data)
 {
 	DepFilterData *filter_data = (DepFilterData *) data;
 	bool res = false;
-	LowPackageDependency **deps = (filter_data->dep_func) (pkg);
+	LowPackageDependency **deps = filter_data->dep_func (pkg);
 	int i;
 
 	for (i = 0; deps[i] != NULL; i++) {
@@ -424,7 +424,7 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 
 		if (iter_rpmdb->filter_data_free_func) {
 			gpointer data = iter_rpmdb->filter_data;
-			(iter_rpmdb->filter_data_free_func) (data);
+			iter_rpmdb->filter_data_free_func (data);
 		}
 
 		free (iter);
@@ -441,7 +441,7 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 	}
 	if (iter_rpmdb->func != NULL) {
 		/* move on to the next rpm if this one fails the filter */
-		if (!(iter_rpmdb->func) (iter->pkg, iter_rpmdb->filter_data)) {
+		if (!iter_rpmdb->func (iter->pkg, iter_rpmdb->filter_data)) {
 			low_package_unref (iter->pkg);
 			return low_package_iter_next (iter);
 		}

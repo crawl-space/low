@@ -95,7 +95,7 @@ low_repo_set_inner_for_each (gpointer key G_GNUC_UNUSED, gpointer value,
 	if (for_each_data->filter == ALL ||
 	    (for_each_data->filter == ENABLED && repo->enabled) ||
 	    (for_each_data->filter == DISABLED && !repo->enabled)) {
-		(for_each_data->func) (repo, for_each_data->data);
+		for_each_data->func (repo, for_each_data->data);
 	}
 }
 
@@ -155,8 +155,8 @@ low_repo_set_package_iter_next (LowPackageIter *iter)
 		low_debug ("On repo '%s'", current_repo->id);
 
 		current_repo_iter =
-			(iter_set->search_func) (current_repo,
-						 iter_set->search_data);
+			iter_set->search_func (current_repo,
+					       iter_set->search_data);
 		current_repo_iter = low_package_iter_next (current_repo_iter);
 	}
 
@@ -198,7 +198,7 @@ low_repo_set_package_iter_new (LowRepoSet *repo_set,
 	if (iter->current_repo != NULL) {
 		low_debug ("On repo '%s'", iter->current_repo->id);
 		iter->current_repo_iter =
-			(iter->search_func) (iter->current_repo, search_data);
+			iter->search_func (iter->current_repo, search_data);
 	}
 
 	return (LowPackageIter *) iter;

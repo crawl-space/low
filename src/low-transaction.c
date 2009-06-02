@@ -883,7 +883,7 @@ static void
 progress (LowTransaction *trans, bool is_done)
 {
 	if (trans->callback) {
-		(trans->callback) (is_done ? -1 : 0, trans->callback_data);
+		trans->callback (is_done ? -1 : 0, trans->callback_data);
 	}
 }
 

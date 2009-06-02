@@ -76,7 +76,7 @@ low_fake_repo_fake_iter_next (LowPackageIter *iter)
 
 	if (iter_fake->func != NULL) {
 		/* move on to the next rpm if this one fails the filter */
-		if (!(iter_fake->func) (iter->pkg, iter_fake->data)) {
+		if (!iter_fake->func (iter->pkg, iter_fake->data)) {
 			return low_package_iter_next (iter);
 		}
 	}

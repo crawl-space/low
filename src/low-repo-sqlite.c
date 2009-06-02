@@ -276,7 +276,7 @@ low_repo_sqlite_search_dep_filter_fn (LowPackage *pkg, gpointer data)
 {
 	DepFilterData *filter_data = (DepFilterData *) data;
 	bool res = false;
-	LowPackageDependency **deps = (filter_data->dep_func) (pkg);
+	LowPackageDependency **deps = filter_data->dep_func (pkg);
 	int i;
 
 	for (i = 0; deps[i] != NULL; i++) {
@@ -786,7 +786,7 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 		sqlite3_finalize (iter_sqlite->pp_stmt);
 
 		if (iter_sqlite->filter_data_free_func) {
-			(iter_sqlite->filter_data_free_func) (iter_sqlite->filter_data);
+			iter_sqlite->filter_data_free_func (iter_sqlite->filter_data);
 		}
 
 		free (iter_sqlite);
@@ -797,7 +797,7 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 						     iter->repo);
 	if (iter_sqlite->func != NULL) {
 		/* move on to the next package if this one fails the filter */
-		if (!(iter_sqlite->func) (iter->pkg, iter_sqlite->filter_data)) {
+		if (!iter_sqlite->func (iter->pkg, iter_sqlite->filter_data)) {
 			low_package_unref (iter->pkg);
 			return low_package_iter_next (iter);
 		}
