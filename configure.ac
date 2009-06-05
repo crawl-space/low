@@ -113,6 +113,22 @@ AC_CHECK_LIB(bz2, BZ2_bzReadOpen, [BZIP2_LIBS="-lbz2"],
 	     [AC_MSG_ERROR([Can't find bz2 library. Please install bzip2.])])
 AC_SUBST(BZIP2_LIBS)
 
+dnl Check for zlib (required)
+Z_LIB=""
+AC_ARG_WITH(zlib, [  --with-zlib=<dir>      Use zlib from here],
+                      [
+                      zlib=$withval
+                      CPPFLAGS="$CPPFLAGS -I$withval/include"
+                      LDFLAGS="$LDFLAGS -L$withval/lib"
+                      ]
+                      )
+AC_CHECK_HEADERS(zlib.h, [AC_DEFINE(HAVE_ZLIB_H)],
+		 [AC_MSG_ERROR([Can't find zlib.h. Please install zlib.])])
+AC_CHECK_LIB(z, gzopen, [Z_LIBS="-lz"],
+	     [AC_MSG_ERROR([Can't find z library. Please install zlib.])])
+AC_SUBST(Z_LIBS)
+
+
 dnl Check for nss (required)
 PKG_CHECK_MODULES(NSS, nss >= $NSS_REQUIRED)
 AC_SUBST(NSS_CFLAGS)

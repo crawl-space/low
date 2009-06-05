@@ -30,6 +30,7 @@
 #include <rpm/rpmlog.h>
 #include <rpm/rpmcli.h>
 #include <rpm/rpmdb.h>
+#include <zlib.h>
 
 #include "config.h"
 
@@ -1306,7 +1307,7 @@ download_repodata_file (LowRepo *repo, const char *relative_name)
 
 /* XXX should do this while downloading */
 static char *
-uncompress_file (const char *filename)
+uncompress_file_bz2 (const char *filename)
 {
 	int error;
 	int size_read;
@@ -1325,6 +1326,35 @@ uncompress_file (const char *filename)
 
 	printf ("Uncompressing...\n");
 	while (size_read = BZ2_bzRead (&error, compressed, &buf, BUF_SIZE),
+	       size_read != 0) {
+		if (write (fd, buf, size_read) == -1) {
+			/* XXX do something better here on failure */
+			exit (EXIT_FAILURE);
+		}
+	}
+
+	close (fd);
+
+	return uncompressed_name;
+}
+
+static char *
+uncompress_file_gz (const char *filename)
+{
+	int size_read;
+	gzFile *compressed;
+	int fd;
+	char buf[BUF_SIZE];
+	char *uncompressed_name = malloc (strlen (filename) - 2);
+	strncpy (uncompressed_name, filename, strlen (filename) - 3);
+	uncompressed_name[strlen (filename) - 3] = '\0';
+
+	compressed = gzopen (filename, "rb");
+
+	fd = open (uncompressed_name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+
+	printf ("Uncompressing...\n");
+	while (size_read = gzread (compressed, &buf, BUF_SIZE),
 	       size_read != 0) {
 		if (write (fd, buf, size_read) == -1) {
 			/* XXX do something better here on failure */
@@ -1365,7 +1395,7 @@ repodata_missing (LowRepo *repo, const char *relative_name)
 }
 
 static void
-fetch_repodata_file (LowRepo *repo, const char *relative_name)
+fetch_repodata_file (LowRepo *repo, const char *relative_name, bool is_bz2)
 {
 	char *tmp_file;
 	char *local_file;
@@ -1374,7 +1404,12 @@ fetch_repodata_file (LowRepo *repo, const char *relative_name)
 	tmp_file = download_repodata_file (repo, relative_name);
 	local_file = create_repodata_filename (repo, relative_name);
 	rename (tmp_file, local_file);
-	db_file = uncompress_file (local_file);
+
+	if (is_bz2) {
+		db_file = uncompress_file_bz2 (local_file);
+	} else {
+		db_file = uncompress_file_gz (local_file);
+	}
 
 	free (local_file);
 	free (tmp_file);
@@ -1442,11 +1477,15 @@ refresh_repo (LowRepo *repo)
 	free (tmp_file);
 
 	if (repodata_missing (repo, repomd->primary_db)) {
-		fetch_repodata_file (repo, repomd->primary_db);
+		fetch_repodata_file (repo, repomd->primary_db, true);
 	}
 
 	if (repodata_missing (repo, repomd->filelists_db)) {
-		fetch_repodata_file (repo, repomd->filelists_db);
+		fetch_repodata_file (repo, repomd->filelists_db, true);
+	}
+
+	if (repomd->delta_xml && repodata_missing (repo, repomd->delta_xml)) {
+		fetch_repodata_file (repo, repomd->delta_xml, false);
 	}
 
 	low_repomd_free (repomd);
