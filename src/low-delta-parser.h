@@ -1,7 +1,7 @@
 /*
  *  Low: a yum-like package manager
  *
- *  Copyright (C) 2008, 2009 James Bowes <jbowes@repl.ca>
+ *  Copyright (C) 2009 James Bowes <jbowes@repl.ca>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,28 +19,36 @@
  *  02110-1301  USA
  */
 
-#ifndef _LOW_UTIL_H_
-#define _LOW_UTIL_H_
+#include <glib.h>
 
-#include <stdbool.h>
+#include "low-util.h"
 
-/**
- * Package digest types we understand
- */
-typedef enum {
-	DIGEST_MD5,
-	DIGEST_SHA1,
-	DIGEST_SHA256,
-	DIGEST_UNKNOWN,
-	DIGEST_NONE
-} LowDigestType;
+#ifndef _LOW_DELTA_PARSER_H_
+#define _LOW_DELTA_PARSER_H_
 
-char **low_util_word_wrap (const char *text, int width);
+typedef struct _LowPackageDelta {
+    char *name;
+    char *arch;
+    char *new_epoch;
+    char *new_version;
+    char *new_release;
+    char *old_epoch;
+    char *old_version;
+    char *old_release;
+    char *filename;
+    size_t size;
+    LowDigestType digest_type;
+    char *digest;
+    char *sequence;
+} LowPackageDelta;
 
-int low_util_evr_cmp (const char *evr1, const char *evr2);
+typedef struct _LowDelta {
+    GHashTable *deltas;
+} LowDelta;
 
-LowDigestType low_util_digest_type_from_string (const char *string);
+LowDelta *low_delta_parse (const char *delta);
+void low_delta_free (LowDelta *delta);
 
-#endif /* _LOW_UTIL_H_ */
+#endif /* _LOW_DELTA_PARSER_H_ */
 
 /* vim: set ts=8 sw=8 noet: */

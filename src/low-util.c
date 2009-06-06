@@ -20,6 +20,7 @@
  */
 
 #include "low-util.h"
+#include "low-debug.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -175,6 +176,23 @@ low_util_evr_cmp (const char *evr1, const char *evr2)
 	free (r2);
 
 	return ret;
+}
+
+LowDigestType
+low_util_digest_type_from_string (const char *string)
+{
+	if (!strcmp (string, "md5")) {
+		return DIGEST_MD5;
+	} else if (!strcmp (string, "sha")) {
+		return DIGEST_SHA1;
+	} else if (!strcmp (string, "sha1")) {
+		return DIGEST_SHA1;
+	} else if (!strcmp (string, "sha256")) {
+		return DIGEST_SHA256;
+	} else {
+		low_debug ("Unknown digest type found: %s\n", string);
+		return DIGEST_UNKNOWN;
+	}
 }
 
 /* vim: set ts=8 sw=8 noet: */

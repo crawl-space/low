@@ -687,23 +687,6 @@ low_repo_sqlite_get_mirror_list (LowRepo *repo)
 	return repo_sqlite->mirrors;
 }
 
-static LowDigestType
-digest_type_from_string (const char *string)
-{
-	if (!strcmp (string, "md5")) {
-		return DIGEST_MD5;
-	} else if (!strcmp (string, "sha")) {
-		return DIGEST_SHA1;
-	} else if (!strcmp (string, "sha1")) {
-		return DIGEST_SHA1;
-	} else if (!strcmp (string, "sha256")) {
-		return DIGEST_SHA256;
-	} else {
-		low_debug ("%s\n", string);
-		return DIGEST_UNKNOWN;
-	}
-}
-
 static LowPackage *
 low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 {
@@ -756,9 +739,10 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 
 	pkg->digest =
 		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-	pkg->digest_type = digest_type_from_string ((const char *)
-						    sqlite3_column_text
-						    (pp_stmt, i++));
+	pkg->digest_type =
+		low_util_digest_type_from_string ((const char *)
+						  sqlite3_column_text
+						  (pp_stmt, i++));
 
 	pkg->get_details = low_sqlite_package_get_details;
 

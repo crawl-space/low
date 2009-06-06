@@ -51,6 +51,8 @@ low_SOURCES = \
 	low-mirror-list.c \
 	low-metalink-parser.h \
 	low-metalink-parser.c \
+	low-delta-parser.h \
+	low-delta-parser.c \
 	main.c \
 	$(NULL)
 
@@ -61,5 +63,6 @@ low_LDADD = \
 	$(CURL_LIBS) \
 	$(EXPAT_LIBS) \
 	$(BZIP2_LIBS) \
+	$(Z_LIBS) \
 	$(NSS_LIBS) \
 	$(NULL)
