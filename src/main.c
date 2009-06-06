@@ -1249,9 +1249,20 @@ command_install (int argc, const char *argv[])
 				     &counter);
 
 	for (i = 0; i < argc; i++) {
+		bool installed = false;
 		LowPackage *pkg;
 		LowPackageDependency *provides =
 			low_package_dependency_new_from_string (argv[i]);
+
+		iter = low_repo_rpmdb_search_provides (repo_rpmdb, provides);
+		while (iter = low_package_iter_next (iter), iter != NULL) {
+			low_package_unref (iter->pkg);
+			installed = true;
+		}
+		if (installed) {
+			printf ("'%s' is already installed.\n", argv[i]);
+			continue;
+		}
 
 		iter = low_repo_set_search_provides (repos, provides);
 		pkg = select_package_for_install (iter);
