@@ -72,3 +72,6 @@ smoke-test:
 
 rpm: dist
 	rpmbuild --clean -ta ${distdir}.tar.gz
+
+srpm: dist
+	rpmbuild --clean -ts ${distdir}.tar.gz
