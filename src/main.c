@@ -1382,6 +1382,7 @@ command_remove (int argc, const char *argv[])
 static char *
 download_repodata_file (LowRepo *repo, const char *relative_name)
 {
+	int ret;
 	LowMirrorList *mirrors = low_repo_sqlite_get_mirror_list (repo);
 
 	const char *basename = get_file_basename (relative_name);
@@ -1402,11 +1403,15 @@ download_repodata_file (LowRepo *repo, const char *relative_name)
 	}
 
 	/* XXX use if_missing here for non repomd.xml */
-	low_download_from_mirror (mirrors, relative_name, local_file,
-				  displayed_basename, download_callback);
+	ret = low_download_from_mirror (mirrors, relative_name, local_file,
+					displayed_basename, download_callback);
 
 	free (displayed_basename);
 
+	if (ret != 0) {
+		printf ("\nUnable to download %s\n", basename);
+		exit(EXIT_FAILURE);
+	}
 	return local_file;
 }
 

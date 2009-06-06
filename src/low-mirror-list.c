@@ -127,8 +127,15 @@ static int
 random_int (int upper)
 {
 	/* Not the most random thing in the world but do we care? */
-	unsigned int iseed = (unsigned int) time (NULL);
+	unsigned int iseed;
+
+	if (upper == 1) {
+		return 0;
+	}
+
+	iseed = (unsigned int) time (NULL);
 	srand (iseed);
+
 	return rand () % upper;
 }
 
@@ -155,6 +162,10 @@ low_mirror_list_lookup_random_mirror (LowMirrorList *mirrors)
 		} else if (mirror->weight == weight) {
 			number_at_current_weight++;
 		}
+	}
+
+	if (number_at_current_weight == 0) {
+		return NULL;
 	}
 
 	choice = random_int (number_at_current_weight);

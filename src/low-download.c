@@ -144,6 +144,10 @@ low_download_from_mirror (LowMirrorList *mirrors, const char *relative_path,
 		fseek (fp, 0, SEEK_SET);
 
 		baseurl = low_mirror_list_lookup_random_mirror (mirrors);
+		if (baseurl == NULL) {
+			return -1;
+		}
+
 		url = create_file_url (baseurl, relative_path);
 
 		curl_easy_setopt (curl, CURLOPT_WRITEDATA, fp);
