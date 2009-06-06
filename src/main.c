@@ -1645,55 +1645,6 @@ command_help (int argc, const char *argv[])
 	return EXIT_SUCCESS;
 }
 
-static void
-print_delta (gpointer key G_GNUC_UNUSED, gpointer value,
-	     gpointer data G_GNUC_UNUSED)
-{
-	LowPackageDelta *pkg_delta = (LowPackageDelta *) value;
-
-	printf ("Name: %s\n", pkg_delta->name);
-	printf ("Arch: %s\n", pkg_delta->arch);
-	printf ("New Epoch: %s\n", pkg_delta->new_epoch);
-	printf ("New Version: %s\n", pkg_delta->new_version);
-	printf ("New Release: %s\n", pkg_delta->new_release);
-	printf ("Old Epoch: %s\n", pkg_delta->old_epoch);
-	printf ("Old Version: %s\n", pkg_delta->old_version);
-	printf ("Old Release: %s\n", pkg_delta->old_release);
-	printf ("Filename: %s\n", pkg_delta->filename);
-	printf ("Digest: %s\n", pkg_delta->digest);
-	printf ("Size: %lu\n", pkg_delta->size);
-	printf ("Sequence: %s\n", pkg_delta->sequence);
-	printf ("\n");
-}
-
-static int
-command_delta (int argc G_GNUC_UNUSED, const char **argv)
-{
-	char *filename;
-	LowRepomd *repomd;
-	LowDelta *delta;
-
-	char *uncompressed_name;
-
-	filename = g_strdup_printf ("%s/%s/repomd.xml", LOCAL_CACHE, argv[0]);
-	repomd = low_repomd_parse (filename);
-
-	free (filename);
-	filename = g_strdup_printf ("%s/%s/%s", LOCAL_CACHE, argv[0], get_file_basename (repomd->delta_xml));
-
-	uncompressed_name = malloc (strlen (filename) - 2);
-	strncpy (uncompressed_name, filename, strlen (filename) - 3);
-	uncompressed_name[strlen (filename) - 3] = '\0';
-
-	delta = low_delta_parse (uncompressed_name);
-	if (delta == NULL) {
-		printf ("No delta file found\n");
-		return 0;
-	}
-	g_hash_table_foreach (delta->deltas, print_delta, NULL);
-	return 0;
-}
-
 static int
 NOT_IMPLEMENTED (int argc G_GNUC_UNUSED, const char **argv G_GNUC_UNUSED)
 {
@@ -1738,9 +1689,7 @@ const SubCommand commands[] = {
 	 "Find what package obsoletes the given value",
 	 command_whatobsoletes},
 	{"version", NO_USAGE, "Display version information", command_version},
-	{"help", "COMMAND", "Display a helpful usage message", command_help},
-
-	{"delta", "REPO", "Dump delta info", command_delta}
+	{"help", "COMMAND", "Display a helpful usage message", command_help}
 };
 
 static void
