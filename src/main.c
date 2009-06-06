@@ -735,6 +735,110 @@ download_package (LowPackage *pkg)
 	return res == 0;
 }
 
+static char *
+create_delta_filepath (LowRepo *repo, LowPackageDelta *pkg_delta)
+{
+	const char *filename = get_file_basename (pkg_delta->filename);
+	char *local_file = g_strdup_printf ("%s/%s/deltas/%s",
+					    LOCAL_CACHE, repo->id,
+					    filename);
+
+	return local_file;
+}
+
+
+static bool
+download_delta (LowRepo *repo, LowPackageDelta *pkg_delta)
+{
+	int res;
+	LowMirrorList *mirrors = low_repo_sqlite_get_mirror_list (repo);
+
+	const char *filename = get_file_basename (pkg_delta->filename);
+	char *local_file = create_delta_filepath (repo, pkg_delta);
+	char *dirname = g_strdup_printf ("%s/%s/deltas", LOCAL_CACHE,
+					 repo->id);
+
+	if (!g_file_test (dirname, G_FILE_TEST_EXISTS)) {
+		mkdir (dirname, 0755);
+	}
+
+	res = low_download_if_missing (mirrors, pkg_delta->filename, local_file,
+				       filename, pkg_delta->digest,
+				       pkg_delta->digest_type, pkg_delta->size,
+				       download_callback);
+	free (local_file);
+
+	return res == 0;
+}
+
+static bool
+verify_delta (const char *sequence, const char *arch)
+{
+	int res;
+	char *command =
+		g_strdup_printf ("/usr/bin/applydeltarpm -a %s -C -s %s",
+				 arch, sequence);
+
+	if (g_spawn_command_line_sync (command, NULL, NULL, &res, NULL)) {
+		free (command);
+		return res == 0;
+	}
+
+	free (command);
+	return false;
+}
+
+static bool
+apply_delta (LowPackageDelta *pkg_delta, LowPackage *new_pkg)
+{
+	int res;
+	char *delta_file = create_delta_filepath (new_pkg->repo, pkg_delta);
+	char *rpm_file = create_package_filepath (new_pkg);
+	char *command =
+		g_strdup_printf ("/usr/bin/applydeltarpm -a %s %s %s",
+				 pkg_delta->arch, delta_file, rpm_file);
+
+	printf ("Rebuilding %s\n", get_file_basename (rpm_file));
+	if (g_spawn_command_line_sync (command, NULL, NULL, &res, NULL)) {
+		free (command);
+		return res == 0;
+	}
+
+	free (command);
+	return false;
+}
+
+static bool
+construct_delta (LowPackage *new_pkg, LowPackage *old_pkg)
+{
+	LowPackageDelta *pkg_delta;
+	LowDelta *delta;
+
+	delta = low_repo_sqlite_get_delta (new_pkg->repo);
+	if (delta == NULL) {
+		return false;
+	}
+
+	pkg_delta = low_delta_find_delta (delta, new_pkg, old_pkg);
+	if (pkg_delta == NULL) {
+		return false;
+	}
+
+	if (!download_delta (new_pkg->repo, pkg_delta)) {
+	    return false;
+	}
+
+	if (!verify_delta (pkg_delta->sequence, pkg_delta->arch)) {
+		return false;
+	}
+
+	if (!apply_delta (pkg_delta, new_pkg)) {
+		return false;
+	}
+
+	return true;
+}
+
 static int
 command_download (int argc G_GNUC_UNUSED, const char *argv[])
 {
@@ -847,7 +951,9 @@ download_required_packages (LowTransaction *trans)
 	list = g_hash_table_get_values (trans->update);
 	while (list != NULL) {
 		LowTransactionMember *member = list->data;
-		download_package (member->pkg);
+		if (!construct_delta (member->pkg, member->related_pkg)) {
+			download_package (member->pkg);
+		}
 		list = list->next;
 	}
 }

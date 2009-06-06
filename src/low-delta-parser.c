@@ -105,6 +105,14 @@ low_delta_start_element (void *data, const char *name, const char **atts)
 	}
 }
 
+static char *
+low_delta_make_key (LowPackageDelta *pkg_delta)
+{
+	return g_strdup_printf ("%s-%s:%s-%s.%s", pkg_delta->name,
+				pkg_delta->new_epoch, pkg_delta->new_version,
+				pkg_delta->new_release, pkg_delta->arch);
+}
+
 static void
 low_delta_end_element (void *data, const char *name)
 {
@@ -112,7 +120,8 @@ low_delta_end_element (void *data, const char *name)
 
 	if (strcmp (name, "newpackage") == 0) {
 		ctx->state = DELTA_STATE_BEGIN;
-		g_hash_table_insert (ctx->delta->deltas, ctx->pkg_delta->name,
+		g_hash_table_insert (ctx->delta->deltas,
+				     low_delta_make_key (ctx->pkg_delta),
 				     ctx->pkg_delta);
 	} else if (strcmp (name, "delta") == 0) {
 		ctx->state = DELTA_STATE_PACKAGE;
@@ -227,6 +236,46 @@ low_delta_free (LowDelta *delta)
 	if (delta != NULL) {
 		free (delta);
 	}
+}
+
+static char *
+low_delta_make_key_from_pkg (LowPackage *pkg)
+{
+
+	return g_strdup_printf ("%s-%s:%s-%s.%s", pkg->name, pkg->epoch,
+				pkg->version, pkg->release, pkg->arch);
+}
+
+static bool
+compare_epochs (char *e1, char *e2) {
+	if (e1 == NULL && e2 == NULL) {
+		return true;
+	} else if (e1 == NULL) {
+		return strcmp ("0", e2) == 0;
+		return true;
+	} else if (e2 == NULL) {
+		return strcmp ("0", e1) == 0;
+	} else {
+		return strcmp (e1, e2) == 0;
+	}
+}
+
+LowPackageDelta *
+low_delta_find_delta (LowDelta *delta, LowPackage *new_pkg, LowPackage *old_pkg)
+{
+	char *key = low_delta_make_key_from_pkg (new_pkg);
+	LowPackageDelta *pkg_delta = g_hash_table_lookup (delta->deltas, key);
+
+	free (key);
+
+	if (pkg_delta != NULL &&
+	    compare_epochs (old_pkg->epoch, pkg_delta->old_epoch) &&
+	    strcmp (old_pkg->version, pkg_delta->old_version) == 0 &&
+	    strcmp (old_pkg->release, pkg_delta->old_release) == 0) {
+		return pkg_delta;
+	}
+
+	return NULL;
 }
 
 /* vim: set ts=8 sw=8 noet: */

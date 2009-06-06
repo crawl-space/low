@@ -23,6 +23,7 @@
 #include "low-repo.h"
 #include "low-package.h"
 #include "low-mirror-list.h"
+#include "low-delta-parser.h"
 
 #ifndef _LOW_REPO_SQLITE_H_
 #define _LOW_REPO_SQLITE_H_
@@ -55,6 +56,7 @@ LowPackageIter *	low_repo_sqlite_search_details 	(LowRepo *repo,
 							 const char *querystr);
 
 LowMirrorList *low_repo_sqlite_get_mirror_list (LowRepo *repo);
+LowDelta *low_repo_sqlite_get_delta (LowRepo *repo);
 
 #endif /* _LOW_REPO_SQLITE_H_ */
 

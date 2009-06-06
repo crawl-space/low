@@ -36,6 +36,7 @@
 typedef struct _LowRepoSqlite {
 	LowRepo super;
 	LowMirrorList *mirrors;
+	LowDelta *delta;
 	sqlite3 *primary_db;
 	sqlite3 *filelists_db;
 	GHashTable *table;
@@ -169,6 +170,24 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 					 SQLITE_ANY, NULL,
 					 low_repo_sqlite_regexp,
 					 (sqlFunc) NULL, (sqlFinal) NULL);
+
+		/* XXX do this lazily */
+		if (repomd->delta_xml != NULL) {
+			char *delta_xml;
+
+			tmp = repomd->delta_xml[strlen (repomd->delta_xml) - 3];
+			repomd->delta_xml[strlen (repomd->delta_xml) - 3] =
+				'\0';
+			delta_xml = g_strdup_printf (LOCAL_CACHE "/%s/%s", id,
+						     repomd->delta_xml + 9);
+			repomd->delta_xml[strlen (repomd->delta_xml) - 3] =
+				tmp;
+
+			repo->delta = low_delta_parse (delta_xml);
+			free (delta_xml);
+		} else {
+			repo->delta = NULL;
+		}
 
 		free (primary_db);
 		free (filelists_db);
@@ -685,6 +704,14 @@ low_repo_sqlite_get_mirror_list (LowRepo *repo)
 	}
 
 	return repo_sqlite->mirrors;
+}
+
+LowDelta *
+low_repo_sqlite_get_delta (LowRepo *repo)
+{
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+
+	return repo_sqlite->delta;
 }
 
 static LowPackage *

@@ -21,6 +21,7 @@
 
 #include <glib.h>
 
+#include "low-package.h"
 #include "low-util.h"
 
 #ifndef _LOW_DELTA_PARSER_H_
@@ -48,6 +49,9 @@ typedef struct _LowDelta {
 
 LowDelta *low_delta_parse (const char *delta);
 void low_delta_free (LowDelta *delta);
+
+LowPackageDelta *low_delta_find_delta (LowDelta *delta, LowPackage *new_pkg,
+				       LowPackage *old_pkg);
 
 #endif /* _LOW_DELTA_PARSER_H_ */
 

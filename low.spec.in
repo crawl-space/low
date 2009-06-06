@@ -14,6 +14,7 @@ BuildRequires:  glib2-devel
 BuildRequires:  nss-devel
 BuildRequires:  rpm-devel
 
+Requires:       deltarpm
 
 %description
 Low is a yum-like package manager, implemented in C, and with the goal
