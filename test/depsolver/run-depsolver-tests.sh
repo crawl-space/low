@@ -21,6 +21,7 @@
 #
 #  Collect results from the YAML driven depsolver test cases
 
+DIRNAME=`dirname $0`
 
 PASSED=1
 
@@ -31,7 +32,7 @@ function run_test {
     let TOTAL=$TOTAL+1
 
     printf "Testing '$1'... "
-    `./test_depsolver yaml/$1 > /dev/null`
+    `./test_depsolver $DIRNAME/yaml/$1 > /dev/null`
     if (($?)); then
         printf "\E[31mFAIL\n"
         PASSED=0
@@ -42,7 +43,7 @@ function run_test {
     tput sgr0
 }
 
-for test_file in $( ls yaml ); do
+for test_file in $( ls $DIRNAME/yaml ); do
     run_test $test_file
 done
 

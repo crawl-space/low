@@ -18,7 +18,7 @@
 #  02110-1301  USA
 
 SUBDIRS = doxygen src test
-EXTRA_DIST = HACKING low.spec
+EXTRA_DIST = HACKING low.spec low-completion.bash
 
 .PHONY: doxygen
 
