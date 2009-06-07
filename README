@@ -12,4 +12,7 @@ replacement for yum.
  * nss
  * rpm
  * sqlite
+ * zlib
+ * bzip2
+ * expat
  * associated -devel packages

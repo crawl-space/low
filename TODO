@@ -14,3 +14,4 @@
 - Add a function to iterate over provides and files, rather than having
   to call both. Still provide the old ones though.
 - multilib and arch "colour" support
+- low check and/or low fix for installed package sanity
