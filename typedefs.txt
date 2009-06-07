@@ -1,8 +1,10 @@
 CallbackData
 
 LowConfig
+LowDelta
 LowMirrorList
 LowPackage
+LowPackageDelta
 LowPackageDependency
 LowPackageDetails
 LowPackageIter

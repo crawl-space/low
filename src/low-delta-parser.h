@@ -28,23 +28,23 @@
 #define _LOW_DELTA_PARSER_H_
 
 typedef struct _LowPackageDelta {
-    char *name;
-    char *arch;
-    char *new_epoch;
-    char *new_version;
-    char *new_release;
-    char *old_epoch;
-    char *old_version;
-    char *old_release;
-    char *filename;
-    size_t size;
-    LowDigestType digest_type;
-    char *digest;
-    char *sequence;
+	char *name;
+	char *arch;
+	char *new_epoch;
+	char *new_version;
+	char *new_release;
+	char *old_epoch;
+	char *old_version;
+	char *old_release;
+	char *filename;
+	size_t size;
+	LowDigestType digest_type;
+	char *digest;
+	char *sequence;
 } LowPackageDelta;
 
 typedef struct _LowDelta {
-    GHashTable *deltas;
+	GHashTable *deltas;
 } LowDelta;
 
 LowDelta *low_delta_parse (const char *delta);

@@ -746,7 +746,6 @@ create_delta_filepath (LowRepo *repo, LowPackageDelta *pkg_delta)
 	return local_file;
 }
 
-
 static bool
 download_delta (LowRepo *repo, LowPackageDelta *pkg_delta)
 {
@@ -794,9 +793,8 @@ apply_delta (LowPackageDelta *pkg_delta, LowPackage *new_pkg)
 	int res;
 	char *delta_file = create_delta_filepath (new_pkg->repo, pkg_delta);
 	char *rpm_file = create_package_filepath (new_pkg);
-	char *command =
-		g_strdup_printf ("/usr/bin/applydeltarpm -a %s %s %s",
-				 pkg_delta->arch, delta_file, rpm_file);
+	char *command = g_strdup_printf ("/usr/bin/applydeltarpm -a %s %s %s",
+					 pkg_delta->arch, delta_file, rpm_file);
 
 	printf ("Rebuilding %s\n", get_file_basename (rpm_file));
 	if (g_spawn_command_line_sync (command, NULL, NULL, &res, NULL)) {
@@ -825,7 +823,7 @@ construct_delta (LowPackage *new_pkg, LowPackage *old_pkg)
 	}
 
 	if (!download_delta (new_pkg->repo, pkg_delta)) {
-	    return false;
+		return false;
 	}
 
 	if (!verify_delta (pkg_delta->sequence, pkg_delta->arch)) {
@@ -1421,7 +1419,7 @@ download_repodata_file (LowRepo *repo, const char *relative_name)
 
 	if (ret != 0) {
 		printf ("\nUnable to download %s\n", basename);
-		exit(EXIT_FAILURE);
+		exit (EXIT_FAILURE);
 	}
 	return local_file;
 }
@@ -1477,8 +1475,7 @@ uncompress_file_gz (const char *filename)
 	fd = open (uncompressed_name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
 	printf ("Uncompressing...\n");
-	while (size_read = gzread (compressed, &buf, BUF_SIZE),
-	       size_read != 0) {
+	while (size_read = gzread (compressed, &buf, BUF_SIZE), size_read != 0) {
 		if (write (fd, buf, size_read) == -1) {
 			/* XXX do something better here on failure */
 			exit (EXIT_FAILURE);
