@@ -2,6 +2,7 @@
 *.swp
 *.swo
 *.tar.gz
+*.tar.bz2
 
 *.gcda
 *.gcno

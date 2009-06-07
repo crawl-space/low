@@ -71,7 +71,7 @@ smoke-test:
 	@cd test && ./smoke-test.sh && cd ../
 
 rpm: dist
-	rpmbuild --clean -ta ${distdir}.tar.gz
+	rpmbuild --clean -ta ${distdir}.tar.bz2
 
 srpm: dist
-	rpmbuild --clean -ts ${distdir}.tar.gz
+	rpmbuild --clean -ts ${distdir}.tar.bz2
