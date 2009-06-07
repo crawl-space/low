@@ -9,10 +9,14 @@ URL:            http://github.com/jbowes/low
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
+BuildRequires:  bzip2-devel
 BuildRequires:  curl-devel
+BuildRequires:  expat-devel
 BuildRequires:  glib2-devel
 BuildRequires:  nss-devel
 BuildRequires:  rpm-devel
+BuildRequires:  sqlite-devel
+BuildRequires:  zlib-devel
 
 Requires:       deltarpm
 
