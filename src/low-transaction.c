@@ -301,6 +301,11 @@ choose_best_arch (LowPackage *target, LowPackage *pkg1, LowPackage *pkg2)
 		return pkg2;
 	}
 
+	/* XXX need to generalize */
+	if (strcmp (pkg2->arch, "x86_64") == 0 && pkg1->arch[0] == 'i') {
+		return pkg2;
+	}
+
 	return pkg1;
 }
 
