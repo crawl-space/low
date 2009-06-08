@@ -1498,9 +1498,10 @@ static bool
 repodata_missing (LowRepo *repo, const char *relative_name)
 {
 	char *filename = create_repodata_filename (repo, relative_name);
-	char *uncompressed_name = malloc (strlen (filename) - 3);
-	strncpy (uncompressed_name, filename, strlen (filename) - 4);
-	uncompressed_name[strlen (filename) - 4] = '\0';
+	const char *last_dot = rindex (filename, '.');
+	char *uncompressed_name = malloc ((last_dot - filename) + 1);
+	strncpy (uncompressed_name, filename, last_dot - filename);
+	uncompressed_name[last_dot - filename] = '\0';
 
 	free (filename);
 
