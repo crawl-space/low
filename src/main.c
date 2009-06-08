@@ -929,7 +929,7 @@ prompt_confirmed (void)
 	return false;
 }
 
-static void
+static bool
 download_required_packages (LowTransaction *trans)
 {
 	/* Maintain a running list of mirror URLs to use for each
@@ -937,12 +937,17 @@ download_required_packages (LowTransaction *trans)
 	GHashTable *repo_mirrors;
 	GList *list;
 
+	bool successful = true;
+
 	repo_mirrors = g_hash_table_new (g_str_hash, g_str_equal);
 
 	list = g_hash_table_get_values (trans->install);
 	while (list != NULL) {
 		LowTransactionMember *member = list->data;
-		download_package (member->pkg);
+		if (!download_package (member->pkg)) {
+			printf ("Unable to download %s\n", member->pkg->name);
+			successful = false;
+		}
 		list = list->next;
 	}
 
@@ -950,10 +955,16 @@ download_required_packages (LowTransaction *trans)
 	while (list != NULL) {
 		LowTransactionMember *member = list->data;
 		if (!construct_delta (member->pkg, member->related_pkg)) {
-			download_package (member->pkg);
+			if (!download_package (member->pkg)) {
+				printf ("Unable to download %s\n",
+					member->pkg->name);
+				successful = false;
+			}
 		}
 		list = list->next;
 	}
+
+	return successful;
 }
 
 static void
@@ -1187,7 +1198,10 @@ run_transaction (LowTransaction *trans)
 		data.verbose = true;
 
 		printf ("Running\n");
-		download_required_packages (trans);
+		if (!download_required_packages (trans)) {
+			printf ("Some packages failed to download. aborting\n");
+			return;
+		}
 
 //              rpmSetVerbosity(RPMLOG_DEBUG);
 		ts = low_transaction_to_rpmts (trans, &data);
