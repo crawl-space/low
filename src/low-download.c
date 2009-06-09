@@ -27,10 +27,11 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
 #include <curl/curl.h>
-#include <glib.h>
 #include <nss3/nss.h>
 #include <nss3/sechash.h>
+
 #include "low-download.h"
 #include "low-debug.h"
 
@@ -38,12 +39,19 @@ static char *
 create_file_url (const char *baseurl, const char *relative_file)
 {
 	char *full_url;
+	uint size = strlen (baseurl) + strlen (relative_file) + 1;
 
 	if (baseurl[strlen (baseurl) - 1] != '/') {
-		full_url = g_strdup_printf ("%s/%s", baseurl, relative_file);
+		size++;
+		full_url = malloc (sizeof (char) * size);
+		strcpy (full_url, baseurl);
+		strcat (full_url, "/");
 	} else {
-		full_url = g_strdup_printf ("%s%s", baseurl, relative_file);
+		full_url = malloc (sizeof (char) * size);
+		strcpy (full_url, baseurl);
 	}
+
+	strcat (full_url, relative_file);
 
 	return full_url;
 }
