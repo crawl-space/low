@@ -932,14 +932,9 @@ prompt_confirmed (void)
 static bool
 download_required_packages (LowTransaction *trans)
 {
-	/* Maintain a running list of mirror URLs to use for each
-	 * repository encountered. */
-	GHashTable *repo_mirrors;
 	GList *list;
 
 	bool successful = true;
-
-	repo_mirrors = g_hash_table_new (g_str_hash, g_str_equal);
 
 	list = g_hash_table_get_values (trans->install);
 	while (list != NULL) {
