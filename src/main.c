@@ -1206,6 +1206,8 @@ run_transaction (LowTransaction *trans, bool assume_yes)
 		if (rc != 0) {
 			printf ("Error running transaction\n");
 		}
+
+		rpmtsFree (ts);
 	}
 }
 
