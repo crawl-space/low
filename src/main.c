@@ -27,8 +27,6 @@
 
 #include <bzlib.h>
 #include <glib.h>
-#include <rpm/rpmlog.h>
-#include <rpm/rpmcli.h>
 #include <rpm/rpmdb.h>
 #include <zlib.h>
 
@@ -1065,8 +1063,6 @@ low_show_rpm_progress (const void *arg, const rpmCallbackType what,
 			fd = Fopen (filename, "r.ufdio");
 			/* FIX: still necessary? */
 			if (fd == NULL || Ferror (fd)) {
-				rpmlog (RPMLOG_ERR, "open of %s failed: %s\n",
-					filename, Fstrerror (fd));
 				if (fd != NULL) {
 					xx = Fclose (fd);
 					fd = NULL;
@@ -1087,7 +1083,6 @@ low_show_rpm_progress (const void *arg, const rpmCallbackType what,
 
 		case RPMCALLBACK_INST_START:
 		case RPMCALLBACK_UNINST_START:
-			rpmcliHashesCurrent = 0;
 			if (h == NULL)
 				break;
 			/* @todo Remove headerFormat() on a progress callback. */
@@ -1130,8 +1125,6 @@ low_show_rpm_progress (const void *arg, const rpmCallbackType what,
 		case RPMCALLBACK_UNINST_STOP:
 			if (verbose)
 				printHash (1, 1, callback);
-			rpmcliProgressTotal = rpmcliPackagesTotal;
-			rpmcliProgressCurrent = 0;
 
 			free (callback->name);
 			callback->name = NULL;
