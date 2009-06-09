@@ -412,7 +412,7 @@ print_updates (LowRepo *repo_rpmdb, LowConfig *config)
 }
 
 static int
-command_list (int argc G_GNUC_UNUSED, const char *argv[])
+command_list (int argc, const char *argv[])
 {
 	LowRepo *repo_rpmdb;
 	LowPackageIter *iter;
@@ -1308,7 +1308,7 @@ command_install (int argc, const char *argv[])
 }
 
 static int
-command_update (int argc G_GNUC_UNUSED, const char *argv[])
+command_update (int argc, const char *argv[])
 {
 	LowRepo *repo_rpmdb;
 	LowRepoSet *repos;
