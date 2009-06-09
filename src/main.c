@@ -1178,7 +1178,7 @@ low_transaction_to_rpmts (LowTransaction *trans, CallbackData *data)
 }
 
 static void
-run_transaction (LowTransaction *trans)
+run_transaction (LowTransaction *trans, bool assume_yes)
 {
 	if (!(g_hash_table_size (trans->install) ||
 	      g_hash_table_size (trans->update) ||
@@ -1190,7 +1190,7 @@ run_transaction (LowTransaction *trans)
 
 	print_transaction (trans);
 
-	if (prompt_confirmed ()) {
+	if (assume_yes || prompt_confirmed ()) {
 		rpmts ts;
 		int rc;
 		CallbackData data;
@@ -1254,11 +1254,18 @@ command_install (int argc, const char *argv[])
 	int i;
 	int res;
 	int counter = 0;
+	bool assume_yes = false;
 
 	initialize_repos (&repo_rpmdb, &repos);
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
+
+	if (strcmp("-y", argv[0]) == 0) {
+	    assume_yes = true;
+	    argc--;
+	    argv++;
+	}
 
 	for (i = 0; i < argc; i++) {
 		bool installed = false;
@@ -1289,7 +1296,7 @@ command_install (int argc, const char *argv[])
 		print_transaction_problems (trans);
 		res = EXIT_FAILURE;
 	} else {
-		run_transaction (trans);
+		run_transaction (trans, assume_yes);
 		res = EXIT_SUCCESS;
 	}
 
@@ -1310,11 +1317,18 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 	int i;
 	int res;
 	int counter = 0;
+	bool assume_yes = false;
 
 	initialize_repos (&repo_rpmdb, &repos);
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
+
+	if (strcmp("-y", argv[0]) == 0) {
+	    assume_yes = true;
+	    argc--;
+	    argv++;
+	}
 
 	for (i = 0; i < argc; i++) {
 		LowPackageDependency *provides =
@@ -1338,7 +1352,7 @@ command_update (int argc G_GNUC_UNUSED, const char *argv[])
 		print_transaction_problems (trans);
 		res = EXIT_FAILURE;
 	} else {
-		run_transaction (trans);
+		run_transaction (trans, assume_yes);
 		res = EXIT_SUCCESS;
 	}
 
@@ -1359,11 +1373,18 @@ command_remove (int argc, const char *argv[])
 	int i;
 	int res;
 	int counter = 0;
+	bool assume_yes = false;
 
 	initialize_repos (&repo_rpmdb, &repos);
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
+
+	if (strcmp("-y", argv[0]) == 0) {
+	    assume_yes = true;
+	    argc--;
+	    argv++;
+	}
 
 	for (i = 0; i < argc; i++) {
 		LowPackageDependency *provides =
@@ -1391,7 +1412,7 @@ command_remove (int argc, const char *argv[])
 		print_transaction_problems (trans);
 		res = EXIT_FAILURE;
 	} else {
-		run_transaction (trans);
+		run_transaction (trans, assume_yes);
 		res = EXIT_SUCCESS;
 	}
 
