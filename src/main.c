@@ -527,8 +527,7 @@ command_repolist (int argc, const char *argv[])
 
 	print_repo (repo_rpmdb);
 
-	low_repo_set_for_each (repos, filter, (LowRepoSetFunc) print_repo,
-			       NULL);
+	low_repo_set_for_each (repos, filter, print_repo);
 
 	low_repo_set_free (repos);
 	low_repo_rpmdb_shutdown (repo_rpmdb);
@@ -1650,8 +1649,7 @@ command_refresh (int argc G_GNUC_UNUSED, const char **argv G_GNUC_UNUSED)
 	config = low_config_initialize (repo_rpmdb);
 	repos = low_repo_set_initialize_from_config (config, false);
 
-	low_repo_set_for_each (repos, filter, (LowRepoSetFunc) refresh_repo,
-			       NULL);
+	low_repo_set_for_each (repos, filter, refresh_repo);
 
 	low_repo_set_free (repos);
 	low_config_free (config);

@@ -41,7 +41,7 @@ typedef enum {
 	ALL
 } LowRepoSetFilter;
 
-typedef bool (*LowRepoSetFunc) (LowRepo *repo, gpointer data);
+typedef void (*LowRepoSetFunc) (LowRepo *repo);
 
 LowRepoSet *    low_repo_set_initialize_from_config 	(LowConfig *config,
 							 bool bind_dbs);
@@ -49,8 +49,7 @@ void            low_repo_set_free                      	(LowRepoSet *repo_set);
 
 void            low_repo_set_for_each                  	(LowRepoSet *repo_set,
 							 LowRepoSetFilter filter,
-							 LowRepoSetFunc func,
-							 gpointer data);
+							 LowRepoSetFunc func);
 
 LowPackageIter * low_repo_set_list_all			(LowRepoSet *repo_set);
 LowPackageIter * low_repo_set_list_by_name 		(LowRepoSet *repo_set,
