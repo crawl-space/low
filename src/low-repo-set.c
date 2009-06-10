@@ -55,6 +55,13 @@ low_repo_set_initialize_from_config (LowConfig *config, bool bind_dbs)
 		free (baseurl);
 		free (mirror_list);
 
+		/* failed to initialize (probably missing sqlite file) */
+		if (repo == NULL) {
+			low_repo_set_free (repo_set);
+			repo_set = NULL;
+			break;
+		}
+
 		g_hash_table_insert (repo_set->repos, id, repo);
 	}
 	g_strfreev (repo_names);

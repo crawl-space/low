@@ -457,7 +457,7 @@ command_list (int argc, const char *argv[])
 	return EXIT_SUCCESS;
 }
 
-static void
+static bool
 initialize_repos (LowRepo **repo_rpmdb, LowRepoSet **repos)
 {
 	LowConfig *config;
@@ -468,6 +468,13 @@ initialize_repos (LowRepo **repo_rpmdb, LowRepoSet **repos)
 	*repos = low_repo_set_initialize_from_config (config, true);
 
 	low_config_free (config);
+
+	if (!repos) {
+		low_repo_rpmdb_shutdown (*repo_rpmdb);
+		return false;
+	}
+
+	return true;
 }
 
 static int
@@ -479,6 +486,9 @@ command_search (int argc G_GNUC_UNUSED, const char *argv[])
 	const char *querystr = argv[0];
 
 	initialize_repos (&repo_rpmdb, &repos);
+	if (!initialize_repos (&repo_rpmdb, &repos)) {
+		return (EXIT_FAILURE);
+	}
 
 	iter = low_repo_rpmdb_search_details (repo_rpmdb, querystr);
 	print_all_packages_short (iter);
@@ -508,7 +518,9 @@ command_repolist (int argc, const char *argv[])
 	LowRepoSet *repos;
 	LowRepoSetFilter filter = ALL;
 
-	initialize_repos (&repo_rpmdb, &repos);
+	if (!initialize_repos (&repo_rpmdb, &repos)) {
+		return (EXIT_FAILURE);
+	}
 
 	if (argc == 1) {
 		if (!strcmp (argv[0], "all")) {
@@ -544,7 +556,9 @@ command_whatprovides (int argc G_GNUC_UNUSED, const char *argv[])
 	LowPackageDependency *provides =
 		low_package_dependency_new_from_string (argv[0]);
 
-	initialize_repos (&repo_rpmdb, &repos);
+	if (!initialize_repos (&repo_rpmdb, &repos)) {
+		return (EXIT_FAILURE);
+	}
 
 	iter = low_repo_rpmdb_search_provides (repo_rpmdb, provides);
 	print_all_packages_short (iter);
@@ -578,7 +592,9 @@ command_whatrequires (int argc G_GNUC_UNUSED, const char *argv[])
 	LowPackageDependency *requires =
 		low_package_dependency_new_from_string (argv[0]);
 
-	initialize_repos (&repo_rpmdb, &repos);
+	if (!initialize_repos (&repo_rpmdb, &repos)) {
+		return (EXIT_FAILURE);
+	}
 
 	iter = low_repo_rpmdb_search_requires (repo_rpmdb, requires);
 	print_all_packages_short (iter);
@@ -602,7 +618,9 @@ command_whatconflicts (int argc G_GNUC_UNUSED, const char *argv[])
 	LowPackageDependency *conflicts =
 		low_package_dependency_new_from_string (argv[0]);
 
-	initialize_repos (&repo_rpmdb, &repos);
+	if (!initialize_repos (&repo_rpmdb, &repos)) {
+		return (EXIT_FAILURE);
+	}
 
 	iter = low_repo_rpmdb_search_conflicts (repo_rpmdb, conflicts);
 	print_all_packages_short (iter);
@@ -626,7 +644,9 @@ command_whatobsoletes (int argc G_GNUC_UNUSED, const char *argv[])
 	LowPackageDependency *obsoletes =
 		low_package_dependency_new_from_string (argv[0]);
 
-	initialize_repos (&repo_rpmdb, &repos);
+	if (!initialize_repos (&repo_rpmdb, &repos)) {
+		return (EXIT_FAILURE);
+	}
 
 	iter = low_repo_rpmdb_search_obsoletes (repo_rpmdb, obsoletes);
 	print_all_packages_short (iter);
@@ -843,7 +863,9 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	char *name = g_strdup (argv[0]);
 	int found_pkg;
 
-	initialize_repos (&repo_rpmdb, &repos);
+	if (!initialize_repos (&repo_rpmdb, &repos)) {
+		return (EXIT_FAILURE);
+	}
 
 	iter = low_repo_set_list_by_name (repos, name);
 	found_pkg = 0;
@@ -1245,7 +1267,9 @@ command_install (int argc, const char *argv[])
 	int counter = 0;
 	bool assume_yes = false;
 
-	initialize_repos (&repo_rpmdb, &repos);
+	if (!initialize_repos (&repo_rpmdb, &repos)) {
+		return (EXIT_FAILURE);
+	}
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
@@ -1308,7 +1332,9 @@ command_update (int argc, const char *argv[])
 	int counter = 0;
 	bool assume_yes = false;
 
-	initialize_repos (&repo_rpmdb, &repos);
+	if (!initialize_repos (&repo_rpmdb, &repos)) {
+		return (EXIT_FAILURE);
+	}
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
@@ -1364,7 +1390,9 @@ command_remove (int argc, const char *argv[])
 	int counter = 0;
 	bool assume_yes = false;
 
-	initialize_repos (&repo_rpmdb, &repos);
+	if (!initialize_repos (&repo_rpmdb, &repos)) {
+		return (EXIT_FAILURE);
+	}
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);

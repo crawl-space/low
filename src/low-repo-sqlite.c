@@ -162,8 +162,15 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 
 		if (access (primary_db, R_OK) || access (filelists_db, R_OK)) {
 			printf ("Can't open db files for repo '%s'! (try running 'yum makecache')\n", id);
-			exit (1);
+
+			free (filelists_db);
+			free (primary_db);
+			low_repomd_free (repomd);
+			free (repo);
+
+			return NULL;
 		}
+
 		low_repo_sqlite_open_db (primary_db, &repo->primary_db);
 		attach_db (repo->primary_db, filelists_db);
 		sqlite3_create_function (repo->primary_db, "regexp", 2,
