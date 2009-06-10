@@ -65,4 +65,15 @@ low_arch_choose_best (LowPackage *target, LowPackage *pkg1, LowPackage *pkg2)
 	return pkg1;
 }
 
+const LowPackage *
+low_arch_choose_best_for_system (LowPackage *pkg1, LowPackage *pkg2)
+{
+	/* XXX need to generalize */
+	if (strcmp (pkg2->arch, "x86_64") == 0 && pkg1->arch[0] == 'i') {
+		return pkg2;
+	}
+
+	return pkg1;
+}
+
 /* vim: set ts=8 sw=8 noet: */

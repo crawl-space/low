@@ -32,6 +32,7 @@
 
 #include "config.h"
 
+#include "low-arch.h"
 #include "low-debug.h"
 #include "low-config.h"
 #include "low-package.h"
@@ -1233,9 +1234,12 @@ select_package_for_install (LowPackageIter *iter)
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		char *new_evr = low_package_evr_as_string (iter->pkg);
+		int cmp = low_util_evr_cmp (new_evr, best_evr);
 
-		if (low_util_evr_cmp (new_evr, best_evr) > 0 &&
-		    iter->pkg->arch[0] != 'i') {
+		if (cmp > 0 ||
+		    (cmp == 0 && best != NULL &&
+		     low_arch_choose_best_for_system (best, iter->pkg)
+		     == iter->pkg)) {
 			if (best) {
 				low_package_unref (best);
 			}

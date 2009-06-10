@@ -26,7 +26,7 @@
 
 bool low_arch_is_compatible (LowPackage *target, LowPackage *pkg);
 const LowPackage *low_arch_choose_best (LowPackage *target, LowPackage *pkg1, LowPackage *pkg2);
-
+const LowPackage *low_arch_choose_best_for_system (LowPackage *pkg1, LowPackage *pkg2);
 
 #endif /* _LOW_ARCH_H_ */
 
