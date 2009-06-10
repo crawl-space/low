@@ -44,6 +44,7 @@ check_low_LDADD = \
 		${top_builddir}/src/low-package.o \
 		${top_builddir}/src/low-repo-set.o \
 		${top_builddir}/src/low-util.o \
+		${top_builddir}/src/low-arch.o \
 		$(NULL)
 
 CLEANFILES = check_low.log

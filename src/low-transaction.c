@@ -29,6 +29,7 @@
 #include "low-transaction.h"
 #include "low-repo-rpmdb.h"
 #include "low-util.h"
+#include "low-arch.h"
 
 /**
  * \page depsolver The Depedency Resolution Algorithm
@@ -267,48 +268,6 @@ low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
 	}
 }
 
-static bool
-arch_is_compatible (LowPackage *target, LowPackage *pkg)
-{
-	if (strcmp (target->arch, pkg->arch) == 0) {
-		return true;
-	}
-
-	if (strcmp (target->arch, "noarch") == 0) {
-		return true;
-	}
-	if (strcmp (pkg->arch, "noarch") == 0) {
-		return true;
-	}
-
-	return false;
-}
-
-static LowPackage *
-choose_best_arch (LowPackage *target, LowPackage *pkg1, LowPackage *pkg2)
-{
-	if (strcmp (target->arch, pkg1->arch) == 0) {
-		return pkg1;
-	}
-	if (strcmp (target->arch, pkg2->arch) == 0) {
-		return pkg2;
-	}
-
-	if (strcmp (pkg1->arch, "noarch") == 0) {
-		return pkg1;
-	}
-	if (strcmp (pkg2->arch, "noarch") == 0) {
-		return pkg2;
-	}
-
-	/* XXX need to generalize */
-	if (strcmp (pkg2->arch, "x86_64") == 0 && pkg1->arch[0] == 'i') {
-		return pkg2;
-	}
-
-	return pkg1;
-}
-
 static LowPackage *
 low_transaction_search_iter_for_update (LowPackage *to_update,
 					LowPackageIter *iter)
@@ -321,10 +280,10 @@ low_transaction_search_iter_for_update (LowPackage *to_update,
 		int cmp = low_util_evr_cmp (new_evr, best_evr);
 
 		/* XXX arch cmp here has to be better */
-		if ((cmp > 0 && arch_is_compatible (to_update, iter->pkg)) ||
+		if ((cmp > 0 && low_arch_is_compatible (to_update, iter->pkg)) ||
 		    (cmp == 0 &&
-		     choose_best_arch (to_update, best,
-				       iter->pkg) == iter->pkg)) {
+		     low_arch_choose_best (to_update, best,
+					   iter->pkg) == iter->pkg)) {
 			low_package_unref (best);
 			best = iter->pkg;
 
@@ -565,9 +524,10 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 		char *new_evr = low_package_evr_as_string (iter->pkg);
 		int cmp = low_util_evr_cmp (new_evr, best_evr);
 
-		if ((cmp > 0 && arch_is_compatible (pkg, iter->pkg)) ||
+		if ((cmp > 0 && low_arch_is_compatible (pkg, iter->pkg)) ||
 		    (cmp == 0 &&
-		     choose_best_arch (pkg, best, iter->pkg) == iter->pkg) ||
+		     low_arch_choose_best (pkg, best,
+					   iter->pkg) == iter->pkg) ||
 		    low_transaction_is_pkg_in_hash (trans->install, iter->pkg)
 		    || low_transaction_is_pkg_in_hash (trans->update,
 						       iter->pkg)) {

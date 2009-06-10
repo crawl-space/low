@@ -53,6 +53,8 @@ low_SOURCES = \
 	low-metalink-parser.c \
 	low-delta-parser.h \
 	low-delta-parser.c \
+	low-arch.h \
+	low-arch.c \
 	main.c \
 	$(NULL)
 
