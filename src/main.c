@@ -1212,7 +1212,6 @@ run_transaction (LowTransaction *trans, bool assume_yes)
 			printf ("Some packages failed to download. aborting\n");
 			return;
 		}
-
 //              rpmSetVerbosity(RPMLOG_DEBUG);
 		ts = low_transaction_to_rpmts (trans, &data);
 		rpmtsSetFlags (ts, RPMTRANS_FLAG_NONE);
@@ -1278,10 +1277,10 @@ command_install (int argc, const char *argv[])
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
 
-	if (strcmp("-y", argv[0]) == 0) {
-	    assume_yes = true;
-	    argc--;
-	    argv++;
+	if (strcmp ("-y", argv[0]) == 0) {
+		assume_yes = true;
+		argc--;
+		argv++;
 	}
 
 	for (i = 0; i < argc; i++) {
@@ -1343,10 +1342,10 @@ command_update (int argc, const char *argv[])
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
 
-	if (strcmp("-y", argv[0]) == 0) {
-	    assume_yes = true;
-	    argc--;
-	    argv++;
+	if (strcmp ("-y", argv[0]) == 0) {
+		assume_yes = true;
+		argc--;
+		argv++;
 	}
 
 	for (i = 0; i < argc; i++) {
@@ -1401,10 +1400,10 @@ command_remove (int argc, const char *argv[])
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
 
-	if (strcmp("-y", argv[0]) == 0) {
-	    assume_yes = true;
-	    argc--;
-	    argv++;
+	if (strcmp ("-y", argv[0]) == 0) {
+		assume_yes = true;
+		argc--;
+		argv++;
 	}
 
 	for (i = 0; i < argc; i++) {
