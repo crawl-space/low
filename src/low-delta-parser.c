@@ -49,45 +49,67 @@ struct delta_context {
 };
 
 static void
+low_delta_handle_newpackage_start (struct delta_context *ctx, const char **atts)
+{
+	int i;
+
+	ctx->pkg_delta = malloc (sizeof (LowPackageDelta));
+
+	for (i = 0; atts[i]; i += 2) {
+		if (strcmp (atts[i], "name") == 0) {
+			ctx->pkg_delta->name = strdup (atts[i + 1]);
+		} else if (strcmp (atts[i], "arch") == 0) {
+			ctx->pkg_delta->arch = strdup (atts[i + 1]);
+		} else if (strcmp (atts[i], "epoch") == 0) {
+			ctx->pkg_delta->new_epoch = strdup (atts[i + 1]);
+		} else if (strcmp (atts[i], "version") == 0) {
+			ctx->pkg_delta->new_version = strdup (atts[i + 1]);
+		} else if (strcmp (atts[i], "release") == 0) {
+			ctx->pkg_delta->new_release = strdup (atts[i + 1]);
+		}
+	}
+}
+
+static void
+low_delta_handle_delta_start (struct delta_context *ctx, const char **atts)
+{
+	int i;
+
+	for (i = 0; atts[i]; i += 2) {
+		if (strcmp (atts[i], "oldepoch") == 0) {
+			ctx->pkg_delta->old_epoch = strdup (atts[i + 1]);
+		} else if (strcmp (atts[i], "oldversion") == 0) {
+			ctx->pkg_delta->old_version = strdup (atts[i + 1]);
+		} else if (strcmp (atts[i], "oldrelease") == 0) {
+			ctx->pkg_delta->old_release = strdup (atts[i + 1]);
+		}
+	}
+}
+
+static void
+low_delta_handle_checksum_start (struct delta_context *ctx, const char **atts)
+{
+	int i;
+
+	for (i = 0; atts[i]; i += 2) {
+		if (strcmp (atts[i], "type") == 0) {
+			ctx->pkg_delta->digest_type =
+				low_util_digest_type_from_string (atts[i + 1]);
+		}
+	}
+}
+
+static void
 low_delta_start_element (void *data, const char *name, const char **atts)
 {
 	struct delta_context *ctx = data;
-	int i;
 
 	if (strcmp (name, "newpackage") == 0) {
 		ctx->state = DELTA_STATE_PACKAGE;
-		ctx->pkg_delta = malloc (sizeof (LowPackageDelta));
-
-		for (i = 0; atts[i]; i += 2) {
-			if (strcmp (atts[i], "name") == 0) {
-				ctx->pkg_delta->name = strdup (atts[i + 1]);
-			} else if (strcmp (atts[i], "arch") == 0) {
-				ctx->pkg_delta->arch = strdup (atts[i + 1]);
-			} else if (strcmp (atts[i], "epoch") == 0) {
-				ctx->pkg_delta->new_epoch =
-					strdup (atts[i + 1]);
-			} else if (strcmp (atts[i], "version") == 0) {
-				ctx->pkg_delta->new_version =
-					strdup (atts[i + 1]);
-			} else if (strcmp (atts[i], "release") == 0) {
-				ctx->pkg_delta->new_release =
-					strdup (atts[i + 1]);
-			}
-		}
+		low_delta_handle_newpackage_start (ctx, atts);
 	} else if (strcmp (name, "delta") == 0) {
 		ctx->state = DELTA_STATE_DELTA;
-		for (i = 0; atts[i]; i += 2) {
-			if (strcmp (atts[i], "oldepoch") == 0) {
-				ctx->pkg_delta->old_epoch =
-					strdup (atts[i + 1]);
-			} else if (strcmp (atts[i], "oldversion") == 0) {
-				ctx->pkg_delta->old_version =
-					strdup (atts[i + 1]);
-			} else if (strcmp (atts[i], "oldrelease") == 0) {
-				ctx->pkg_delta->old_release =
-					strdup (atts[i + 1]);
-			}
-		}
+		low_delta_handle_delta_start (ctx, atts);
 	} else if (strcmp (name, "filename") == 0) {
 		ctx->state = DELTA_STATE_FILENAME;
 	} else if (strcmp (name, "sequence") == 0) {
@@ -96,12 +118,7 @@ low_delta_start_element (void *data, const char *name, const char **atts)
 		ctx->state = DELTA_STATE_SIZE;
 	} else if (strcmp (name, "checksum") == 0) {
 		ctx->state = DELTA_STATE_CHECKSUM;
-		for (i = 0; atts[i]; i += 2) {
-			if (strcmp (atts[i], "type") == 0) {
-				ctx->pkg_delta->digest_type =
-					low_util_digest_type_from_string (atts[i + 1]);
-			}
-		}
+		low_delta_handle_checksum_start (ctx, atts);
 	}
 }
 
@@ -153,8 +170,7 @@ low_delta_character_data (void *data, const XML_Char *s, int len)
 	struct delta_context *ctx = data;
 
 	if (ctx->str_len + len > ctx->buf_size) {
-		ctx->buf = realloc (ctx->buf,
-				    ctx->buf_size + len);
+		ctx->buf = realloc (ctx->buf, ctx->buf_size + len);
 		ctx->buf_size += len;
 	}
 
@@ -179,8 +195,7 @@ low_delta_parse (const char *delta)
 	parser = XML_ParserCreate (NULL);
 	XML_SetUserData (parser, &ctx);
 	XML_SetElementHandler (parser,
-			       low_delta_start_element,
-			       low_delta_end_element);
+			       low_delta_start_element, low_delta_end_element);
 	XML_SetCharacterDataHandler (parser, low_delta_character_data);
 
 	delta_file = open (delta, O_RDONLY);
@@ -205,8 +220,7 @@ low_delta_parse (const char *delta)
 			case XML_PARSING:
 			case XML_INITIALIZED:
 				buf = XML_GetBuffer (parser, XML_BUFFER_SIZE);
-				len = read (delta_file, buf,
-					    XML_BUFFER_SIZE);
+				len = read (delta_file, buf, XML_BUFFER_SIZE);
 				if (len < 0) {
 					fprintf (stderr,
 						 "couldn't read input: %s\n",
@@ -247,7 +261,8 @@ low_delta_make_key_from_pkg (LowPackage *pkg)
 }
 
 static bool
-compare_epochs (char *e1, char *e2) {
+compare_epochs (char *e1, char *e2)
+{
 	if (e1 == NULL && e2 == NULL) {
 		return true;
 	} else if (e1 == NULL) {
