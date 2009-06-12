@@ -57,12 +57,7 @@ low_arch_choose_best (LowPackage *target, LowPackage *pkg1, LowPackage *pkg2)
 		return pkg2;
 	}
 
-	/* XXX need to generalize */
-	if (strcmp (pkg2->arch, "x86_64") == 0 && pkg1->arch[0] == 'i') {
-		return pkg2;
-	}
-
-	return pkg1;
+	return low_arch_choose_best_for_system (pkg1, pkg2);
 }
 
 const LowPackage *
@@ -71,6 +66,10 @@ low_arch_choose_best_for_system (LowPackage *pkg1, LowPackage *pkg2)
 	/* XXX need to generalize */
 	if (strcmp (pkg2->arch, "x86_64") == 0 && pkg1->arch[0] == 'i') {
 		return pkg2;
+	}
+
+	if (pkg1->arch[0] == 'i' && pkg2->arch[0] == 'i') {
+		return pkg1->arch[1] > pkg2->arch[1] ? pkg1 : pkg2;
 	}
 
 	return pkg1;
