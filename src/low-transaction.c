@@ -511,19 +511,47 @@ low_transaction_dep_in_filelist (const char *needle, char **haystack)
 	return false;
 }
 
+static LowPackageDependency *
+low_transaction_find_provides_in_deplist (const LowPackageDependency *needle,
+					  LowPackageDependency **haystack)
+{
+	int i;
+
+	for (i = 0; haystack[i] != NULL; i++) {
+		if (low_package_dependency_satisfies (needle, haystack[i])) {
+			return haystack[i];
+		}
+	}
+
+	return NULL;
+}
+
 static LowTransactionStatus
 select_best_provides (LowTransaction *trans, LowPackage *pkg,
-		      LowPackageIter *iter, bool check_for_existing)
+		      LowPackageIter *iter, LowPackageDependency *requires,
+		      bool check_for_existing)
 {
 	LowTransactionStatus status = LOW_TRANSACTION_UNRESOLVABLE;
 	LowPackage *best = NULL;
-	char *best_evr = g_strdup ("");
+	LowPackageDependency *best_prov = NULL;
 
 	/* XXX this is duplicated in main.c */
 	while (iter = low_package_iter_next (iter), iter != NULL) {
-		char *new_evr = low_package_evr_as_string (iter->pkg);
-		int cmp = low_util_evr_cmp (new_evr, best_evr);
+		LowPackageDependency **provides =
+			low_package_get_provides (iter->pkg);
+		LowPackageDependency *new_prov =
+			low_transaction_find_provides_in_deplist (requires,
+								  provides);
 
+		int cmp;
+		/* XXX get rid of this check */
+		if (best_prov != NULL) {
+			cmp = low_package_dependency_cmp (new_prov, best_prov);
+		} else {
+			cmp = 1;
+		}
+
+		low_debug ("%s %d %s\n", iter->pkg->name, cmp , best ? best->name : NULL);
 		if ((cmp > 0 && low_arch_is_compatible (pkg, iter->pkg)) ||
 		    (cmp == 0 &&
 		     low_arch_choose_best (pkg, best,
@@ -535,17 +563,13 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 				low_package_unref (best);
 			}
 
-			free (best_evr);
 			best = iter->pkg;
-			best_evr = new_evr;
+			best_prov = new_prov;
 		} else {
 			low_package_unref (iter->pkg);
-			free (new_evr);
 		}
 
 	}
-
-	free (best_evr);
 
 	if (best) {
 		/* XXX clean this up */
@@ -670,7 +694,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 		providing = low_repo_set_search_provides (trans->repos,
 							  requires[i]);
 		status = select_best_provides (trans, pkg, providing,
-					       !check_available);
+					       requires[i], !check_available);
 		if (status == LOW_TRANSACTION_PACKAGES_ADDED) {
 			pkgs_added = true;
 		}
@@ -681,6 +705,7 @@ low_transaction_check_package_requires (LowTransaction *trans, LowPackage *pkg,
 							   requires[i]->name);
 
 			status = select_best_provides (trans, pkg, providing,
+						       requires[i],
 						       !check_available);
 			if (status == LOW_TRANSACTION_PACKAGES_ADDED) {
 				pkgs_added = true;

@@ -238,6 +238,22 @@ low_dependency_sense_to_rpm (LowPackageDependencySense sense)
 	}
 }
 
+int
+low_package_dependency_cmp (const LowPackageDependency *dep1,
+			    const LowPackageDependency *dep2)
+{
+	/* XXX make this more robust */
+	if (dep1->evr && dep2->evr) {
+		return low_util_evr_cmp (dep1->evr, dep2->evr);
+	} else if (dep1->evr) {
+		return 1;
+	} else if (dep2->evr) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
 bool
 low_package_dependency_satisfies (const LowPackageDependency *needs,
 				  const LowPackageDependency *satisfies)
@@ -261,7 +277,6 @@ low_package_dependency_satisfies (const LowPackageDependency *needs,
 
 	return res == 1 ? true : false;
 }
-
 char *
 low_package_evr_as_string (LowPackage *pkg)
 {
