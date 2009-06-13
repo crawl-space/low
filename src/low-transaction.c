@@ -558,7 +558,9 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 					   iter->pkg) == iter->pkg) ||
 		    low_transaction_is_pkg_in_hash (trans->install, iter->pkg)
 		    || low_transaction_is_pkg_in_hash (trans->update,
-						       iter->pkg)) {
+						       iter->pkg) ||
+		    (cmp == 0 && low_arch_is_compatible (best, iter->pkg) &&
+		     strcmp (best->name, iter->pkg->name) > 0)) {
 			if (best) {
 				low_package_unref (best);
 			}

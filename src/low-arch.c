@@ -48,7 +48,7 @@ static const LowPackage *
 low_arch_cmp_for_x86 (LowPackage *pkg1, LowPackage *pkg2)
 {
 	if (pkg1->arch[0] == 'i' && pkg2->arch[0] == 'i') {
-		return pkg1->arch[1] > pkg2->arch[1] ? pkg1 : pkg2;
+		return pkg1->arch[1] >= pkg2->arch[1] ? pkg1 : pkg2;
 	} else if (pkg1->arch[0] == 'i') {
 		return pkg1;
 	} else if (pkg2->arch[0] == 'i') {

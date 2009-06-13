@@ -1,0 +1,19 @@
+test: When two or more packages providing a dep are otherwise equal,
+      choose the one with the strcmp smallest name.
+
+installed: []
+
+available:
+    - package: { name: sh-libs, evr: 0.3.1-2, arch: i386 }
+      provides: [ shell-libs ]
+    - package: { name: zsh-libs, evr: 2.3.1-1, arch: i386 }
+      provides: [ shell-libs ]
+    - package: { name: bash, evr: 1.3.1-2, arch: i386 }
+      requires: [ shell-libs ]
+
+transaction:
+    - install: { name: bash }
+
+results:
+    - install: { name: sh-libs, evr: 0.3.1-2, arch: i386 }
+    - install: { name: bash, evr: 1.3.1-2, arch: i386 }
