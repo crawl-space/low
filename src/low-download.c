@@ -289,6 +289,9 @@ compare_digest (const char *file, const char *expected,
 
 	close (fd);
 	HASH_End (ctx, result, &size, BUF_SIZE);
+	HASH_Destroy (ctx);
+
+	NSS_Shutdown ();
 
 	for (i = 0; i < strlen (expected); i += 2) {
 		unsigned char e = 16 * char_to_short (expected[i]) +

@@ -200,6 +200,8 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 		free (filelists_db);
 	} else {
 		repo->primary_db = NULL;
+		repo->filelists_db = NULL;
+		repo->delta = NULL;
 	}
 
 	repo->table = NULL;
@@ -233,6 +235,10 @@ low_repo_sqlite_shutdown (LowRepo *repo)
 	if (repo_sqlite->primary_db) {
 		detach_db (repo_sqlite->primary_db);
 		sqlite3_close (repo_sqlite->primary_db);
+	}
+
+	if (repo_sqlite->delta) {
+		low_delta_free (repo_sqlite->delta);
 	}
 
 	if (repo_sqlite->table) {

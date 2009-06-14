@@ -744,6 +744,7 @@ download_package (LowPackage *pkg)
 	if (!g_file_test (dirname, G_FILE_TEST_EXISTS)) {
 		mkdir (dirname, 0755);
 	}
+	free (dirname);
 
 	res = low_download_if_missing (mirrors, pkg->location_href, local_file,
 				       filename, pkg->digest, pkg->digest_type,
@@ -778,6 +779,7 @@ download_delta (LowRepo *repo, LowPackageDelta *pkg_delta)
 	if (!g_file_test (dirname, G_FILE_TEST_EXISTS)) {
 		mkdir (dirname, 0755);
 	}
+	free (dirname);
 
 	res = low_download_if_missing (mirrors, pkg_delta->filename, local_file,
 				       filename, pkg_delta->digest,

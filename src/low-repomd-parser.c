@@ -76,10 +76,11 @@ low_repomd_start_element (void *data, const char *name, const char **atts)
 					case REPODATA_STATE_FILELISTS:
 						ctx->repomd->filelists_db =
 							strdup (atts[i + 1]);
+						break;
 					case REPODATA_STATE_DELTA:
 						ctx->repomd->delta_xml =
 							strdup (atts[i + 1]);
-
+						break;
 					default:
 						break;
 				}

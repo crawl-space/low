@@ -205,7 +205,6 @@ low_delta_parse (const char *delta)
 	}
 
 	ctx.delta = malloc (sizeof (LowDelta));
-	memset (ctx.delta, 0, sizeof (LowDelta));
 
 	ctx.delta->deltas = g_hash_table_new (g_str_hash, g_str_equal);
 
@@ -227,6 +226,7 @@ low_delta_parse (const char *delta)
 						 strerror (errno));
 					XML_ParserFree (parser);
 					low_delta_free (ctx.delta);
+					free (ctx.buf);
 					return NULL;
 				}
 
@@ -239,15 +239,39 @@ low_delta_parse (const char *delta)
 	} while (status.parsing != XML_FINISHED);
 
 	XML_ParserFree (parser);
+	free (ctx.buf);
 
 	close (delta_file);
 	return ctx.delta;
+}
+
+static void
+low_package_delta_free (gpointer key G_GNUC_UNUSED, gpointer value,
+			gpointer data G_GNUC_UNUSED)
+{
+	LowPackageDelta *pkg_delta = (LowPackageDelta *) value;
+
+	free (pkg_delta->name);
+	free (pkg_delta->arch);
+	free (pkg_delta->new_epoch);
+	free (pkg_delta->new_version);
+	free (pkg_delta->new_release);
+	free (pkg_delta->old_epoch);
+	free (pkg_delta->old_version);
+	free (pkg_delta->old_release);
+	free (pkg_delta->filename);
+	free (pkg_delta->digest);
+	free (pkg_delta->sequence);
+
+	free (pkg_delta);
 }
 
 void
 low_delta_free (LowDelta *delta)
 {
 	if (delta != NULL) {
+		g_hash_table_foreach (delta->deltas, low_package_delta_free,
+				      NULL);
 		free (delta);
 	}
 }
