@@ -551,7 +551,6 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 			cmp = 1;
 		}
 
-		low_debug ("%s %d %s\n", iter->pkg->name, cmp , best ? best->name : NULL);
 		if ((cmp > 0 && low_arch_is_compatible (pkg, iter->pkg)) ||
 		    (cmp == 0 &&
 		     low_arch_choose_best (pkg, best,
