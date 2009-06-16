@@ -27,7 +27,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <rpm/rpmlib.h>
-#include <glib.h>
 
 #define MAXLINE 10000
 #define MAXWORD 1000
@@ -80,7 +79,7 @@ low_util_word_wrap (const char *text, int width)
 			while (isspace (line[--line_pos])
 			       && line[line_pos] != '\n') ;
 			line[line_pos + 1] = '\0';
-			output[lineno++] = g_strdup (line);
+			output[lineno++] = strdup (line);
 			strncpy (line, word, word_pos);
 			line_pos = word_pos;
 		}
@@ -88,7 +87,7 @@ low_util_word_wrap (const char *text, int width)
 
 	if (line_pos > 0) {
 		line[line_pos] = '\0';
-		output[lineno++] = g_strdup (line);
+		output[lineno++] = strdup (line);
 	}
 
  quit:
@@ -137,21 +136,21 @@ low_util_split_evr (const char *evr, char **e, char **v, char **r)
 
 	colon = index (evr, ':');
 	if (colon != NULL) {
-		*e = g_strndup (evr, colon - evr);
+		*e = strndup (evr, colon - evr);
 	} else {
-		*e = g_strdup_printf ("0");
+		*e = strdup ("0");
 		colon = evr - 1;
 	}
 
 	dash = rindex (evr, '-');
 	if (dash != NULL) {
-		*r = g_strdup (dash + 1);
+		*r = strdup (dash + 1);
 	} else {
-		*r = g_strdup_printf ("0");
+		*r = strdup ("0");
 		dash = evr + strlen (evr) + 1;
 	}
 
-	*v = g_strndup (colon + 1, dash - (colon + 1));
+	*v = strndup (colon + 1, dash - (colon + 1));
 }
 
 int
