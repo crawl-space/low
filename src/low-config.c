@@ -22,7 +22,6 @@
 #include <sys/utsname.h>
 #include <stdlib.h>
 #include <string.h>
-#include <glib.h>
 #include "low-config.h"
 #include "low-package.h"
 #include "low-repo-rpmdb.h"
