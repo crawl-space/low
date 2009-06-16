@@ -164,7 +164,7 @@ low_package_dependency_sense_from_string (const char *sensestr)
 		return DEPENDENCY_SENSE_LE;
 	} else {
 		/* XXX be smarter here */
-		exit (1);
+		return DEPENDENCY_SENSE_NONE;
 	}
 }
 
@@ -190,7 +190,8 @@ low_package_dependency_new_from_string (const char *depstr)
 		dep->evr = NULL;
 	} else {
 		/* XXX do better here */
-		exit (1);
+		free (dep);
+		dep = NULL;
 	}
 
 	g_strfreev (split);

@@ -84,9 +84,9 @@ low_config_initialize (LowRepo *repo_rpmdb)
 				   strlen (joined_config), G_KEY_FILE_NONE,
 				   &error);
 	if (error != NULL) {
-		g_print ("%s\n", error->message);
 		g_error_free (error);
-		exit (1);
+		low_config_free (config);
+		config = NULL;
 	}
 
 	free (main_config);
