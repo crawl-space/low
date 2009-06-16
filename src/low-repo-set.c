@@ -43,9 +43,8 @@ low_repo_set_initialize_from_config (LowConfig *config, bool bind_dbs)
 		char *mirror_list = low_config_get_string (config,
 							   repo_names[i],
 							   "mirrorlist");
-		bool enabled = low_config_get_boolean (config,
-						       repo_names[i],
-						       "enabled");
+		bool enabled = low_config_get_bool (config, repo_names[i],
+						    "enabled");
 		LowRepo *repo = low_repo_sqlite_initialize (id, name, baseurl,
 							    mirror_list,
 							    enabled,

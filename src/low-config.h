@@ -39,9 +39,9 @@ char **         low_config_get_repo_names   (LowConfig *config);
 char *          low_config_get_string       (LowConfig *config,
 					     const char *group,
 					     const char *key);
-bool            low_config_get_boolean      (LowConfig *config,
-					     const char *group,
-					     const char *key);
+bool            low_config_get_bool      (LowConfig *config,
+					  const char *group,
+					  const char *key);
 
 #endif /* _LOW_CONFIG_H_ */
 

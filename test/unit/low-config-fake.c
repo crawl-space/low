@@ -57,9 +57,9 @@ low_config_get_string (LowConfig *config G_GNUC_UNUSED,
 }
 
 bool
-low_config_get_boolean (LowConfig *config G_GNUC_UNUSED,
-			const char *group G_GNUC_UNUSED,
-			const char *key G_GNUC_UNUSED)
+low_config_get_bool (LowConfig *config G_GNUC_UNUSED,
+		     const char *group G_GNUC_UNUSED,
+		     const char *key G_GNUC_UNUSED)
 {
 	return true;
 }
