@@ -1279,7 +1279,7 @@ command_install (int argc, const char *argv[])
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
 
-	if (strcmp ("-y", argv[0]) == 0) {
+	if (argc > 0 && strcmp ("-y", argv[0]) == 0) {
 		assume_yes = true;
 		argc--;
 		argv++;
@@ -1344,7 +1344,7 @@ command_update (int argc, const char *argv[])
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
 
-	if (strcmp ("-y", argv[0]) == 0) {
+	if (argc > 0 && strcmp ("-y", argv[0]) == 0) {
 		assume_yes = true;
 		argc--;
 		argv++;
@@ -1402,7 +1402,7 @@ command_remove (int argc, const char *argv[])
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
 
-	if (strcmp ("-y", argv[0]) == 0) {
+	if (argc > 0 && strcmp ("-y", argv[0]) == 0) {
 		assume_yes = true;
 		argc--;
 		argv++;
