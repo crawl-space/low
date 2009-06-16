@@ -27,8 +27,8 @@
 #define _LOW_DOWNLOAD_H_
 
 typedef int (*LowDownloadCallback) (void *clientp, double dltotal,
-					    double dlnow, double ultotal,
-					    double ulnow);
+				    double dlnow, double ultotal,
+				    double ulnow);
 
 int      low_download 		     (const char *url,
 				      const char *file,
