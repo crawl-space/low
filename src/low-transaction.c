@@ -551,7 +551,7 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 			cmp = 1;
 		}
 
-		if ((cmp > 0 && low_arch_is_compatible (pkg, iter->pkg)) ||
+		if (((cmp > 0 && low_arch_is_compatible (pkg, iter->pkg)) ||
 		    (cmp == 0 &&
 		     low_arch_choose_best (pkg, best,
 					   iter->pkg) == iter->pkg) ||
@@ -559,7 +559,9 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 		    || low_transaction_is_pkg_in_hash (trans->update,
 						       iter->pkg) ||
 		    (cmp == 0 && low_arch_is_compatible (best, iter->pkg) &&
-		     strcmp (best->name, iter->pkg->name) > 0)) {
+		     strcmp (best->name, iter->pkg->name) > 0)) &&
+		    !low_transaction_is_pkg_in_hash (trans->updated, iter->pkg) &&
+		    !low_transaction_is_pkg_in_hash (trans->remove, iter->pkg)) {
 			if (best) {
 				low_package_unref (best);
 			}
