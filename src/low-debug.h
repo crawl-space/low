@@ -29,18 +29,19 @@
 
 #define low_debug_pkg(msg, pkg) low_debug("%s : %s-%s-%s.%s", (msg), \
 					  (pkg)->name, (pkg)->version, \
-					  (pkg)->release, (pkg)->arch)
+					  (pkg)->release, \
+					  low_arch_to_str ((pkg)->arch))
 
-#define low_debug_update(msg, pkg1, pkg2) low_debug("%s : %s-%s-%s.%s to %s-%s-%s.%s", \
-						    (msg), \
-						    (pkg1)->name, \
-						    (pkg1)->version, \
-						    (pkg1)->release, \
-						    (pkg1)->arch, \
-						    (pkg2)->name, \
-						    (pkg2)->version, \
-						    (pkg2)->release, \
-						    (pkg2)->arch)
+#define low_debug_update(msg, pkg1, pkg2) \
+	low_debug("%s : %s-%s-%s.%s to %s-%s-%s.%s", (msg), \
+		  (pkg1)->name, \
+		  (pkg1)->version, \
+		  (pkg1)->release, \
+		  low_arch_to_str ((pkg1)->arch), \
+		  (pkg2)->name, \
+		  (pkg2)->version, \
+		  (pkg2)->release, \
+		  low_arch_to_str ((pkg2)->arch))
 
 void 	low_debug_impl 	(const char *file, const char *func, const int line,
 			 const char *format, ...)

@@ -370,7 +370,7 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	pkg->version = strdup (version->data);
 	pkg->release = strdup (release->data);
-	pkg->arch = strdup (arch->data);
+	pkg->arch = low_arch_from_str (arch->data);
 
 	pkg->size = rpmtdGetNumber (size);
 	pkg->repo = repo;

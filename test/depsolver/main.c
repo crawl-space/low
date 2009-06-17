@@ -301,7 +301,8 @@ low_package_from_hash (GHashTable *hash)
 
 	pkg->id = NULL;
 	pkg->name = g_hash_table_lookup (nevra_hash, "name");
-	pkg->arch = g_hash_table_lookup (nevra_hash, "arch");
+	pkg->arch = low_arch_from_str (g_hash_table_lookup (nevra_hash,
+							    "arch"));
 
 	pkg->location_href = NULL;
 	pkg->provides = NULL;
@@ -361,7 +362,8 @@ static LowPackage *
 find_package (LowRepo *repo, GHashTable *hash)
 {
 	char *name = g_hash_table_lookup (hash, "name");
-	char *arch = g_hash_table_lookup (hash, "arch");
+	bool check_arch = g_hash_table_lookup (hash, "arch") != NULL;
+	LowArch arch = ARCH_UNKNOWN;
 	char *evr = g_hash_table_lookup (hash, "evr");
 
 	char *epoch = NULL;
@@ -373,6 +375,9 @@ find_package (LowRepo *repo, GHashTable *hash)
 	if (evr != NULL) {
 		parse_evr (evr, &epoch, &version, &release);
 	}
+	if (check_arch) {
+		arch = low_arch_from_str (g_hash_table_lookup (hash, "arch"));
+	}
 
 	/* We need at least the name. */
 	iter = low_fake_repo_list_all (repo);
@@ -383,7 +388,7 @@ find_package (LowRepo *repo, GHashTable *hash)
 			low_package_unref (pkg);
 			continue;
 		}
-		if (arch && strcmp (arch, pkg->arch)) {
+		if (check_arch && arch != pkg->arch) {
 			low_package_unref (pkg);
 			continue;
 		}
@@ -446,7 +451,7 @@ static int
 assert_package (GHashTable *pkgs, GHashTable *hash)
 {
 	char *name = g_hash_table_lookup (hash, "name");
-	char *arch = g_hash_table_lookup (hash, "arch");
+	LowArch arch = low_arch_from_str (g_hash_table_lookup (hash, "arch"));
 	char *evr = g_hash_table_lookup (hash, "evr");
 
 	char *epoch = NULL;
@@ -466,7 +471,7 @@ assert_package (GHashTable *pkgs, GHashTable *hash)
 		if (!strcmp (name, pkg->name) &&
 		    !strcmp (version, pkg->version) &&
 		    !strcmp (release, pkg->release) &&
-		    !strcmp (arch, pkg->arch) &&
+		    arch == pkg->arch &&
 		    (!(epoch || pkg->epoch) || !strcmp (epoch, pkg->epoch))) {
 			return 0;
 		}

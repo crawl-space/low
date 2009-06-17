@@ -24,9 +24,21 @@
 
 #include <stdbool.h>
 
-bool low_arch_is_compatible (char *target, char *arch);
-const char *low_arch_choose_best (char *target, char *arch1, char *arch2);
-const char *low_arch_choose_best_for_system (char *pkg1, char *pkg2);
+typedef enum {
+	ARCH_NOARCH,
+	ARCH_X86_64,
+	ARCH_I386,
+	ARCH_I586,
+	ARCH_I686,
+	ARCH_UNKNOWN
+} LowArch;
+
+LowArch low_arch_from_str (const char *arch_str);
+const char *low_arch_to_str (LowArch arch);
+
+bool low_arch_is_compatible (LowArch target, LowArch arch);
+int low_arch_choose_best (LowArch target, LowArch arch1, LowArch arch2);
+int low_arch_choose_best_for_system (LowArch pkg1, LowArch pkg2);
 
 #endif /* _LOW_ARCH_H_ */
 

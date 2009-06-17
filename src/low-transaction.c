@@ -117,6 +117,26 @@ low_transaction_pkg_compare_func (gconstpointer data1, gconstpointer data2)
 
 }
 */
+
+static char *
+low_transaction_make_key (LowPackage *pkg)
+{
+	char * key;
+
+	if (pkg->epoch) {
+		key = g_strdup_printf ("%s-%s:%s-%s.%s", pkg->name,
+				       pkg->epoch, pkg->version,
+				       pkg->release,
+				       low_arch_to_str (pkg->arch));
+	} else {
+		key = g_strdup_printf ("%s-%s-%s.%s", pkg->name,
+				       pkg->version, pkg->release,
+				       low_arch_to_str (pkg->arch));
+	}
+
+	return key;
+}
+
 static bool
 low_transaction_add_to_hash (GHashTable *hash, LowPackage *pkg,
 			     LowPackage *related_pkg)
@@ -125,14 +145,7 @@ low_transaction_add_to_hash (GHashTable *hash, LowPackage *pkg,
 	char *key;
 	LowTransactionMember *member;
 
-	if (pkg->epoch) {
-		key = g_strdup_printf ("%s-%s:%s-%s.%s", pkg->name,
-				       pkg->epoch, pkg->version,
-				       pkg->release, pkg->arch);
-	} else {
-		key = g_strdup_printf ("%s-%s-%s.%s", pkg->name,
-				       pkg->version, pkg->release, pkg->arch);
-	}
+	key = low_transaction_make_key (pkg);
 
 	if (!g_hash_table_lookup (hash, key)) {
 		member = malloc (sizeof (LowTransactionMember));
@@ -161,14 +174,7 @@ low_transaction_remove_from_hash (GHashTable *hash, LowPackage *pkg)
 	char *key;
 	LowTransactionMember *found_pkg;
 
-	if (pkg->epoch) {
-		key = g_strdup_printf ("%s-%s:%s-%s.%s", pkg->name,
-				       pkg->epoch, pkg->version,
-				       pkg->release, pkg->arch);
-	} else {
-		key = g_strdup_printf ("%s-%s-%s.%s", pkg->name,
-				       pkg->version, pkg->release, pkg->arch);
-	}
+	key = low_transaction_make_key (pkg);
 
 	found_pkg = g_hash_table_lookup (hash, key);
 	if (found_pkg) {
@@ -184,14 +190,7 @@ low_transaction_is_pkg_in_hash (GHashTable *hash, LowPackage *pkg)
 	char *key;
 	bool ret;
 
-	if (pkg->epoch) {
-		key = g_strdup_printf ("%s-%s:%s-%s.%s", pkg->name,
-				       pkg->epoch, pkg->version,
-				       pkg->release, pkg->arch);
-	} else {
-		key = g_strdup_printf ("%s-%s-%s.%s", pkg->name,
-				       pkg->version, pkg->release, pkg->arch);
-	}
+	key = low_transaction_make_key (pkg);
 
 	ret = g_hash_table_lookup (hash, key) != 0 ? true : false;
 
@@ -280,10 +279,11 @@ low_transaction_search_iter_for_update (LowPackage *to_update,
 		int cmp = low_util_evr_cmp (new_evr, best_evr);
 
 		/* XXX arch cmp here has to be better */
-		if ((cmp > 0 && low_arch_is_compatible (to_update->arch, iter->pkg->arch)) ||
+		if ((cmp > 0 && low_arch_is_compatible (to_update->arch,
+							iter->pkg->arch)) ||
 		    (cmp == 0 &&
 		     low_arch_choose_best (to_update->arch, best->arch,
-					   iter->pkg->arch) == iter->pkg->arch)) {
+					   iter->pkg->arch) < 0)) {
 			low_package_unref (best);
 			best = iter->pkg;
 
@@ -413,8 +413,8 @@ find_updated (LowRepo *repo_rpmdb, LowPackage *updating)
 		/* XXX arch cmp here has to be better */
 		if (!found &&
 		    low_util_evr_cmp (updating_evr, updated_evr) > 0 &&
-		    (strcmp (iter->pkg->arch, updating->arch) == 0 ||
-		     strcmp (updating->arch, "noarch") == 0)) {
+		    (iter->pkg->arch == updating->arch ||
+		     updating->arch == ARCH_NOARCH)) {
 			updated = iter->pkg;
 			found = true;
 		} else {
@@ -551,14 +551,16 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 			cmp = 1;
 		}
 
-		if (((cmp > 0 && low_arch_is_compatible (pkg->arch, iter->pkg->arch)) ||
+		if (((cmp > 0 &&
+		      low_arch_is_compatible (pkg->arch, iter->pkg->arch)) ||
 		    (cmp == 0 &&
 		     low_arch_choose_best (pkg->arch, best->arch,
-					   iter->pkg->arch) == iter->pkg->arch) ||
+					   iter->pkg->arch) < 0) ||
 		    low_transaction_is_pkg_in_hash (trans->install, iter->pkg)
 		    || low_transaction_is_pkg_in_hash (trans->update,
 						       iter->pkg) ||
-		    (cmp == 0 && low_arch_is_compatible (best->arch, iter->pkg->arch) &&
+		    (cmp == 0 &&
+		     low_arch_is_compatible (best->arch, iter->pkg->arch) &&
 		     strcmp (best->name, iter->pkg->name) > 0)) &&
 		    !low_transaction_is_pkg_in_hash (trans->updated, iter->pkg) &&
 		    !low_transaction_is_pkg_in_hash (trans->remove, iter->pkg)) {

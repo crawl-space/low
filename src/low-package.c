@@ -33,7 +33,6 @@ low_package_free (LowPackage *pkg)
 	free (pkg->version);
 	free (pkg->release);
 	free (pkg->epoch);
-	free (pkg->arch);
 
 	/* available package specific */
 	free (pkg->location_href);

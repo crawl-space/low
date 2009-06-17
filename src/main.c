@@ -189,7 +189,7 @@ print_package (LowPackage *pkg, bool show_all)
 	LowPackageDetails *details = low_package_get_details (pkg);
 
 	printf ("Name        : %s\n", pkg->name);
-	printf ("Arch        : %s\n", pkg->arch);
+	printf ("Arch        : %s\n", low_arch_to_str (pkg->arch));
 	printf ("Version     : %s\n", pkg->version);
 	printf ("Release     : %s\n", pkg->release);
 
@@ -294,7 +294,8 @@ command_info (int argc, const char *argv[])
 static void
 print_package_short (LowPackage *pkg)
 {
-	char *name_arch = g_strdup_printf ("%s.%s", pkg->name, pkg->arch);
+	char *name_arch = g_strdup_printf ("%s.%s", pkg->name,
+					   low_arch_to_str (pkg->arch));
 	char *version_release = g_strdup_printf ("%s-%s", pkg->version,
 						 pkg->release);
 
@@ -1240,8 +1241,7 @@ select_package_for_install (LowPackageIter *iter)
 		if (cmp > 0 ||
 		    (cmp == 0 && best != NULL &&
 		     low_arch_choose_best_for_system (best->arch,
-						      iter->pkg->arch)
-		     == iter->pkg->arch)) {
+						      iter->pkg->arch) < 0)) {
 			if (best) {
 				low_package_unref (best);
 			}

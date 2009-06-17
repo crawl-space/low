@@ -22,6 +22,7 @@
 #ifndef _LOW_PACKAGE_H_
 #define _LOW_PACKAGE_H_
 
+#include "low-arch.h"
 #include "low-repo.h"
 #include "low-util.h"
 
@@ -73,10 +74,10 @@ struct _LowPackage {
 	signature id; /**< Repo type dependent package identifier */
 
 	char *name;
+	char *epoch;
 	char *version;
 	char *release;
-	char *arch;
-	char *epoch;
+	LowArch arch;
 
 	size_t size;
 	char *location_href;

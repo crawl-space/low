@@ -764,7 +764,9 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	g_hash_table_insert (repo_sqlite->table, pkg->id, pkg);
 
 	pkg->name = strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-	pkg->arch = strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->arch =
+		low_arch_from_str ((const char *) sqlite3_column_text (pp_stmt,
+								       i++));
 	pkg->version =
 		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
 	pkg->release =

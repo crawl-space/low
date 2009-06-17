@@ -281,7 +281,8 @@ low_delta_make_key_from_pkg (LowPackage *pkg)
 {
 
 	return g_strdup_printf ("%s-%s:%s-%s.%s", pkg->name, pkg->epoch,
-				pkg->version, pkg->release, pkg->arch);
+				pkg->version, pkg->release,
+				low_arch_to_str (pkg->arch));
 }
 
 static bool
