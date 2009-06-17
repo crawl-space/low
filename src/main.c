@@ -1239,8 +1239,9 @@ select_package_for_install (LowPackageIter *iter)
 
 		if (cmp > 0 ||
 		    (cmp == 0 && best != NULL &&
-		     low_arch_choose_best_for_system (best, iter->pkg)
-		     == iter->pkg)) {
+		     low_arch_choose_best_for_system (best->arch,
+						      iter->pkg->arch)
+		     == iter->pkg->arch)) {
 			if (best) {
 				low_package_unref (best);
 			}

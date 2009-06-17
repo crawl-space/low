@@ -22,13 +22,11 @@
 #ifndef _LOW_ARCH_H_
 #define _LOW_ARCH_H_
 
-#include "low-package.h"
+#include <stdbool.h>
 
-bool low_arch_is_compatible (LowPackage *target, LowPackage *pkg);
-const LowPackage *low_arch_choose_best (LowPackage *target, LowPackage *pkg1,
-					LowPackage *pkg2);
-const LowPackage *low_arch_choose_best_for_system (LowPackage *pkg1,
-						   LowPackage *pkg2);
+bool low_arch_is_compatible (char *target, char *arch);
+const char *low_arch_choose_best (char *target, char *arch1, char *arch2);
+const char *low_arch_choose_best_for_system (char *pkg1, char *pkg2);
 
 #endif /* _LOW_ARCH_H_ */
 

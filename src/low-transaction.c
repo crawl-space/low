@@ -280,10 +280,10 @@ low_transaction_search_iter_for_update (LowPackage *to_update,
 		int cmp = low_util_evr_cmp (new_evr, best_evr);
 
 		/* XXX arch cmp here has to be better */
-		if ((cmp > 0 && low_arch_is_compatible (to_update, iter->pkg)) ||
+		if ((cmp > 0 && low_arch_is_compatible (to_update->arch, iter->pkg->arch)) ||
 		    (cmp == 0 &&
-		     low_arch_choose_best (to_update, best,
-					   iter->pkg) == iter->pkg)) {
+		     low_arch_choose_best (to_update->arch, best->arch,
+					   iter->pkg->arch) == iter->pkg->arch)) {
 			low_package_unref (best);
 			best = iter->pkg;
 
@@ -551,14 +551,14 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 			cmp = 1;
 		}
 
-		if (((cmp > 0 && low_arch_is_compatible (pkg, iter->pkg)) ||
+		if (((cmp > 0 && low_arch_is_compatible (pkg->arch, iter->pkg->arch)) ||
 		    (cmp == 0 &&
-		     low_arch_choose_best (pkg, best,
-					   iter->pkg) == iter->pkg) ||
+		     low_arch_choose_best (pkg->arch, best->arch,
+					   iter->pkg->arch) == iter->pkg->arch) ||
 		    low_transaction_is_pkg_in_hash (trans->install, iter->pkg)
 		    || low_transaction_is_pkg_in_hash (trans->update,
 						       iter->pkg) ||
-		    (cmp == 0 && low_arch_is_compatible (best, iter->pkg) &&
+		    (cmp == 0 && low_arch_is_compatible (best->arch, iter->pkg->arch) &&
 		     strcmp (best->name, iter->pkg->name) > 0)) &&
 		    !low_transaction_is_pkg_in_hash (trans->updated, iter->pkg) &&
 		    !low_transaction_is_pkg_in_hash (trans->remove, iter->pkg)) {

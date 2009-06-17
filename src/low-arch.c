@@ -24,77 +24,77 @@
 #include "low-arch.h"
 
 bool
-low_arch_is_compatible (LowPackage *target, LowPackage *pkg)
+low_arch_is_compatible (char *target, char *arch)
 {
-	if (target->arch[0] == 'i' && pkg->arch[0] == 'i') {
+	if (target[0] == 'i' && arch[0] == 'i') {
 		return true;
 	}
 
-	if (strcmp (target->arch, pkg->arch) == 0) {
+	if (strcmp (target, arch) == 0) {
 		return true;
 	}
 
-	if (strcmp (target->arch, "noarch") == 0) {
+	if (strcmp (target, "noarch") == 0) {
 		return true;
 	}
-	if (strcmp (pkg->arch, "noarch") == 0) {
+	if (strcmp (arch, "noarch") == 0) {
 		return true;
 	}
 
 	return false;
 }
 
-static const LowPackage *
-low_arch_cmp_for_x86 (LowPackage *pkg1, LowPackage *pkg2)
+static const char *
+low_arch_cmp_for_x86 (char *arch1, char *arch2)
 {
-	if (pkg1->arch[0] == 'i' && pkg2->arch[0] == 'i') {
-		return pkg1->arch[1] >= pkg2->arch[1] ? pkg1 : pkg2;
-	} else if (pkg1->arch[0] == 'i') {
-		return pkg1;
-	} else if (pkg2->arch[0] == 'i') {
-		return pkg2;
+	if (arch1[0] == 'i' && arch2[0] == 'i') {
+		return arch1[1] >= arch2[1] ? arch1 : arch2;
+	} else if (arch1[0] == 'i') {
+		return arch1;
+	} else if (arch2[0] == 'i') {
+		return arch2;
 	} else {
-		return low_arch_choose_best_for_system (pkg1, pkg2);
+		return low_arch_choose_best_for_system (arch1, arch2);
 	}
 }
 
-const LowPackage *
-low_arch_choose_best (LowPackage *target, LowPackage *pkg1, LowPackage *pkg2)
+const char *
+low_arch_choose_best (char *target, char *arch1, char *arch2)
 {
-	if (target->arch[0] == 'i') {
-		return low_arch_cmp_for_x86 (pkg1, pkg2);
+	if (target[0] == 'i') {
+		return low_arch_cmp_for_x86 (arch1, arch2);
 	}
 
-	if (strcmp (target->arch, pkg1->arch) == 0) {
-		return pkg1;
+	if (strcmp (target, arch1) == 0) {
+		return arch1;
 	}
-	if (strcmp (target->arch, pkg2->arch) == 0) {
-		return pkg2;
-	}
-
-	if (strcmp (pkg1->arch, "noarch") == 0) {
-		return pkg1;
-	}
-	if (strcmp (pkg2->arch, "noarch") == 0) {
-		return pkg2;
+	if (strcmp (target, arch2) == 0) {
+		return arch2;
 	}
 
-	return low_arch_choose_best_for_system (pkg1, pkg2);
+	if (strcmp (arch1, "noarch") == 0) {
+		return arch1;
+	}
+	if (strcmp (arch2, "noarch") == 0) {
+		return arch2;
+	}
+
+	return low_arch_choose_best_for_system (arch1, arch2);
 }
 
-const LowPackage *
-low_arch_choose_best_for_system (LowPackage *pkg1, LowPackage *pkg2)
+const char *
+low_arch_choose_best_for_system (char *arch1, char *arch2)
 {
 	/* XXX need to generalize */
-	if (strcmp (pkg2->arch, "x86_64") == 0 && pkg1->arch[0] == 'i') {
-		return pkg2;
+	if (strcmp (arch2, "x86_64") == 0 && arch1[0] == 'i') {
+		return arch2;
 	}
 
-	if (pkg1->arch[0] == 'i' && pkg2->arch[0] == 'i') {
-		return pkg1->arch[1] > pkg2->arch[1] ? pkg1 : pkg2;
+	if (arch1[0] == 'i' && arch2[0] == 'i') {
+		return arch1[1] > arch2[1] ? arch1 : arch2;
 	}
 
-	return pkg1;
+	return arch1;
 }
 
 /* vim: set ts=8 sw=8 noet: */
