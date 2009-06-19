@@ -1,0 +1,27 @@
+test: Update two packages where a dep required by one is provided by the other,
+      as well as an available packages which provide a newer version.
+
+installed:
+    - package: { name: bash, evr: 0:0.3.0-1, arch: i386 }
+      provides: [ shell ]
+    - package: { name: system-base, evr: 1.0.0-1, arch: i386 }
+      requires: [ shell ]
+
+
+available:
+    - package: { name: fish, evr: 1.8.1-2, arch: i386 }
+      provides: [ shell ]
+    - package: { name: bash, evr: 1.7.1-2, arch: i386 }
+      provides: [ shell = 1.0 ]
+    - package: { name: zsh, evr: 1.8.1-2, arch: i386 }
+      provides: [ shell = 4.0 ]
+    - package: { name: system-base, evr: 2.0.0-1, arch: i386 }
+      requires: [ shell ]
+
+transaction:
+    - update: { name: bash }
+    - update: { name: system-base }
+
+results:
+    - update: { name: bash, evr: 1.7.1-2, arch: i386 }
+    - update: { name: system-base, evr: 2.0.0-1, arch: i386 }

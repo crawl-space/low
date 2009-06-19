@@ -537,13 +537,34 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 
 	/* XXX this is duplicated in main.c */
 	while (iter = low_package_iter_next (iter), iter != NULL) {
-		LowPackageDependency **provides =
-			low_package_get_provides (iter->pkg);
-		LowPackageDependency *new_prov =
-			low_transaction_find_provides_in_deplist (requires,
-								  provides);
-
+		LowPackageDependency **provides;
+		LowPackageDependency *new_prov;
 		int cmp;
+
+		if (low_transaction_is_pkg_in_hash (trans->updated, iter->pkg)
+		    || low_transaction_is_pkg_in_hash (trans->remove,
+						       iter->pkg)) {
+			low_package_unref (iter->pkg);
+			continue;
+		}
+
+		if (low_transaction_is_pkg_in_hash (trans->install, iter->pkg)
+		    || low_transaction_is_pkg_in_hash (trans->update,
+						       iter->pkg)) {
+			/* If its already picked, we can't get any better. */
+			best = iter->pkg;
+
+			while ((iter = low_package_iter_next (iter)) != NULL) {
+				low_package_unref (iter->pkg);
+			}
+
+			break;
+		}
+
+		provides = low_package_get_provides (iter->pkg);
+		new_prov = low_transaction_find_provides_in_deplist (requires,
+								     provides);
+
 		/* XXX get rid of this check */
 		if (best_prov != NULL) {
 			cmp = low_package_dependency_cmp (new_prov, best_prov);
@@ -556,14 +577,9 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 		    (cmp == 0 &&
 		     low_arch_choose_best (pkg->arch, best->arch,
 					   iter->pkg->arch) < 0) ||
-		    low_transaction_is_pkg_in_hash (trans->install, iter->pkg)
-		    || low_transaction_is_pkg_in_hash (trans->update,
-						       iter->pkg) ||
 		    (cmp == 0 &&
 		     low_arch_is_compatible (best->arch, iter->pkg->arch) &&
-		     strcmp (best->name, iter->pkg->name) > 0)) &&
-		    !low_transaction_is_pkg_in_hash (trans->updated, iter->pkg) &&
-		    !low_transaction_is_pkg_in_hash (trans->remove, iter->pkg)) {
+		     strcmp (best->name, iter->pkg->name) > 0))) {
 			if (best) {
 				low_package_unref (best);
 			}
