@@ -104,11 +104,13 @@ struct _LowPackage {
 typedef struct _LowPackageIter LowPackageIter;
 
 typedef LowPackageIter * (*LowPackageIterNextFunc) (LowPackageIter *iter);
+typedef void (*LowPackageIterFreeFunc) (LowPackageIter *iter);
 
 struct _LowPackageIter {
 	LowRepo *repo;
 	LowPackage *pkg;
 	LowPackageIterNextFunc next_func;
+	LowPackageIterFreeFunc free_func;
 };
 
 LowPackage * 		low_package_ref_init 	(LowPackage *pkg);
@@ -124,7 +126,8 @@ LowPackageDependency **	low_package_get_obsoletes	(LowPackage *pkg);
 
 char **			low_package_get_files 		(LowPackage *pkg);
 
-LowPackageIter * 	low_package_iter_next 	(LowPackageIter *iter);
+LowPackageIter *low_package_iter_next (LowPackageIter *iter);
+void low_package_iter_free (LowPackageIter *iter);
 
 LowPackageDependencySense low_package_dependency_sense_from_string (const char *sensestr);
 

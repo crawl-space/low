@@ -46,8 +46,6 @@ typedef struct _LowPackageIterRpmdb {
 	LowPackageIterFilterDataFree filter_data_free_func;
 } LowPackageIterRpmdb;
 
-LowPackageIter *low_package_iter_rpmdb_next (LowPackageIter *iter);
-
 LowPackageDetails *low_rpmdb_package_get_details (LowPackage *pkg);
 
 LowPackageDependency **low_rpmdb_package_get_provides (LowPackage *pkg);
@@ -95,181 +93,20 @@ low_repo_rpmdb_shutdown (LowRepo *repo)
 	free (repo);
 }
 
-static LowPackageIter *
-low_repo_rpmdb_search (LowRepo *repo, int32_t tag, const char *querystr)
-{
-	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
-	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
-	iter->super.repo = repo;
-	iter->super.next_func = low_package_iter_rpmdb_next;
-	iter->super.pkg = NULL;
-
-	iter->func = NULL;
-	iter->filter_data_free_func = NULL;
-
-	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, tag, querystr, 0);
-	return (LowPackageIter *) iter;
-}
-
-LowPackageIter *
-low_repo_rpmdb_list_all (LowRepo *repo)
-{
-	return low_repo_rpmdb_search (repo, 0, NULL);
-}
-
-LowPackageIter *
-low_repo_rpmdb_list_by_name (LowRepo *repo, const char *name)
-{
-	return low_repo_rpmdb_search (repo, RPMTAG_NAME, name);
-}
-
-typedef struct _DepFilterData {
-	LowPackageDependency *dep;
-	LowPackageGetDependency dep_func;
-} DepFilterData;
-
 static void
-dep_filter_data_free_fn (gpointer data)
+low_package_iter_rpmdb_free (LowPackageIter *iter)
 {
-	DepFilterData *filter_data = (DepFilterData *) data;
-	low_package_dependency_free (filter_data->dep);
-	free (filter_data);
-}
+	LowPackageIterRpmdb *iter_rpmdb = (LowPackageIterRpmdb *) iter;
 
-static bool
-low_repo_rpmdb_search_dep_filter_fn (LowPackage *pkg, gpointer data)
-{
-	DepFilterData *filter_data = (DepFilterData *) data;
-	bool res = false;
-	LowPackageDependency **deps = filter_data->dep_func (pkg);
-	int i;
+	rpmdbFreeIterator (iter_rpmdb->rpm_iter);
 
-	for (i = 0; deps[i] != NULL; i++) {
-		if (low_package_dependency_satisfies (filter_data->dep,
-						      deps[i])) {
-			res = true;
-			break;
-		}
+	if (iter_rpmdb->filter_data_free_func) {
+		gpointer data = iter_rpmdb->filter_data;
+		iter_rpmdb->filter_data_free_func (data);
 	}
 
-	return res;
+	free (iter);
 }
-
-static LowPackageIter *
-low_repo_rpmdb_search_dep (LowRepo *repo, int32_t tag,
-			   const LowPackageDependency *dep,
-			   LowPackageGetDependency dep_func)
-{
-	DepFilterData *data = malloc (sizeof (DepFilterData));
-	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
-	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
-	iter->super.repo = repo;
-	iter->super.next_func = low_package_iter_rpmdb_next;
-	iter->super.pkg = NULL;
-
-	iter->func = low_repo_rpmdb_search_dep_filter_fn;
-	iter->filter_data_free_func = dep_filter_data_free_fn;
-	iter->filter_data = (gpointer) data;
-
-	data->dep = low_package_dependency_new (dep->name, dep->sense,
-						dep->evr);
-	data->dep_func = dep_func;
-
-	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, tag, dep->name, 0);
-	return (LowPackageIter *) iter;
-}
-
-LowPackageIter *
-low_repo_rpmdb_search_provides (LowRepo *repo,
-				const LowPackageDependency *provides)
-{
-	return low_repo_rpmdb_search_dep (repo, RPMTAG_PROVIDENAME, provides,
-					  low_package_get_provides);
-}
-
-LowPackageIter *
-low_repo_rpmdb_search_requires (LowRepo *repo,
-				const LowPackageDependency *requires)
-{
-	return low_repo_rpmdb_search_dep (repo, RPMTAG_REQUIRENAME, requires,
-					  low_package_get_requires);
-}
-
-LowPackageIter *
-low_repo_rpmdb_search_conflicts (LowRepo *repo,
-				 const LowPackageDependency *conflicts)
-{
-	return low_repo_rpmdb_search_dep (repo, RPMTAG_CONFLICTNAME, conflicts,
-					  low_package_get_conflicts);
-}
-
-LowPackageIter *
-low_repo_rpmdb_search_obsoletes (LowRepo *repo,
-				 const LowPackageDependency *obsoletes)
-{
-	/* XXX This seems to be broken in RPM itself. */
-	return low_repo_rpmdb_search_dep (repo, RPMTAG_OBSOLETENAME, obsoletes,
-					  low_package_get_obsoletes);
-}
-
-LowPackageIter *
-low_repo_rpmdb_search_files (LowRepo *repo, const char *file)
-{
-	return low_repo_rpmdb_search (repo, RPMTAG_BASENAMES, file);
-}
-
-static bool
-low_repo_rpmdb_search_details_filter_fn (LowPackage *pkg, gpointer data)
-{
-	char *querystr = (char *) data;
-
-	/* url can be NULL, so check first. */
-	if (strstr (pkg->name, querystr)) {
-		return true;
-	} else {
-		bool res;
-		LowPackageDetails *details = low_package_get_details (pkg);
-
-		if (strstr (details->summary, querystr) ||
-		    strstr (details->description, querystr) ||
-		    (details->url != NULL && strstr (details->url, querystr))) {
-			res = true;
-		} else {
-			res = false;
-		}
-
-		low_package_details_free (details);
-
-		return res;
-	}
-}
-
-LowPackageIter *
-low_repo_rpmdb_search_details (LowRepo *repo, const char *querystr)
-{
-	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
-	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
-	iter->super.repo = repo;
-	iter->super.next_func = low_package_iter_rpmdb_next;
-	iter->super.pkg = NULL;
-
-	iter->func = low_repo_rpmdb_search_details_filter_fn;
-	iter->filter_data_free_func = NULL;
-	iter->filter_data = (gpointer) querystr;
-
-	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, 0, NULL, 0);
-	return (LowPackageIter *) iter;
-}
-
-/* XXX Duplicated */
-union rpm_entry {
-	void *p;
-	char *string;
-	char **list;
-	uint32_t *int_list;
-	uint32_t *flags;
-	uint32_t *integer;
-};
 
 static uint
 id_hash_func (gconstpointer key)
@@ -413,21 +250,14 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 	return pkg;
 }
 
-LowPackageIter *
+static LowPackageIter *
 low_package_iter_rpmdb_next (LowPackageIter *iter)
 {
 	LowPackageIterRpmdb *iter_rpmdb = (LowPackageIterRpmdb *) iter;
 	Header header = rpmdbNextIterator (iter_rpmdb->rpm_iter);
 
 	if (header == NULL) {
-		rpmdbFreeIterator (iter_rpmdb->rpm_iter);
-
-		if (iter_rpmdb->filter_data_free_func) {
-			gpointer data = iter_rpmdb->filter_data;
-			iter_rpmdb->filter_data_free_func (data);
-		}
-
-		free (iter);
+		low_package_iter_rpmdb_free (iter);
 		return NULL;
 	}
 
@@ -449,6 +279,185 @@ low_package_iter_rpmdb_next (LowPackageIter *iter)
 
 	return iter;
 }
+
+static LowPackageIter *
+low_repo_rpmdb_search (LowRepo *repo, int32_t tag, const char *querystr)
+{
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
+	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
+	iter->super.repo = repo;
+	iter->super.next_func = low_package_iter_rpmdb_next;
+	iter->super.free_func = low_package_iter_rpmdb_free;
+	iter->super.pkg = NULL;
+
+	iter->func = NULL;
+	iter->filter_data_free_func = NULL;
+
+	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, tag, querystr, 0);
+	return (LowPackageIter *) iter;
+}
+
+LowPackageIter *
+low_repo_rpmdb_list_all (LowRepo *repo)
+{
+	return low_repo_rpmdb_search (repo, 0, NULL);
+}
+
+LowPackageIter *
+low_repo_rpmdb_list_by_name (LowRepo *repo, const char *name)
+{
+	return low_repo_rpmdb_search (repo, RPMTAG_NAME, name);
+}
+
+typedef struct _DepFilterData {
+	LowPackageDependency *dep;
+	LowPackageGetDependency dep_func;
+} DepFilterData;
+
+static void
+dep_filter_data_free_fn (gpointer data)
+{
+	DepFilterData *filter_data = (DepFilterData *) data;
+	low_package_dependency_free (filter_data->dep);
+	free (filter_data);
+}
+
+static bool
+low_repo_rpmdb_search_dep_filter_fn (LowPackage *pkg, gpointer data)
+{
+	DepFilterData *filter_data = (DepFilterData *) data;
+	bool res = false;
+	LowPackageDependency **deps = filter_data->dep_func (pkg);
+	int i;
+
+	for (i = 0; deps[i] != NULL; i++) {
+		if (low_package_dependency_satisfies (filter_data->dep,
+						      deps[i])) {
+			res = true;
+			break;
+		}
+	}
+
+	return res;
+}
+
+static LowPackageIter *
+low_repo_rpmdb_search_dep (LowRepo *repo, int32_t tag,
+			   const LowPackageDependency *dep,
+			   LowPackageGetDependency dep_func)
+{
+	DepFilterData *data = malloc (sizeof (DepFilterData));
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
+	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
+	iter->super.repo = repo;
+	iter->super.next_func = low_package_iter_rpmdb_next;
+	iter->super.free_func = low_package_iter_rpmdb_free;
+	iter->super.pkg = NULL;
+
+	iter->func = low_repo_rpmdb_search_dep_filter_fn;
+	iter->filter_data_free_func = dep_filter_data_free_fn;
+	iter->filter_data = (gpointer) data;
+
+	data->dep = low_package_dependency_new (dep->name, dep->sense,
+						dep->evr);
+	data->dep_func = dep_func;
+
+	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, tag, dep->name, 0);
+	return (LowPackageIter *) iter;
+}
+
+LowPackageIter *
+low_repo_rpmdb_search_provides (LowRepo *repo,
+				const LowPackageDependency *provides)
+{
+	return low_repo_rpmdb_search_dep (repo, RPMTAG_PROVIDENAME, provides,
+					  low_package_get_provides);
+}
+
+LowPackageIter *
+low_repo_rpmdb_search_requires (LowRepo *repo,
+				const LowPackageDependency *requires)
+{
+	return low_repo_rpmdb_search_dep (repo, RPMTAG_REQUIRENAME, requires,
+					  low_package_get_requires);
+}
+
+LowPackageIter *
+low_repo_rpmdb_search_conflicts (LowRepo *repo,
+				 const LowPackageDependency *conflicts)
+{
+	return low_repo_rpmdb_search_dep (repo, RPMTAG_CONFLICTNAME, conflicts,
+					  low_package_get_conflicts);
+}
+
+LowPackageIter *
+low_repo_rpmdb_search_obsoletes (LowRepo *repo,
+				 const LowPackageDependency *obsoletes)
+{
+	/* XXX This seems to be broken in RPM itself. */
+	return low_repo_rpmdb_search_dep (repo, RPMTAG_OBSOLETENAME, obsoletes,
+					  low_package_get_obsoletes);
+}
+
+LowPackageIter *
+low_repo_rpmdb_search_files (LowRepo *repo, const char *file)
+{
+	return low_repo_rpmdb_search (repo, RPMTAG_BASENAMES, file);
+}
+
+static bool
+low_repo_rpmdb_search_details_filter_fn (LowPackage *pkg, gpointer data)
+{
+	char *querystr = (char *) data;
+
+	/* url can be NULL, so check first. */
+	if (strstr (pkg->name, querystr)) {
+		return true;
+	} else {
+		bool res;
+		LowPackageDetails *details = low_package_get_details (pkg);
+
+		if (strstr (details->summary, querystr) ||
+		    strstr (details->description, querystr) ||
+		    (details->url != NULL && strstr (details->url, querystr))) {
+			res = true;
+		} else {
+			res = false;
+		}
+
+		low_package_details_free (details);
+
+		return res;
+	}
+}
+
+LowPackageIter *
+low_repo_rpmdb_search_details (LowRepo *repo, const char *querystr)
+{
+	LowRepoRpmdb *repo_rpmdb = (LowRepoRpmdb *) repo;
+	LowPackageIterRpmdb *iter = malloc (sizeof (LowPackageIterRpmdb));
+	iter->super.repo = repo;
+	iter->super.next_func = low_package_iter_rpmdb_next;
+	iter->super.free_func = low_package_iter_rpmdb_free;
+	iter->super.pkg = NULL;
+
+	iter->func = low_repo_rpmdb_search_details_filter_fn;
+	iter->filter_data_free_func = NULL;
+	iter->filter_data = (gpointer) querystr;
+
+	iter->rpm_iter = rpmdbInitIterator (repo_rpmdb->db, 0, NULL, 0);
+	return (LowPackageIter *) iter;
+}
+
+/* XXX Duplicated */
+union rpm_entry {
+	void *p;
+	char *string;
+	char **list;
+	uint32_t *int_list;
+	uint32_t *flags;
+	uint32_t *integer;
+};
 
 static LowPackageDependencySense
 rpm_to_low_dependency_sense (uint32_t flag)

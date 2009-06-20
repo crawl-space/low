@@ -553,11 +553,7 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 						       iter->pkg)) {
 			/* If its already picked, we can't get any better. */
 			best = iter->pkg;
-
-			while ((iter = low_package_iter_next (iter)) != NULL) {
-				low_package_unref (iter->pkg);
-			}
-
+			low_package_iter_free (iter);
 			break;
 		}
 
@@ -617,28 +613,24 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 
 static bool
 low_transaction_check_providing_is_installed (LowTransaction *trans,
-					      LowPackageIter *providing)
+					      LowPackageIter *iter)
 {
-	bool found = false;
+	while (iter = low_package_iter_next (iter), iter != NULL) {
+		if (!low_transaction_is_pkg_in_hash (trans->remove, iter->pkg)
+		    && !low_transaction_is_pkg_in_hash (trans->updated,
+							iter->pkg)) {
+			low_debug_pkg ("Provided by", iter->pkg);
+			low_package_unref (iter->pkg);
+			low_package_iter_free (iter);
 
-	while (providing = low_package_iter_next (providing),
-	       providing != NULL) {
-		if (!found) {
-			if (low_transaction_is_pkg_in_hash (trans->remove,
-							    providing->pkg) ||
-			    low_transaction_is_pkg_in_hash (trans->updated,
-							    providing->pkg)) {
-				low_debug ("Providing package is being removed");
-			} else {
-				low_debug_pkg ("Provided by", providing->pkg);
-				found = true;
-			}
+			return true;
 		}
 
-		low_package_unref (providing->pkg);
+		low_debug ("Providing package is being removed");
+		low_package_unref (iter->pkg);
 	}
 
-	return found;
+	return false;
 }
 
 static LowTransactionStatus
@@ -1067,12 +1059,7 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 			if (iter != NULL) {
 				low_debug_pkg ("Conflicted by", iter->pkg);
 				low_package_unref (iter->pkg);
-
-				/* XXX we just need a free function */
-				while (iter = low_package_iter_next (iter),
-				       iter != NULL) {
-					low_package_unref (iter->pkg);
-				}
+				low_package_iter_free (iter);
 				status = LOW_TRANSACTION_UNRESOLVABLE;
 				break;
 			}
@@ -1088,12 +1075,7 @@ low_transaction_check_all_conflicts (LowTransaction *trans)
 			if (iter != NULL) {
 				low_debug_pkg ("Conflicts with", iter->pkg);
 				low_package_unref (iter->pkg);
-
-				/* XXX we just need a free function */
-				while (iter = low_package_iter_next (iter),
-				       iter != NULL) {
-					low_package_unref (iter->pkg);
-				}
+				low_package_iter_free (iter);
 				status = LOW_TRANSACTION_UNRESOLVABLE;
 				break;
 			}

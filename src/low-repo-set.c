@@ -178,6 +178,16 @@ low_repo_set_package_iter_next (LowPackageIter *iter)
 	return iter;
 }
 
+static void
+low_repo_set_package_iter_free (LowPackageIter *iter)
+{
+	LowRepoSetPackageIter *iter_set = (LowRepoSetPackageIter *) iter;
+
+	low_package_iter_free (iter_set->current_repo_iter);
+	free (iter_set->repo_iter);
+	free (iter);
+}
+
 static LowPackageIter *
 low_repo_set_package_iter_new (LowRepoSet *repo_set,
 			       LowRepoSetIterSearchFunc search_func,
@@ -185,6 +195,7 @@ low_repo_set_package_iter_new (LowRepoSet *repo_set,
 {
 	LowRepoSetPackageIter *iter = malloc (sizeof (LowRepoSetPackageIter));
 	iter->super.next_func = low_repo_set_package_iter_next;
+	iter->super.free_func = low_repo_set_package_iter_free;
 	iter->super.pkg = NULL;
 	iter->repo_iter = malloc (sizeof (GHashTableIter));
 	g_hash_table_iter_init (iter->repo_iter, repo_set->repos);

@@ -84,12 +84,19 @@ low_fake_repo_fake_iter_next (LowPackageIter *iter)
 	return iter;
 }
 
+static void
+low_fake_repo_fake_iter_free (LowPackageIter *iter G_GNUC_UNUSED)
+{
+
+}
+
 LowPackageIter *
 low_fake_repo_list_all (LowRepo *repo)
 {
 	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
 	iter->super.repo = repo;
 	iter->super.next_func = low_fake_repo_fake_iter_next;
+	iter->super.free_func = low_fake_repo_fake_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->position = 0;
@@ -117,6 +124,7 @@ low_fake_repo_list_by_name (LowRepo *repo, const char *name)
 	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
 	iter->super.repo = repo;
 	iter->super.next_func = low_fake_repo_fake_iter_next;
+	iter->super.free_func = low_fake_repo_fake_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->position = 0;
@@ -150,6 +158,7 @@ low_fake_repo_search_provides (LowRepo *repo,
 	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
 	iter->super.repo = repo;
 	iter->super.next_func = low_fake_repo_fake_iter_next;
+	iter->super.free_func = low_fake_repo_fake_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->position = 0;
@@ -185,6 +194,7 @@ low_fake_repo_search_requires (LowRepo *repo,
 	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
 	iter->super.repo = repo;
 	iter->super.next_func = low_fake_repo_fake_iter_next;
+	iter->super.free_func = low_fake_repo_fake_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->position = 0;
@@ -220,6 +230,7 @@ low_fake_repo_search_conflicts (LowRepo *repo,
 	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
 	iter->super.repo = repo;
 	iter->super.next_func = low_fake_repo_fake_iter_next;
+	iter->super.free_func = low_fake_repo_fake_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->position = 0;
@@ -255,6 +266,7 @@ low_fake_repo_search_obsoletes (LowRepo *repo,
 	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
 	iter->super.repo = repo;
 	iter->super.next_func = low_fake_repo_fake_iter_next;
+	iter->super.free_func = low_fake_repo_fake_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->position = 0;
@@ -288,6 +300,7 @@ low_fake_repo_search_files (LowRepo *repo, const char *file)
 	LowFakePackageIter *iter = malloc (sizeof (LowFakePackageIter));
 	iter->super.repo = repo;
 	iter->super.next_func = low_fake_repo_fake_iter_next;
+	iter->super.free_func = low_fake_repo_fake_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->position = 0;

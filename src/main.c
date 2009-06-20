@@ -1287,17 +1287,16 @@ command_install (int argc, const char *argv[])
 	}
 
 	for (i = 0; i < argc; i++) {
-		bool installed = false;
 		LowPackage *pkg;
 		LowPackageDependency *provides =
 			low_package_dependency_new_from_string (argv[i]);
 
 		iter = low_repo_rpmdb_search_provides (repo_rpmdb, provides);
-		while (iter = low_package_iter_next (iter), iter != NULL) {
+		iter = low_package_iter_next (iter);
+		if (iter != NULL) {
 			low_package_unref (iter->pkg);
-			installed = true;
-		}
-		if (installed) {
+			low_package_iter_free (iter);
+
 			printf ("'%s' is already installed.\n", argv[i]);
 			continue;
 		}
@@ -1424,9 +1423,7 @@ command_remove (int argc, const char *argv[])
 
 		low_transaction_add_remove (trans, iter->pkg);
 
-		while (iter = low_package_iter_next (iter), iter != NULL) {
-			low_package_unref (iter->pkg);
-		}
+		low_package_iter_free (iter);
 
 		low_package_dependency_free (provides);
 	}

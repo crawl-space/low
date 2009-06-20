@@ -55,8 +55,6 @@ typedef struct _LowPackageIterSqlite {
 	LowPackageIterFilterDataFree filter_data_free_func;
 } LowPackageIterSqlite;
 
-LowPackageIter *low_sqlite_package_iter_next (LowPackageIter *iter);
-
 LowPackageDetails *low_sqlite_package_get_details (LowPackage *pkg);
 
 LowPackageDependency **low_sqlite_package_get_provides (LowPackage *pkg);
@@ -248,6 +246,118 @@ low_repo_sqlite_shutdown (LowRepo *repo)
 	free (repo);
 }
 
+static LowPackage *
+low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
+{
+	int i = 0;
+	int key;
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+	LowPackage *pkg;
+
+	if (!repo_sqlite->table) {
+		low_debug ("initializing hash table\n");
+		repo_sqlite->table =
+			g_hash_table_new_full (g_int_hash, g_int_equal,
+					       NULL,
+					       (GDestroyNotify)
+					       low_package_unref);
+	}
+
+	key = sqlite3_column_int (pp_stmt, 0);
+	pkg = g_hash_table_lookup (repo_sqlite->table, &key);
+	if (pkg) {
+		low_debug ("CACHE HIT, for %d", key);
+		low_package_ref (pkg);
+		return pkg;
+	}
+
+	pkg = malloc (sizeof (LowPackage));
+	low_package_ref_init (pkg);
+	low_package_ref (pkg);
+
+	/* XXX kind of hacky */
+	pkg->id = malloc (sizeof (int));
+	*((int *) pkg->id) = sqlite3_column_int (pp_stmt, i++);
+
+	low_debug ("CACHE MISS, inserting %d", GPOINTER_TO_INT (pkg->id));
+	g_hash_table_insert (repo_sqlite->table, pkg->id, pkg);
+
+	pkg->name = strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->arch =
+		low_arch_from_str ((const char *) sqlite3_column_text (pp_stmt,
+								       i++));
+	pkg->version =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->release =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->epoch = strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+
+	pkg->size = sqlite3_column_int (pp_stmt, i++);
+	pkg->repo = repo;
+
+	pkg->location_href =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+
+	pkg->digest =
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+	pkg->digest_type =
+		low_util_digest_type_from_string ((const char *)
+						  sqlite3_column_text
+						  (pp_stmt, i++));
+
+	pkg->get_details = low_sqlite_package_get_details;
+
+	pkg->get_provides = low_sqlite_package_get_provides;
+	pkg->get_requires = low_sqlite_package_get_requires;
+	pkg->get_conflicts = low_sqlite_package_get_conflicts;
+	pkg->get_obsoletes = low_sqlite_package_get_obsoletes;
+
+	pkg->provides = NULL;
+	pkg->requires = NULL;
+	pkg->conflicts = NULL;
+	pkg->obsoletes = NULL;
+
+	pkg->get_files = low_sqlite_package_get_files;
+
+	return pkg;
+}
+
+static void
+low_sqlite_package_iter_free (LowPackageIter *iter)
+{
+	LowPackageIterSqlite *iter_sqlite = (LowPackageIterSqlite *) iter;
+
+	sqlite3_finalize (iter_sqlite->pp_stmt);
+
+	if (iter_sqlite->filter_data_free_func) {
+		iter_sqlite->filter_data_free_func (iter_sqlite->filter_data);
+	}
+
+	free (iter_sqlite);
+}
+
+static LowPackageIter *
+low_sqlite_package_iter_next (LowPackageIter *iter)
+{
+	LowPackageIterSqlite *iter_sqlite = (LowPackageIterSqlite *) iter;
+
+	if (sqlite3_step (iter_sqlite->pp_stmt) == SQLITE_DONE) {
+		low_sqlite_package_iter_free (iter);
+		return NULL;
+	}
+
+	iter->pkg = low_package_sqlite_new_from_row (iter_sqlite->pp_stmt,
+						     iter->repo);
+	if (iter_sqlite->func != NULL) {
+		/* move on to the next package if this one fails the filter */
+		if (!iter_sqlite->func (iter->pkg, iter_sqlite->filter_data)) {
+			low_package_unref (iter->pkg);
+			return low_package_iter_next (iter);
+		}
+	}
+	return iter;
+}
+
 LowPackageIter *
 low_repo_sqlite_list_all (LowRepo *repo)
 {
@@ -257,6 +367,7 @@ low_repo_sqlite_list_all (LowRepo *repo)
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
 	iter->super.next_func = low_sqlite_package_iter_next;
+	iter->super.free_func = low_sqlite_package_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->func = NULL;
@@ -277,6 +388,7 @@ low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
 	iter->super.next_func = low_sqlite_package_iter_next;
+	iter->super.free_func = low_sqlite_package_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->func = NULL;
@@ -334,6 +446,7 @@ low_repo_sqlite_search_provides (LowRepo *repo,
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
 	iter->super.next_func = low_sqlite_package_iter_next;
+	iter->super.free_func = low_sqlite_package_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->func = low_repo_sqlite_search_dep_filter_fn;
@@ -363,6 +476,7 @@ low_repo_sqlite_search_requires (LowRepo *repo,
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
 	iter->super.next_func = low_sqlite_package_iter_next;
+	iter->super.free_func = low_sqlite_package_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->func = low_repo_sqlite_search_dep_filter_fn;
@@ -392,6 +506,7 @@ low_repo_sqlite_search_conflicts (LowRepo *repo,
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
 	iter->super.next_func = low_sqlite_package_iter_next;
+	iter->super.free_func = low_sqlite_package_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->func = low_repo_sqlite_search_dep_filter_fn;
@@ -523,6 +638,7 @@ low_repo_sqlite_search_obsoletes (LowRepo *repo,
 
 	iter->super.repo = repo;
 	iter->super.next_func = low_sqlite_package_iter_next;
+	iter->super.free_func = low_sqlite_package_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->func = low_repo_sqlite_search_dep_filter_fn;
@@ -552,6 +668,7 @@ low_repo_sqlite_search_primary_files (LowRepo *repo, const char *file)
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
 	iter->super.next_func = low_sqlite_package_iter_next;
+	iter->super.free_func = low_sqlite_package_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->func = NULL;
@@ -581,6 +698,7 @@ low_repo_sqlite_search_filelists_files (LowRepo *repo, const char *file)
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
 	iter->super.next_func = low_sqlite_package_iter_next;
+	iter->super.free_func = low_sqlite_package_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->func = NULL;
@@ -626,6 +744,7 @@ low_repo_sqlite_search_details (LowRepo *repo, const char *querystr)
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
 	iter->super.repo = repo;
 	iter->super.next_func = low_sqlite_package_iter_next;
+	iter->super.free_func = low_sqlite_package_iter_free;
 	iter->super.pkg = NULL;
 
 	iter->func = NULL;
@@ -725,110 +844,6 @@ low_repo_sqlite_get_delta (LowRepo *repo)
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 
 	return repo_sqlite->delta;
-}
-
-static LowPackage *
-low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
-{
-	int i = 0;
-	int key;
-	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-	LowPackage *pkg;
-
-	if (!repo_sqlite->table) {
-		low_debug ("initializing hash table\n");
-		repo_sqlite->table =
-			g_hash_table_new_full (g_int_hash, g_int_equal,
-					       NULL,
-					       (GDestroyNotify)
-					       low_package_unref);
-	}
-
-	key = sqlite3_column_int (pp_stmt, 0);
-	pkg = g_hash_table_lookup (repo_sqlite->table, &key);
-	if (pkg) {
-		low_debug ("CACHE HIT, for %d", key);
-		low_package_ref (pkg);
-		return pkg;
-	}
-
-	pkg = malloc (sizeof (LowPackage));
-	low_package_ref_init (pkg);
-	low_package_ref (pkg);
-
-	/* XXX kind of hacky */
-	pkg->id = malloc (sizeof (int));
-	*((int *) pkg->id) = sqlite3_column_int (pp_stmt, i++);
-
-	low_debug ("CACHE MISS, inserting %d", GPOINTER_TO_INT (pkg->id));
-	g_hash_table_insert (repo_sqlite->table, pkg->id, pkg);
-
-	pkg->name = strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-	pkg->arch =
-		low_arch_from_str ((const char *) sqlite3_column_text (pp_stmt,
-								       i++));
-	pkg->version =
-		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-	pkg->release =
-		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-	pkg->epoch = strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-
-	pkg->size = sqlite3_column_int (pp_stmt, i++);
-	pkg->repo = repo;
-
-	pkg->location_href =
-		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-
-	pkg->digest =
-		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
-	pkg->digest_type =
-		low_util_digest_type_from_string ((const char *)
-						  sqlite3_column_text
-						  (pp_stmt, i++));
-
-	pkg->get_details = low_sqlite_package_get_details;
-
-	pkg->get_provides = low_sqlite_package_get_provides;
-	pkg->get_requires = low_sqlite_package_get_requires;
-	pkg->get_conflicts = low_sqlite_package_get_conflicts;
-	pkg->get_obsoletes = low_sqlite_package_get_obsoletes;
-
-	pkg->provides = NULL;
-	pkg->requires = NULL;
-	pkg->conflicts = NULL;
-	pkg->obsoletes = NULL;
-
-	pkg->get_files = low_sqlite_package_get_files;
-
-	return pkg;
-}
-
-LowPackageIter *
-low_sqlite_package_iter_next (LowPackageIter *iter)
-{
-	LowPackageIterSqlite *iter_sqlite = (LowPackageIterSqlite *) iter;
-
-	if (sqlite3_step (iter_sqlite->pp_stmt) == SQLITE_DONE) {
-		sqlite3_finalize (iter_sqlite->pp_stmt);
-
-		if (iter_sqlite->filter_data_free_func) {
-			iter_sqlite->filter_data_free_func (iter_sqlite->filter_data);
-		}
-
-		free (iter_sqlite);
-		return NULL;
-	}
-
-	iter->pkg = low_package_sqlite_new_from_row (iter_sqlite->pp_stmt,
-						     iter->repo);
-	if (iter_sqlite->func != NULL) {
-		/* move on to the next package if this one fails the filter */
-		if (!iter_sqlite->func (iter->pkg, iter_sqlite->filter_data)) {
-			low_package_unref (iter->pkg);
-			return low_package_iter_next (iter);
-		}
-	}
-	return iter;
 }
 
 LowPackageDetails *

@@ -133,6 +133,14 @@ low_package_iter_next (LowPackageIter *iter)
 	return iter->next_func (iter);
 }
 
+void
+low_package_iter_free (LowPackageIter *iter)
+{
+	if (iter != NULL) {
+		iter->free_func (iter);
+	}
+}
+
 LowPackageDependency *
 low_package_dependency_new (const char *name, LowPackageDependencySense sense,
 			    const char *evr)
