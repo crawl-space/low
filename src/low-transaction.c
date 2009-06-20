@@ -526,6 +526,20 @@ low_transaction_find_provides_in_deplist (const LowPackageDependency *needle,
 	return NULL;
 }
 
+static bool
+low_transaction_is_installing (LowTransaction *trans, LowPackage *pkg)
+{
+	return low_transaction_is_pkg_in_hash (trans->install, pkg) ||
+		low_transaction_is_pkg_in_hash (trans->update, pkg);
+}
+
+static bool
+low_transaction_is_removing (LowTransaction *trans, LowPackage *pkg)
+{
+	return low_transaction_is_pkg_in_hash (trans->updated, pkg) ||
+		low_transaction_is_pkg_in_hash (trans->remove, pkg);
+}
+
 static LowTransactionStatus
 select_best_provides (LowTransaction *trans, LowPackage *pkg,
 		      LowPackageIter *iter, LowPackageDependency *requires,
@@ -541,16 +555,12 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 		LowPackageDependency *new_prov;
 		int cmp;
 
-		if (low_transaction_is_pkg_in_hash (trans->updated, iter->pkg)
-		    || low_transaction_is_pkg_in_hash (trans->remove,
-						       iter->pkg)) {
+		if (low_transaction_is_removing (trans, iter->pkg)) {
 			low_package_unref (iter->pkg);
 			continue;
 		}
 
-		if (low_transaction_is_pkg_in_hash (trans->install, iter->pkg)
-		    || low_transaction_is_pkg_in_hash (trans->update,
-						       iter->pkg)) {
+		if (low_transaction_is_installing (trans, iter->pkg)) {
 			/* If its already picked, we can't get any better. */
 			best = iter->pkg;
 			low_package_iter_free (iter);
@@ -591,10 +601,7 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 	if (best) {
 		/* XXX clean this up */
 		if (check_for_existing) {
-			if (low_transaction_is_pkg_in_hash
-			    (trans->install, best)
-			    || low_transaction_is_pkg_in_hash (trans->update,
-							       best)) {
+			if (low_transaction_is_installing (trans, best)) {
 				return LOW_TRANSACTION_NO_CHANGE;
 			} else {
 				return LOW_TRANSACTION_UNRESOLVABLE;
@@ -616,9 +623,7 @@ low_transaction_check_providing_is_installed (LowTransaction *trans,
 					      LowPackageIter *iter)
 {
 	while (iter = low_package_iter_next (iter), iter != NULL) {
-		if (!low_transaction_is_pkg_in_hash (trans->remove, iter->pkg)
-		    && !low_transaction_is_pkg_in_hash (trans->updated,
-							iter->pkg)) {
+		if (!low_transaction_is_removing (trans, iter->pkg)) {
 			low_debug_pkg ("Provided by", iter->pkg);
 			low_package_unref (iter->pkg);
 			low_package_iter_free (iter);
@@ -791,10 +796,7 @@ low_transaction_check_removal (LowTransaction *trans,
 				continue;
 			}
 
-			if (low_transaction_is_pkg_in_hash (trans->remove,
-							    iter->pkg) ||
-			    low_transaction_is_pkg_in_hash (trans->updated,
-							    iter->pkg)) {
+			if (low_transaction_is_removing (trans, iter->pkg)) {
 				low_debug ("Requiring package is being removed");
 				continue;
 			}
@@ -850,10 +852,7 @@ low_transaction_check_removal (LowTransaction *trans,
 				continue;
 			}
 
-			if (low_transaction_is_pkg_in_hash (trans->remove,
-							    iter->pkg) ||
-			    low_transaction_is_pkg_in_hash (trans->updated,
-							    iter->pkg)) {
+			if (low_transaction_is_removing (trans, iter->pkg)) {
 				low_debug ("Requiring package is being removed");
 				continue;
 			}
