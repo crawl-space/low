@@ -4,14 +4,14 @@
 - test info description word wrapping.
 - all of yum's macro substitution for config files
 - doxygen code documentation
-- calculate list of updating packages, being mindful of kernel
 - gpg key checking
 - globbing search for command line 'low search'
 - low dump [repo|all|PACKAGE] - output full package details in a format
   we can parse
-- more unit tests for low-repo-set (using fake sqlite repos)
-- lazy load PRCO and file lists
+- more unit tests for low-repo-set (using fake sqlite repos) and others
 - Add a function to iterate over provides and files, rather than having
   to call both. Still provide the old ones though.
 - multilib and arch "colour" support
 - low check and/or low fix for installed package sanity
+- command line option parsing
+- remove dep on glib
