@@ -64,6 +64,14 @@ low_transaction_member_free (LowTransactionMember *member)
 	free (member);
 }
 
+static GHashTable *
+new_hash_table (void)
+{
+	return g_hash_table_new_full (g_str_hash, g_str_equal, free,
+				      (GDestroyNotify)
+				      low_transaction_member_free);
+}
+
 LowTransaction *
 low_transaction_new (LowRepo *repo_rpmdb, LowRepoSet *repos,
 		     LowTransactionProgressCallbackFn callback,
@@ -77,46 +85,15 @@ low_transaction_new (LowRepo *repo_rpmdb, LowRepoSet *repos,
 	trans->callback = callback;
 	trans->callback_data = callback_data;
 
-	trans->install = g_hash_table_new_full (g_str_hash, g_str_equal,
-						free, (GDestroyNotify)
-						low_transaction_member_free);
-	trans->update = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       free, (GDestroyNotify)
-					       low_transaction_member_free);
-	trans->updated = g_hash_table_new_full (g_str_hash, g_str_equal,
-						free, (GDestroyNotify)
-						low_transaction_member_free);
-	trans->remove = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       free, (GDestroyNotify)
-					       low_transaction_member_free);
+	trans->install = new_hash_table ();
+	trans->update = new_hash_table ();
+	trans->updated = new_hash_table ();
+	trans->remove = new_hash_table ();
 
-	trans->unresolved = g_hash_table_new_full (g_str_hash, g_str_equal,
-						   free, (GDestroyNotify)
-						   low_transaction_member_free);
+	trans->unresolved = new_hash_table ();
 
 	return trans;
 }
-
-/*
-static int
-low_transaction_pkg_compare_func (gconstpointer data1, gconstpointer data2)
-{
-	const LowPackage *pkg1 = (LowPackage *) data1;
-	const LowPackage *pkg2 = (LowPackage *) data2;
-
-	if (!strcmp (pkg1->name, pkg2->name) &&
-	    !strcmp (pkg1->version, pkg2->version) &&
-	    !strcmp (pkg1->release, pkg2->release) &&
-	    !strcmp (pkg1->arch, pkg2->arch) &&
-	    (!(pkg1->epoch || pkg2->epoch) ||
-	     !strcmp (pkg1->epoch, pkg2->epoch))) {
-		return 0;
-	} else {
-		return 1;
-	}
-
-}
-*/
 
 static char *
 low_transaction_make_key (LowPackage *pkg)
@@ -1139,7 +1116,8 @@ low_transaction_resolve (LowTransaction *trans G_GNUC_UNUSED)
 	gettimeofday (&start, NULL);
 
 	while (status == LOW_TRANSACTION_PACKAGES_ADDED) {
-		LowTransactionStatus conflicts_status, requires_status;
+		LowTransactionStatus conflicts_status;
+		LowTransactionStatus requires_status;
 
 		conflicts_status = low_transaction_check_all_conflicts (trans);
 		requires_status = low_transaction_check_all_requires (trans);
