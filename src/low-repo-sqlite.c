@@ -358,13 +358,11 @@ low_sqlite_package_iter_next (LowPackageIter *iter)
 	return iter;
 }
 
-LowPackageIter *
-low_repo_sqlite_list_all (LowRepo *repo)
+static LowPackageIterSqlite *
+low_package_iter_sqlite_new (LowRepo *repo)
 {
-	const char *stmt = SELECT_FIELDS_FROM "packages p";
-
-	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+
 	iter->super.repo = repo;
 	iter->super.next_func = low_sqlite_package_iter_next;
 	iter->super.free_func = low_sqlite_package_iter_free;
@@ -374,10 +372,22 @@ low_repo_sqlite_list_all (LowRepo *repo)
 	iter->filter_data_free_func = NULL;
 	iter->filter_data = NULL;
 
+	return iter;
+}
+
+LowPackageIter *
+low_repo_sqlite_list_all (LowRepo *repo)
+{
+	const char *stmt = SELECT_FIELDS_FROM "packages p";
+
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+	LowPackageIterSqlite *iter = low_package_iter_sqlite_new (repo);
+
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
 			 NULL);
 	return (LowPackageIter *) iter;
 }
+
 
 LowPackageIter *
 low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
@@ -385,15 +395,7 @@ low_repo_sqlite_list_by_name (LowRepo *repo, const char *name)
 	const char *stmt = SELECT_FIELDS_FROM "packages p WHERE name = :name";
 
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
-	iter->super.repo = repo;
-	iter->super.next_func = low_sqlite_package_iter_next;
-	iter->super.free_func = low_sqlite_package_iter_free;
-	iter->super.pkg = NULL;
-
-	iter->func = NULL;
-	iter->filter_data_free_func = NULL;
-	iter->filter_data = NULL;
+	LowPackageIterSqlite *iter = low_package_iter_sqlite_new (repo);
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
 			 NULL);
@@ -434,16 +436,12 @@ low_repo_sqlite_search_dep_filter_fn (LowPackage *pkg, gpointer data)
 	return res;
 }
 
-LowPackageIter *
-low_repo_sqlite_search_provides (LowRepo *repo,
-				 const LowPackageDependency *provides)
+static LowPackageIterSqlite *
+low_package_iter_sqlite_new_with_filter (LowRepo *repo)
 {
-	const char *stmt = SELECT_FIELDS_FROM "packages p, provides pr "
-			   "WHERE pr.pkgKey = p.pkgKey AND pr.name = :provides";
-
 	DepFilterData *data = malloc (sizeof (DepFilterData));
-	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+
 	iter->super.repo = repo;
 	iter->super.next_func = low_sqlite_package_iter_next;
 	iter->super.free_func = low_sqlite_package_iter_free;
@@ -452,6 +450,22 @@ low_repo_sqlite_search_provides (LowRepo *repo,
 	iter->func = low_repo_sqlite_search_dep_filter_fn;
 	iter->filter_data_free_func = dep_filter_data_free_fn;
 	iter->filter_data = (gpointer) data;
+
+	return iter;
+}
+
+LowPackageIter *
+low_repo_sqlite_search_provides (LowRepo *repo,
+				 const LowPackageDependency *provides)
+{
+	const char *stmt = SELECT_FIELDS_FROM "packages p, provides pr "
+			   "WHERE pr.pkgKey = p.pkgKey AND pr.name = :provides";
+
+	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
+	LowPackageIterSqlite *iter =
+		low_package_iter_sqlite_new_with_filter (repo);
+	DepFilterData *data = (DepFilterData *) iter->filter_data;
+
 	/* XXX might need to copy this */
 	data->dep = low_package_dependency_new (provides->name, provides->sense,
 						provides->evr);
@@ -471,17 +485,11 @@ low_repo_sqlite_search_requires (LowRepo *repo,
 			   "WHERE req.pkgKey = p.pkgKey "
 			   "AND req.name = :requires";
 
-	DepFilterData *data = malloc (sizeof (DepFilterData));
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
-	iter->super.repo = repo;
-	iter->super.next_func = low_sqlite_package_iter_next;
-	iter->super.free_func = low_sqlite_package_iter_free;
-	iter->super.pkg = NULL;
+	LowPackageIterSqlite *iter =
+		low_package_iter_sqlite_new_with_filter (repo);
+	DepFilterData *data = (DepFilterData *) iter->filter_data;
 
-	iter->func = low_repo_sqlite_search_dep_filter_fn;
-	iter->filter_data_free_func = dep_filter_data_free_fn;
-	iter->filter_data = (gpointer) data;
 	/* XXX might need to copy this */
 	data->dep = low_package_dependency_new (requires->name, requires->sense,
 						requires->evr);
@@ -501,17 +509,11 @@ low_repo_sqlite_search_conflicts (LowRepo *repo,
 			   "WHERE conf.pkgKey = p.pkgKey "
 			   "AND conf.name = :conflicts";
 
-	DepFilterData *data = malloc (sizeof (DepFilterData));
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
-	iter->super.repo = repo;
-	iter->super.next_func = low_sqlite_package_iter_next;
-	iter->super.free_func = low_sqlite_package_iter_free;
-	iter->super.pkg = NULL;
+	LowPackageIterSqlite *iter =
+		low_package_iter_sqlite_new_with_filter (repo);
+	DepFilterData *data = (DepFilterData *) iter->filter_data;
 
-	iter->func = low_repo_sqlite_search_dep_filter_fn;
-	iter->filter_data_free_func = dep_filter_data_free_fn;
-	iter->filter_data = (gpointer) data;
 	/* XXX might need to copy this */
 	data->dep = low_package_dependency_new (conflicts->name,
 						conflicts->sense,
@@ -605,9 +607,11 @@ low_repo_sqlite_search_obsoletes (LowRepo *repo,
 	GSList *obs;
 	char *tmp;
 
-	DepFilterData *data = malloc (sizeof (DepFilterData));
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
+	LowPackageIterSqlite *iter =
+		low_package_iter_sqlite_new_with_filter (repo);
+	DepFilterData *data = (DepFilterData *) iter->filter_data;
+
 	if (repo_sqlite->obsoletes == NULL) {
 		low_repo_sqlite_initialize_obsoletes (repo_sqlite);
 	}
@@ -636,14 +640,6 @@ low_repo_sqlite_search_obsoletes (LowRepo *repo,
 	stmt = g_strdup_printf (SELECT_FIELDS_FROM "packages p "
 			   "WHERE p.pkgKey IN (%s", tmp);
 
-	iter->super.repo = repo;
-	iter->super.next_func = low_sqlite_package_iter_next;
-	iter->super.free_func = low_sqlite_package_iter_free;
-	iter->super.pkg = NULL;
-
-	iter->func = low_repo_sqlite_search_dep_filter_fn;
-	iter->filter_data_free_func = dep_filter_data_free_fn;
-	iter->filter_data = (gpointer) data;
 	/* XXX might need to copy this */
 	data->dep = low_package_dependency_new (obsoletes->name,
 						obsoletes->sense,
@@ -665,15 +661,7 @@ low_repo_sqlite_search_primary_files (LowRepo *repo, const char *file)
 			   "AND f.name = :file";
 
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
-	iter->super.repo = repo;
-	iter->super.next_func = low_sqlite_package_iter_next;
-	iter->super.free_func = low_sqlite_package_iter_free;
-	iter->super.pkg = NULL;
-
-	iter->func = NULL;
-	iter->filter_data_free_func = NULL;
-	iter->filter_data = NULL;
+	LowPackageIterSqlite *iter = low_package_iter_sqlite_new (repo);
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
 			 NULL);
@@ -695,15 +683,7 @@ low_repo_sqlite_search_filelists_files (LowRepo *repo, const char *file)
 	char *dirname = g_strndup (file, slash - file);
 
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
-	iter->super.repo = repo;
-	iter->super.next_func = low_sqlite_package_iter_next;
-	iter->super.free_func = low_sqlite_package_iter_free;
-	iter->super.pkg = NULL;
-
-	iter->func = NULL;
-	iter->filter_data_free_func = NULL;
-	iter->filter_data = NULL;
+	LowPackageIterSqlite *iter = low_package_iter_sqlite_new (repo);
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
 			 NULL);
@@ -741,15 +721,7 @@ low_repo_sqlite_search_details (LowRepo *repo, const char *querystr)
 	char *like_querystr = g_strdup_printf ("%%%s%%", querystr);
 
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
-	LowPackageIterSqlite *iter = malloc (sizeof (LowPackageIterSqlite));
-	iter->super.repo = repo;
-	iter->super.next_func = low_sqlite_package_iter_next;
-	iter->super.free_func = low_sqlite_package_iter_free;
-	iter->super.pkg = NULL;
-
-	iter->func = NULL;
-	iter->filter_data_free_func = NULL;
-	iter->filter_data = NULL;
+	LowPackageIterSqlite *iter = low_package_iter_sqlite_new (repo);
 
 	sqlite3_prepare (repo_sqlite->primary_db, stmt, -1, &iter->pp_stmt,
 			 NULL);
