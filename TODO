@@ -14,3 +14,10 @@
 - multilib and arch "colour" support
 - low check and/or low fix for installed package sanity
 - remove dep on glib
+- updateinfo support
+- groups support
+- plugins
+- libification
+- python bindings
+- fix up package reference counting
+- generate man page and bash-completion from command struct/options
