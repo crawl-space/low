@@ -263,18 +263,12 @@ LowOption info_options[] = {
 };
 
 static int
-command_info (int argc, const char *argv[])
+command_info (int argc G_GNUC_UNUSED, const char *argv[])
 {
 	LowRepo *repo_rpmdb;
 	LowRepoSet *repos;
 	LowPackageIter *iter;
 	LowConfig *config;
-	int consumed;
-
-	consumed = low_parse_options (argc, argv, info_options);
-
-	argc -= consumed;
-	argv += consumed;
 
 	repo_rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (repo_rpmdb);
@@ -1282,12 +1276,6 @@ command_install (int argc, const char *argv[])
 	int i;
 	int res;
 	int counter = 0;
-	int consumed;
-
-	consumed = low_parse_options (argc, argv, transaction_options);
-
-	argc -= consumed;
-	argv += consumed;
 
 	if (!initialize_repos (&repo_rpmdb, &repos)) {
 		return (EXIT_FAILURE);
@@ -1345,12 +1333,6 @@ command_update (int argc, const char *argv[])
 	int i;
 	int res;
 	int counter = 0;
-	int consumed;
-
-	consumed = low_parse_options (argc, argv, transaction_options);
-
-	argc -= consumed;
-	argv += consumed;
 
 	if (!initialize_repos (&repo_rpmdb, &repos)) {
 		return (EXIT_FAILURE);
@@ -1402,12 +1384,6 @@ command_remove (int argc, const char *argv[])
 	int i;
 	int res;
 	int counter = 0;
-	int consumed;
-
-	consumed = low_parse_options (argc, argv, transaction_options);
-
-	argc -= consumed;
-	argv += consumed;
 
 	if (!initialize_repos (&repo_rpmdb, &repos)) {
 		return (EXIT_FAILURE);
@@ -1867,7 +1843,24 @@ main (int argc, const char *argv[])
 
 	for (i = 0; i < ARRAY_SIZE (commands); i++) {
 		if (!strcmp (argv[0], commands[i].name)) {
-			return commands[i].func (argc - 1, argv + 1);
+			argc--;
+			argv++;
+
+			if (commands[i].options != NULL) {
+				consumed =
+					low_parse_options (argc, argv,
+							   commands[i].options);
+
+				if (consumed < 0) {
+					show_help (commands[i].name);
+
+					return EXIT_FAILURE;
+				}
+
+				argc -= consumed;
+				argv += consumed;
+			}
+			return commands[i].func (argc, argv);
 		}
 	}
 	printf ("Unknown command: %s\n", argv[0]);
