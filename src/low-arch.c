@@ -25,10 +25,12 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
-static struct {
+struct arch_map_entry {
 	LowArch arch;
 	const char *str;
-} arch_map[] = {
+};
+
+static struct arch_map_entry arch_map[] = {
 	{ ARCH_NOARCH, "noarch" },
 	{ ARCH_X86_64, "x86_64" },
 	{ ARCH_I386, "i386" },
