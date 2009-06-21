@@ -111,13 +111,7 @@ char **			low_fake_repo_get_files 	(LowRepo *repo,
 	DELEGATE_DEP_SEARCH_FUNCTION(name, search_obsoletes) \
 	\
 	DELEGATE_SEARCH_FUNCTION(name, search_files) \
-	DELEGATE_SEARCH_FUNCTION(name, search_details) \
-	\
-//	DELEGATE_GET_FUNCTION(name, provides)
-//	DELEGATE_GET_FUNCTION(name, requires)
-//	DELEGATE_GET_FUNCTION(name, conflicts)
-//	DELEGATE_GET_FUNCTION(name, obsoletes)
-//	DELEGATE_GET_FUNCTION(name, files)
+	DELEGATE_SEARCH_FUNCTION(name, search_details)
 
 #define FAKE_SQLITE_REPO \
 	FAKE_REPO (sqlite, Sqlite) \

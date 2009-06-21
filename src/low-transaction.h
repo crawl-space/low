@@ -57,39 +57,24 @@ typedef struct _LowTransactionMember {
 	LowPackage *related_pkg;
 } LowTransactionMember;
 
-LowTransaction *low_transaction_new (LowRepo *rpmdb,LowRepoSet *repos,
+LowTransaction *low_transaction_new (LowRepo *rpmdb, LowRepoSet *repos,
 				     LowTransactionProgressCallbackFn callback,
 				     gpointer callback_data);
-void			low_transaction_free 	(LowTransaction *trans);
-
-//low_transaction_find_updates (LowTransaction *trans);
+void low_transaction_free (LowTransaction *trans);
 
 /*
  * If anything is getting updated or obsoleted, calculate that during these
  * function calls.
  */
 
-bool 	low_transaction_add_install 	(LowTransaction *trans,
-						 LowPackage *to_install);
-bool 	low_transaction_add_update 	(LowTransaction *trans,
-						 LowPackage *to_update);
-bool 	low_transaction_add_remove 	(LowTransaction *trans,
-						 LowPackage *to_remove);
-
-//low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove);
-//low_transaction_add_update (LowTransaction *trans, LowPackage *to_update);
+bool low_transaction_add_install (LowTransaction *trans, LowPackage *pkg);
+bool low_transaction_add_update (LowTransaction *trans, LowPackage *pkg);
+bool low_transaction_add_remove (LowTransaction *trans, LowPackage *pkg);
 
 /**
  * Resolve missing dependencies, add them to the transaction as needed.
  */
 LowTransactionResult 	low_transaction_resolve	(LowTransaction *trans);
-
-/**
- * read the list of operations to perform.
- * From here we can download the rpms we need, and have the rpmdb
- * perform the operation.
- */
-//:low_transaction_get_diff (lowTransaction *trans);
 
 #endif /* _LOW_TRANSACTION_H_ */
 

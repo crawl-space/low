@@ -231,15 +231,14 @@ low_transaction_check_install_only_n (LowTransaction *trans, LowPackage *pkg)
 }
 
 bool
-low_transaction_add_install (LowTransaction *trans, LowPackage *to_install)
+low_transaction_add_install (LowTransaction *trans, LowPackage *pkg)
 {
-	if (low_transaction_add_to_hash (trans->install, to_install, NULL)) {
-		low_debug_pkg ("Adding for install", to_install);
-		low_transaction_check_install_only_n (trans, to_install);
+	if (low_transaction_add_to_hash (trans->install, pkg, NULL)) {
+		low_debug_pkg ("Adding for install", pkg);
+		low_transaction_check_install_only_n (trans, pkg);
 		return true;
 	} else {
-		low_debug_pkg ("Not adding already added pkg for install",
-			       to_install);
+		low_debug_pkg ("Not adding already added pkg for install", pkg);
 		return false;
 	}
 }
@@ -360,18 +359,17 @@ add_update_worker (LowTransaction *trans, LowPackage *to_update,
 }
 
 bool
-low_transaction_add_update (LowTransaction *trans, LowPackage *to_update)
+low_transaction_add_update (LowTransaction *trans, LowPackage *pkg)
 {
 	LowPackage *updating_to = choose_best_for_update (trans->rpmdb,
-							  trans->repos,
-							  to_update);
+							  trans->repos, pkg);
 
 	if (updating_to == NULL) {
-		low_debug_pkg ("No available update for", to_update);
+		low_debug_pkg ("No available update for", pkg);
 		return false;
 	}
 
-	return add_update_worker (trans, to_update, updating_to);
+	return add_update_worker (trans, pkg, updating_to);
 }
 
 static LowPackage *
@@ -411,25 +409,24 @@ find_updated (LowRepo *repo_rpmdb, LowPackage *updating)
  **/
 static bool
 low_transaction_add_install_or_update (LowTransaction *trans,
-				       LowPackage *to_install)
+				       LowPackage *pkg)
 {
-	LowPackage *updated = find_updated (trans->rpmdb, to_install);
+	LowPackage *updated = find_updated (trans->rpmdb, pkg);
 	if (updated) {
-		return add_update_worker (trans, updated, to_install);
+		return add_update_worker (trans, updated, pkg);
 	} else {
-		return low_transaction_add_install (trans, to_install);
+		return low_transaction_add_install (trans, pkg);
 	}
 }
 
 bool
-low_transaction_add_remove (LowTransaction *trans, LowPackage *to_remove)
+low_transaction_add_remove (LowTransaction *trans, LowPackage *pkg)
 {
-	if (low_transaction_add_to_hash (trans->remove, to_remove, NULL)) {
-		low_debug_pkg ("Adding for remove", to_remove);
+	if (low_transaction_add_to_hash (trans->remove, pkg, NULL)) {
+		low_debug_pkg ("Adding for remove", pkg);
 		return true;
 	} else {
-		low_debug_pkg ("Not adding already added pkg for remove",
-			       to_remove);
+		low_debug_pkg ("Not adding already added pkg for remove", pkg);
 		return false;
 	}
 }
