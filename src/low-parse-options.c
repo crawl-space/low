@@ -54,6 +54,7 @@ low_parse_long_opt (const char **argv, const LowOption *options)
 		}
 	}
 
+	printf ("invalid option: %s\n", argv[0]);
 	return INVALID_OPTION;
 }
 
@@ -68,6 +69,7 @@ low_parse_short_opt (const char **argv, const LowOption *options)
 		}
 	}
 
+	printf ("invalid option: %s\n", argv[0]);
 	return INVALID_OPTION;
 }
 
@@ -90,6 +92,10 @@ low_parse_options (int argc, const char **argv, const LowOption *options)
 		} else {
 			consumed = low_parse_short_opt (argv + i,
 							options);
+		}
+
+		if (consumed < 0) {
+			return consumed;
 		}
 
 		i += consumed;

@@ -254,6 +254,14 @@ print_all_packages (LowPackageIter *iter, bool show_all)
 	}
 }
 
+bool show_all = false;
+
+LowOption info_options[] = {
+	{OPTION_BOOL, 'a', "all", &show_all, NULL,
+		"Show all package info"},
+	LOW_OPTION_END
+};
+
 static int
 command_info (int argc, const char *argv[])
 {
@@ -262,15 +270,8 @@ command_info (int argc, const char *argv[])
 	LowPackageIter *iter;
 	LowConfig *config;
 	int consumed;
-	bool show_all = false;
 
-	LowOption options[] = {
-		{OPTION_BOOL, 'a', "all", &show_all, NULL,
-			"Show all package info"},
-		LOW_OPTION_END
-	};
-
-	consumed = low_parse_options (argc, argv, options);
+	consumed = low_parse_options (argc, argv, info_options);
 
 	argc -= consumed;
 	argv += consumed;
@@ -1263,6 +1264,14 @@ select_package_for_install (LowPackageIter *iter)
 	return best;
 }
 
+bool assume_yes = false;
+
+LowOption transaction_options[] = {
+	{OPTION_BOOL, 'y', "assume-yes", &assume_yes, NULL,
+		"Assume yes for any questions"},
+	LOW_OPTION_END
+};
+
 static int
 command_install (int argc, const char *argv[])
 {
@@ -1274,15 +1283,8 @@ command_install (int argc, const char *argv[])
 	int res;
 	int counter = 0;
 	int consumed;
-	bool assume_yes = false;
 
-	LowOption options[] = {
-		{OPTION_BOOL, 'y', "assume-yes", &assume_yes, NULL,
-			"Assume yes for any questions"},
-		LOW_OPTION_END
-	};
-
-	consumed = low_parse_options (argc, argv, options);
+	consumed = low_parse_options (argc, argv, transaction_options);
 
 	argc -= consumed;
 	argv += consumed;
@@ -1344,15 +1346,8 @@ command_update (int argc, const char *argv[])
 	int res;
 	int counter = 0;
 	int consumed;
-	bool assume_yes = false;
 
-	LowOption options[] = {
-		{OPTION_BOOL, 'y', "assume-yes", &assume_yes, NULL,
-			"Assume yes for any questions"},
-		LOW_OPTION_END
-	};
-
-	consumed = low_parse_options (argc, argv, options);
+	consumed = low_parse_options (argc, argv, transaction_options);
 
 	argc -= consumed;
 	argv += consumed;
@@ -1408,15 +1403,8 @@ command_remove (int argc, const char *argv[])
 	int res;
 	int counter = 0;
 	int consumed;
-	bool assume_yes = false;
 
-	LowOption options[] = {
-		{OPTION_BOOL, 'y', "assume-yes", &assume_yes, NULL,
-			"Assume yes for any questions"},
-		LOW_OPTION_END
-	};
-
-	consumed = low_parse_options (argc, argv, options);
+	consumed = low_parse_options (argc, argv, transaction_options);
 
 	argc -= consumed;
 	argv += consumed;
@@ -1719,6 +1707,13 @@ command_version (int argc G_GNUC_UNUSED, const char **argv G_GNUC_UNUSED)
 	return EXIT_SUCCESS;
 }
 
+bool help = false;
+
+LowOption global_options[] = {
+	{OPTION_BOOL, 'h', "help", &help, NULL, "Show command help"},
+	LOW_OPTION_END
+};
+
 static int
 command_help (int argc, const char *argv[])
 {
@@ -1748,37 +1743,67 @@ typedef struct _SubCommand {
 	const char *usage;
 	const char *summary;
 	int (*func) (int argc, const char *argv[]);
+	LowOption *options;
 } SubCommand;
 
 const SubCommand commands[] = {
-	{"refresh", NO_USAGE, "Download new metadata", command_refresh},
-	{"install", "PACKAGE", "Install a package", command_install},
+	{"refresh", NO_USAGE, "Download new metadata", command_refresh, NULL},
+	{"install", "PACKAGE", "Install a package", command_install,
+	  transaction_options},
 	{"update", "[PACKAGE]", "Update or install a package",
-	 command_update},
-	{"remove", "PACKAGE", "Remove a package", command_remove},
-	{"clean", NO_USAGE, "Remove cached data", NOT_IMPLEMENTED},
-	{"info", "PACKAGE", "Display package details", command_info},
+	 command_update, transaction_options},
+	{"remove", "PACKAGE", "Remove a package", command_remove,
+	 transaction_options},
+	{"clean", NO_USAGE, "Remove cached data", NOT_IMPLEMENTED, NULL},
+	{"info", "PACKAGE", "Display package details", command_info,
+	 info_options},
 	{"list", "[all|installed|PACKAGE]", "Display a group of packages",
-	 command_list},
+	 command_list, NULL},
 	{"download", NO_USAGE,
-	 "Download (but don't install) a list of packages", command_download},
+	 "Download (but don't install) a list of packages", command_download,
+	 NULL},
 	{"search", "PATTERN",
-	 "Search package information for the given string", command_search},
+	 "Search package information for the given string", command_search,
+	 NULL},
 	{"repolist", "[all|enabled|disabled]",
-	 "Display configured software repositories", command_repolist},
+	 "Display configured software repositories", command_repolist, NULL},
 	{"whatprovides", "PATTERN",
-	 "Find what package provides the given value", command_whatprovides},
+	 "Find what package provides the given value", command_whatprovides,
+	 NULL},
 	{"whatrequires", "PATTERN",
-	 "Find what package requires the given value", command_whatrequires},
+	 "Find what package requires the given value", command_whatrequires,
+	 NULL},
 	{"whatconflicts", "PATTERN",
 	 "Find what package conflicts the given value",
-	 command_whatconflicts},
+	 command_whatconflicts, NULL},
 	{"whatobsoletes", "PATTERN",
 	 "Find what package obsoletes the given value",
-	 command_whatobsoletes},
-	{"version", NO_USAGE, "Display version information", command_version},
-	{"help", "COMMAND", "Display a helpful usage message", command_help}
+	 command_whatobsoletes, NULL},
+	{"version", NO_USAGE, "Display version information", command_version,
+	 NULL},
+	{"help", "COMMAND", "Display a helpful usage message", command_help,
+	 NULL}
 };
+
+static void
+print_options (LowOption *options)
+{
+	LowOption *option;
+
+	for (option = options; option->type != OPTION_END; option++) {
+		if (option->short_name && option->long_name) {
+			printf ("  -%c, --%-14s", option->short_name,
+				option->long_name);
+		} else if (option->short_name) {
+			printf ("  -%-19c", option->short_name);
+		} else {
+			printf ("  --%-18s", option->long_name);
+		}
+
+		printf ("%s\n", option->help);
+	}
+
+}
 
 static void
 show_help (const char *command)
@@ -1790,6 +1815,11 @@ show_help (const char *command)
 			printf ("Usage: %s %s\n", commands[i].name,
 				commands[i].usage);
 			printf ("\n%s\n", commands[i].summary);
+
+			if (commands[i].options) {
+				printf ("Options:\n");
+				print_options (commands[i].options);
+			}
 		}
 	}
 }
@@ -1804,7 +1834,10 @@ usage (void)
 {
 	unsigned int i;
 
-	printf ("low: a yum-like package manager\n");
+	printf ("low: a yum-like package manager\n\n");
+	printf ("Top-level options:\n");
+	print_options (global_options);
+	printf ("\nAvailable commands:\n");
 	for (i = 0; i < ARRAY_SIZE (commands); i++) {
 		printf ("  %-20s%s\n", commands[i].name, commands[i].summary);
 	}
@@ -1816,23 +1849,17 @@ int
 main (int argc, const char *argv[])
 {
 	unsigned int i;
-	unsigned int consumed;
-	bool help = false;
-
-	LowOption options[] = {
-		{OPTION_BOOL, 'h', "help", &help, NULL, "Show command help"},
-		LOW_OPTION_END
-	};
+	int consumed;
 
 	argc--;
 	argv++;
 
-	consumed = low_parse_options (argc, argv, options);
+	consumed = low_parse_options (argc, argv, global_options);
 
 	argc -= consumed;
 	argv += consumed;
 
-	if (help || argc < 1) {
+	if (consumed < 0 || help || argc < 1) {
 		return usage ();
 	}
 
