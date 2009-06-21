@@ -31,11 +31,11 @@ struct arch_map_entry {
 };
 
 static struct arch_map_entry arch_map[] = {
-	{ ARCH_NOARCH, "noarch" },
-	{ ARCH_X86_64, "x86_64" },
-	{ ARCH_I386, "i386" },
-	{ ARCH_I586, "i586" },
-	{ ARCH_I686, "i686" }
+	{ARCH_NOARCH, "noarch"},
+	{ARCH_X86_64, "x86_64"},
+	{ARCH_I386, "i386"},
+	{ARCH_I586, "i586"},
+	{ARCH_I686, "i686"}
 };
 
 LowArch
