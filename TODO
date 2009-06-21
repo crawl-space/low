@@ -13,5 +13,4 @@
   to call both. Still provide the old ones though.
 - multilib and arch "colour" support
 - low check and/or low fix for installed package sanity
-- command line option parsing
 - remove dep on glib
