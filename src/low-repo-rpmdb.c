@@ -449,7 +449,6 @@ low_repo_rpmdb_search_details (LowRepo *repo, const char *querystr)
 	return (LowPackageIter *) iter;
 }
 
-/* XXX Duplicated */
 union rpm_entry {
 	void *p;
 	char *string;

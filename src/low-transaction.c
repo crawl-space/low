@@ -523,7 +523,6 @@ select_best_provides (LowTransaction *trans, LowPackage *pkg,
 	LowPackage *best = NULL;
 	LowPackageDependency *best_prov = NULL;
 
-	/* XXX this is duplicated in main.c */
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackageDependency **provides;
 		LowPackageDependency *new_prov;
