@@ -45,6 +45,7 @@
 #include "low-download.h"
 #include "low-mirror-list.h"
 #include "low-delta-parser.h"
+#include "low-parse-options.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -260,33 +261,34 @@ command_info (int argc, const char *argv[])
 	LowRepoSet *repos;
 	LowPackageIter *iter;
 	LowConfig *config;
-	char *name;
+	int consumed;
 	bool show_all = false;
 
-	/* XXX We might not want to ship with the show_all stuff; its ugly. */
-	if (argc == 2) {
-		/* XXX do option parsing */
-		show_all = true;
-		name = g_strdup (argv[1]);
-	} else {
-		name = g_strdup (argv[0]);
-	}
+	LowOption options[] = {
+		{OPTION_BOOL, 'a', "all", &show_all, NULL,
+			"Show all package info"},
+		LOW_OPTION_END
+	};
+
+	consumed = low_parse_options (argc, argv, options);
+
+	argc -= consumed;
+	argv += consumed;
 
 	repo_rpmdb = low_repo_rpmdb_initialize ();
 	config = low_config_initialize (repo_rpmdb);
 
-	iter = low_repo_rpmdb_list_by_name (repo_rpmdb, name);
+	iter = low_repo_rpmdb_list_by_name (repo_rpmdb, argv[0]);
 	print_all_packages (iter, show_all);
 
 	repos = low_repo_set_initialize_from_config (config, true);
 
-	iter = low_repo_set_list_by_name (repos, name);
+	iter = low_repo_set_list_by_name (repos, argv[0]);
 	print_all_packages (iter, show_all);
 
 	low_repo_set_free (repos);
 	low_config_free (config);
 	low_repo_rpmdb_shutdown (repo_rpmdb);
-	free (name);
 
 	return EXIT_SUCCESS;
 }
@@ -1271,7 +1273,19 @@ command_install (int argc, const char *argv[])
 	int i;
 	int res;
 	int counter = 0;
+	int consumed;
 	bool assume_yes = false;
+
+	LowOption options[] = {
+		{OPTION_BOOL, 'y', "assume-yes", &assume_yes, NULL,
+			"Assume yes for any questions"},
+		LOW_OPTION_END
+	};
+
+	consumed = low_parse_options (argc, argv, options);
+
+	argc -= consumed;
+	argv += consumed;
 
 	if (!initialize_repos (&repo_rpmdb, &repos)) {
 		return (EXIT_FAILURE);
@@ -1279,12 +1293,6 @@ command_install (int argc, const char *argv[])
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
-
-	if (argc > 0 && strcmp ("-y", argv[0]) == 0) {
-		assume_yes = true;
-		argc--;
-		argv++;
-	}
 
 	for (i = 0; i < argc; i++) {
 		LowPackage *pkg;
@@ -1335,7 +1343,19 @@ command_update (int argc, const char *argv[])
 	int i;
 	int res;
 	int counter = 0;
+	int consumed;
 	bool assume_yes = false;
+
+	LowOption options[] = {
+		{OPTION_BOOL, 'y', "assume-yes", &assume_yes, NULL,
+			"Assume yes for any questions"},
+		LOW_OPTION_END
+	};
+
+	consumed = low_parse_options (argc, argv, options);
+
+	argc -= consumed;
+	argv += consumed;
 
 	if (!initialize_repos (&repo_rpmdb, &repos)) {
 		return (EXIT_FAILURE);
@@ -1343,12 +1363,6 @@ command_update (int argc, const char *argv[])
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
-
-	if (argc > 0 && strcmp ("-y", argv[0]) == 0) {
-		assume_yes = true;
-		argc--;
-		argv++;
-	}
 
 	for (i = 0; i < argc; i++) {
 		LowPackageDependency *provides =
@@ -1393,7 +1407,19 @@ command_remove (int argc, const char *argv[])
 	int i;
 	int res;
 	int counter = 0;
+	int consumed;
 	bool assume_yes = false;
+
+	LowOption options[] = {
+		{OPTION_BOOL, 'y', "assume-yes", &assume_yes, NULL,
+			"Assume yes for any questions"},
+		LOW_OPTION_END
+	};
+
+	consumed = low_parse_options (argc, argv, options);
+
+	argc -= consumed;
+	argv += consumed;
 
 	if (!initialize_repos (&repo_rpmdb, &repos)) {
 		return (EXIT_FAILURE);
@@ -1401,12 +1427,6 @@ command_remove (int argc, const char *argv[])
 
 	trans = low_transaction_new (repo_rpmdb, repos, transaction_callback,
 				     &counter);
-
-	if (argc > 0 && strcmp ("-y", argv[0]) == 0) {
-		assume_yes = true;
-		argc--;
-		argv++;
-	}
 
 	for (i = 0; i < argc; i++) {
 		LowPackageDependency *provides =
@@ -1796,19 +1816,34 @@ int
 main (int argc, const char *argv[])
 {
 	unsigned int i;
+	unsigned int consumed;
+	bool help = false;
 
-	if (argc < 2) {
+	LowOption options[] = {
+		{OPTION_BOOL, 'h', "help", &help, NULL, "Show command help"},
+		LOW_OPTION_END
+	};
+
+	argc--;
+	argv++;
+
+	consumed = low_parse_options (argc, argv, options);
+
+	argc -= consumed;
+	argv += consumed;
+
+	if (help || argc < 1) {
 		return usage ();
 	}
 
 	low_debug_init ();
 
 	for (i = 0; i < ARRAY_SIZE (commands); i++) {
-		if (!strcmp (argv[1], commands[i].name)) {
-			return commands[i].func (argc - 2, argv + 2);
+		if (!strcmp (argv[0], commands[i].name)) {
+			return commands[i].func (argc - 1, argv + 1);
 		}
 	}
-	printf ("Unknown command: %s\n", argv[1]);
+	printf ("Unknown command: %s\n", argv[0]);
 
 	return usage ();
 }

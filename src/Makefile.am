@@ -55,6 +55,8 @@ low_SOURCES = \
 	low-delta-parser.c \
 	low-arch.h \
 	low-arch.c \
+	low-parse-options.h \
+	low-parse-options.c \
 	main.c \
 	$(NULL)
 
