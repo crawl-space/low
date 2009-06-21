@@ -1684,9 +1684,11 @@ command_version (int argc G_GNUC_UNUSED, const char **argv G_GNUC_UNUSED)
 }
 
 bool help = false;
+bool version = false;
 
 LowOption global_options[] = {
 	{OPTION_BOOL, 'h', "help", &help, NULL, "Show command help"},
+	{OPTION_BOOL, 0, "version", &version, NULL, "Show program version"},
 	LOW_OPTION_END
 };
 
@@ -1834,6 +1836,10 @@ main (int argc, const char *argv[])
 
 	argc -= consumed;
 	argv += consumed;
+
+	if (version) {
+		return command_version (argc, argv);
+	}
 
 	if (consumed < 0 || help || argc < 1) {
 		return usage ();
