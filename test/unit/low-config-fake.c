@@ -20,6 +20,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include "low-config-fake.h"
 
 /**
@@ -41,8 +42,8 @@ char **
 low_config_get_repo_names (LowConfig *config G_GNUC_UNUSED)
 {
 	static char *names[3];
-	names[0] = g_strdup ("test1");
-	names[1] = g_strdup ("test2");
+	names[0] = strdup ("test1");
+	names[1] = strdup ("test2");
 	names[2] = NULL;
 
 	return names;
@@ -53,7 +54,7 @@ low_config_get_string (LowConfig *config G_GNUC_UNUSED,
 		       const char *group G_GNUC_UNUSED,
 		       const char *key G_GNUC_UNUSED)
 {
-	return g_strdup ("test string");
+	return strdup ("test string");
 }
 
 bool

@@ -857,14 +857,13 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	LowRepo *repo_rpmdb;
 	LowRepoSet *repos;
 	LowPackageIter *iter;
-	char *name = g_strdup (argv[0]);
 	int found_pkg;
 
 	if (!initialize_repos (&repo_rpmdb, &repos)) {
 		return EXIT_FAILURE;
 	}
 
-	iter = low_repo_set_list_by_name (repos, name);
+	iter = low_repo_set_list_by_name (repos, argv[0]);
 	found_pkg = 0;
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		LowPackage *pkg = iter->pkg;
@@ -876,13 +875,12 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	}
 
 	if (!found_pkg) {
-		printf ("No such package: %s", name);
+		printf ("No such package: %s", argv[0]);
 		return EXIT_FAILURE;
 	}
 
 	low_repo_set_free (repos);
 	low_repo_rpmdb_shutdown (repo_rpmdb);
-	free (name);
 
 	return EXIT_SUCCESS;
 }
@@ -1133,7 +1131,7 @@ low_show_rpm_progress (const void *arg, const rpmCallbackType what,
 		case RPMCALLBACK_TRANS_START:
 			if (verbose) {
 				callback->state = CALLBACK_PREPARE;
-				callback->name = g_strdup ("Preparing...");
+				callback->name = strdup ("Preparing...");
 				callback->total_rpms = total;
 				callback->current_rpm = 0;
 			}
@@ -1225,7 +1223,7 @@ static LowPackage *
 select_package_for_install (LowPackageIter *iter)
 {
 	LowPackage *best = NULL;
-	char *best_evr = g_strdup ("");
+	char *best_evr = strdup ("");
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
 		char *new_evr = low_package_evr_as_string (iter->pkg);

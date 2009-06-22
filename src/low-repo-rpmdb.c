@@ -60,8 +60,8 @@ low_repo_rpmdb_initialize (void)
 {
 	LowRepoRpmdb *repo = malloc (sizeof (LowRepoRpmdb));
 
-	repo->super.id = g_strdup ("installed");
-	repo->super.name = g_strdup ("Installed Packages");
+	repo->super.id = strdup ("installed");
+	repo->super.name = strdup ("Installed Packages");
 	repo->super.enabled = true;
 
 	rpmReadConfigFiles (NULL, NULL);
@@ -550,10 +550,10 @@ low_rpmdb_package_get_details (LowPackage *pkg)
 	headerGet (header, RPMTAG_URL, url, HEADERGET_MINMEM);
 	headerGet (header, RPMTAG_LICENSE, license, HEADERGET_MINMEM);
 
-	details->summary = g_strdup (summary->data);
-	details->description = g_strdup (description->data);
-	details->url = g_strdup (url->data);
-	details->license = g_strdup (license->data);
+	details->summary = strdup (summary->data);
+	details->description = strdup (description->data);
+	details->url = url->data ? strdup (url->data) : NULL;
+	details->license = strdup (license->data);
 
 	rpmtdFreeData (summary);
 	rpmtdFreeData (description);

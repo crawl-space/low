@@ -55,7 +55,7 @@ static void
 parse_string (SyckNode *node)
 {
 	g_hash_table_insert (symbols, GINT_TO_POINTER (node->id),
-			     g_strdup (node->data.str->ptr));
+			     strdup (node->data.str->ptr));
 }
 
 static void
@@ -231,10 +231,10 @@ parse_evr (const char *evr, char **epoch, char **version, char **release)
 	didx = rindex (evr, '-');
 
 	if (didx == NULL) {
-		*version = g_strdup (cidx + 1);
+		*version = strdup (cidx + 1);
 	} else {
 		*version = g_strndup (cidx + 1, didx - (cidx + 1));
-		*release = g_strdup (didx + 1);
+		*release = strdup (didx + 1);
 	}
 }
 

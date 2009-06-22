@@ -129,7 +129,7 @@ low_fake_repo_list_by_name (LowRepo *repo, const char *name)
 
 	iter->position = 0;
 	iter->func = low_fake_repo_list_by_name_filter_fn;
-	iter->data = g_strdup (name);
+	iter->data = strdup (name);
 
 	return (LowPackageIter *) iter;
 }
@@ -305,7 +305,7 @@ low_fake_repo_search_files (LowRepo *repo, const char *file)
 
 	iter->position = 0;
 	iter->func = low_fake_repo_search_files_filter_fn;
-	iter->data = g_strdup (file);
+	iter->data = strdup (file);
 
 	return (LowPackageIter *) iter;
 }

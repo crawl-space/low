@@ -129,7 +129,7 @@ low_config_replace_single_macro (const char *rawstr, const char *key,
 		replaced = g_strjoinv (value, parts);
 		g_strfreev (parts);
 	} else {
-		replaced = g_strdup (rawstr);
+		replaced = strdup (rawstr);
 	}
 
 	return replaced;

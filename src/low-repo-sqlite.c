@@ -120,6 +120,16 @@ typedef void (*sqlFinal) (sqlite3_context *);
 
 #define LOCAL_CACHE "/var/cache/yum"
 
+static char *
+xstrdup (const char *in)
+{
+	if (in == NULL) {
+		return NULL;
+	}
+
+	return strdup (in);
+}
+
 LowRepo *
 low_repo_sqlite_initialize (const char *id, const char *name,
 			    const char *baseurl, const char *mirror_list,
@@ -206,10 +216,10 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 	repo->obsoletes = NULL;
 	repo->mirrors = NULL;
 
-	repo->super.id = g_strdup (id);
-	repo->super.name = g_strdup (name);
-	repo->super.baseurl = g_strdup (baseurl);
-	repo->super.mirror_list = g_strdup (mirror_list);
+	repo->super.id = strdup (id);
+	repo->super.name = strdup (name);
+	repo->super.baseurl = xstrdup (baseurl);
+	repo->super.mirror_list = xstrdup (mirror_list);
 	repo->super.enabled = enabled;
 
 	low_repomd_free (repomd);
@@ -563,7 +573,7 @@ build_evr (const unsigned char *epoch, const unsigned char *version,
 	} else if (version && release) {
 		evr = g_strdup_printf ("%s-%s", version, release);
 	} else {
-		evr = g_strdup ((const char *) version);
+		evr = xstrdup ((const char *) version);
 	}
 
 	return evr;
@@ -575,7 +585,7 @@ add_dep_to_hash (GHashTable *table, const char *dep_name, int pkg_id)
 	GSList *deps = g_hash_table_lookup (table, dep_name);
 	deps = g_slist_prepend (deps, GINT_TO_POINTER (pkg_id));
 
-	g_hash_table_replace (table, g_strdup (dep_name), deps);
+	g_hash_table_replace (table, strdup (dep_name), deps);
 }
 
 static void
@@ -619,7 +629,7 @@ low_repo_sqlite_search_obsoletes (LowRepo *repo,
 	obs = g_hash_table_lookup (repo_sqlite->obsoletes, obsoletes->name);
 	if (obs == NULL) {
 		/* Just an ID we don't find */
-		tmp = g_strdup ("-1);");
+		tmp = strdup ("-1);");
 	} else {
 		char *tmp2;
 		tmp = g_strdup_printf ("%d", GPOINTER_TO_INT (obs->data));
@@ -841,7 +851,7 @@ low_sqlite_package_get_details (LowPackage *pkg)
 		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
 
 	details->url =
-		g_strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
 	details->license =
 		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
 

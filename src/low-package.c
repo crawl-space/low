@@ -187,12 +187,12 @@ low_package_dependency_new_from_string (const char *depstr)
 	for (length = 0; split[length] != NULL; length++) ;
 
 	if (length == 3) {
-		dep->name = g_strdup (split[0]);
+		dep->name = strdup (split[0]);
 		dep->sense =
 			low_package_dependency_sense_from_string (split[1]);
-		dep->evr = g_strdup (split[2]);
+		dep->evr = strdup (split[2]);
 	} else if (length == 1) {
-		dep->name = g_strdup (split[0]);
+		dep->name = strdup (split[0]);
 		dep->sense = DEPENDENCY_SENSE_NONE;
 		dep->evr = NULL;
 	} else {
