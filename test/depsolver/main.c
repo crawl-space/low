@@ -225,7 +225,7 @@ parse_evr (const char *evr, char **epoch, char **version, char **release)
 		*epoch = NULL;
 		cidx = evr - 1;
 	} else {
-		*epoch = g_strndup (evr, cidx - evr);
+		*epoch = strndup (evr, cidx - evr);
 	}
 
 	didx = rindex (evr, '-');
@@ -233,7 +233,7 @@ parse_evr (const char *evr, char **epoch, char **version, char **release)
 	if (didx == NULL) {
 		*version = strdup (cidx + 1);
 	} else {
-		*version = g_strndup (cidx + 1, didx - (cidx + 1));
+		*version = strndup (cidx + 1, didx - (cidx + 1));
 		*release = strdup (didx + 1);
 	}
 }

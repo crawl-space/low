@@ -690,7 +690,7 @@ low_repo_sqlite_search_filelists_files (LowRepo *repo, const char *file)
 
 	char *slash = rindex (file, '/');
 	char *filename = g_strdup_printf ("(^|/)%s(/|$)", (char *) (slash + 1));
-	char *dirname = g_strndup (file, slash - file);
+	char *dirname = strndup (file, slash - file);
 
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;
 	LowPackageIterSqlite *iter = low_package_iter_sqlite_new (repo);
