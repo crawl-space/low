@@ -192,7 +192,8 @@ low_package_rpmdb_new_from_header (Header header, LowRepo *repo)
 
 	pkg = malloc (sizeof (LowPackage));
 
-	pkg->id = g_memdup (id->data, 16);
+	pkg->id = malloc (sizeof (char) * 16);
+	pkg->id = memcpy (pkg->id, id->data, 16);
 
 	g_hash_table_insert (repo_rpmdb->table, pkg->id, pkg);
 	low_package_ref_init (pkg);
