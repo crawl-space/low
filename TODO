@@ -1,6 +1,5 @@
 - Anything from the output of 'make todo'
 - Find another ini parser.
-- make targets for code style.
 - test info description word wrapping.
 - all of yum's macro substitution for config files
 - doxygen code documentation
