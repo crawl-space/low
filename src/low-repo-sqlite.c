@@ -688,7 +688,7 @@ low_repo_sqlite_search_filelists_files (LowRepo *repo, const char *file)
 			   "AND f.dirname = :dir "
 			   "AND f.filenames REGEXP :file";
 
-	char *slash = g_strrstr (file, "/");
+	char *slash = rindex (file, '/');
 	char *filename = g_strdup_printf ("(^|/)%s(/|$)", (char *) (slash + 1));
 	char *dirname = g_strndup (file, slash - file);
 
