@@ -681,6 +681,18 @@ create_package_filepath (LowPackage *pkg)
 }
 
 static int
+digit_count (int num)
+{
+	int i = 1;
+
+	while ((num /= 10) > 0) {
+		i++;
+	}
+
+	return i;
+}
+
+static int
 download_callback (void *clientp, double dltotal, double dlnow,
 		   double ultotal G_GNUC_UNUSED, double ulnow G_GNUC_UNUSED)
 {
@@ -696,7 +708,8 @@ download_callback (void *clientp, double dltotal, double dlnow,
 	printf ("\rdownloading %s, ", file);
 
 	if (tmp_total < 1023) {
-		printf ("%.0fB/%.0fB", tmp_now, tmp_total);
+		printf ("%*.0fB/%.0fB", digit_count (tmp_total), tmp_now,
+			tmp_total);
 		fflush (stdout);
 		return 0;
 	}
@@ -704,7 +717,8 @@ download_callback (void *clientp, double dltotal, double dlnow,
 	tmp_now /= 1024;
 	tmp_total /= 1024;
 	if (tmp_total < 1023) {
-		printf ("%.1fKB/%.1fKB", tmp_now, tmp_total);
+		printf ("%*.1fKB/%.1fKB", digit_count (tmp_total) + 1, tmp_now,
+			tmp_total);
 		fflush (stdout);
 		return 0;
 	}
@@ -712,14 +726,16 @@ download_callback (void *clientp, double dltotal, double dlnow,
 	tmp_now /= 1024;
 	tmp_total /= 1024;
 	if (tmp_total < 1023) {
-		printf ("%.1fMB/%.1fMB", tmp_now, tmp_total);
+		printf ("%*.1fMB/%.1fMB", digit_count (tmp_total) + 1, tmp_now,
+			tmp_total);
 		fflush (stdout);
 		return 0;
 	}
 
 	tmp_now /= 1024;
 	tmp_total /= 1024;
-	printf ("%.1fGB/%.1fGB", tmp_now, tmp_total);
+	printf ("%*.1fGB/%.1fGB", digit_count(tmp_total) + 1, tmp_now,
+		tmp_total);
 	fflush (stdout);
 	return 0;
 }
@@ -1038,18 +1054,6 @@ typedef struct _CallbackData {
 	int current_rpm;
 	CallbackState state;
 } CallbackData;
-
-static int
-digit_count (int num)
-{
-	int i = 1;
-
-	while ((num /= 10) > 0) {
-		i++;
-	}
-
-	return i;
-}
 
 static void
 printHash (int part, int total, CallbackData *data)
