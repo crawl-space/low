@@ -874,6 +874,7 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	LowRepoSet *repos;
 	LowPackageIter *iter;
 	int found_pkg;
+	int ret = EXIT_SUCCESS;
 
 	if (!initialize_repos (&repo_rpmdb, &repos)) {
 		return EXIT_FAILURE;
@@ -891,14 +892,14 @@ command_download (int argc G_GNUC_UNUSED, const char *argv[])
 	}
 
 	if (!found_pkg) {
-		printf ("No such package: %s", argv[0]);
-		return EXIT_FAILURE;
+		printf ("No such package: %s\n", argv[0]);
+		ret = EXIT_FAILURE;
 	}
 
 	low_repo_set_free (repos);
 	low_repo_rpmdb_shutdown (repo_rpmdb);
 
-	return EXIT_SUCCESS;
+	return ret;
 }
 
 static void
