@@ -1039,23 +1039,40 @@ typedef struct _CallbackData {
 	CallbackState state;
 } CallbackData;
 
+static int
+digit_count (int num)
+{
+	int i = 1;
+
+	while ((num /= 10) > 0) {
+		i++;
+	}
+
+	return i;
+}
+
 static void
 printHash (int part, int total, CallbackData *data)
 {
+	int num_digits = digit_count (data->total_rpms);
+
 	if (data->state == CALLBACK_INSTALL) {
-		printf ("\r(%d/%d) Installing ", data->current_rpm,
-			data->total_rpms);
+		printf ("\r(%*d/%d) Installing ", num_digits,
+			data->current_rpm, data->total_rpms);
 	} else if (data->state == CALLBACK_REMOVE) {
-		printf ("\r(%d/%d) Removing ", data->current_rpm,
-			data->total_rpms);
+		printf ("\r(%*d/%d) Removing   ", num_digits,
+			data->current_rpm, data->total_rpms);
 	} else {
 		printf ("\r");
 	}
-	printf ("%s %d%%", data->name, part * 100 / total);
-	if (part == total)
-		printf ("\n");
 
-	(void) fflush (stdout);
+	printf ("%s %3d%%", data->name, part * 100 / total);
+
+	if (part == total) {
+		printf ("\n");
+	}
+
+	fflush (stdout);
 }
 
 static void *
