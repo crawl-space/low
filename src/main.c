@@ -717,7 +717,7 @@ download_callback (void *clientp, double dltotal, double dlnow,
 	tmp_now /= 1024;
 	tmp_total /= 1024;
 	if (tmp_total < 1023) {
-		printf ("%*.1fKB/%.1fKB", digit_count (tmp_total) + 1, tmp_now,
+		printf ("%*.1fKB/%.1fKB", digit_count (tmp_total) + 2, tmp_now,
 			tmp_total);
 		fflush (stdout);
 		return 0;
@@ -726,7 +726,7 @@ download_callback (void *clientp, double dltotal, double dlnow,
 	tmp_now /= 1024;
 	tmp_total /= 1024;
 	if (tmp_total < 1023) {
-		printf ("%*.1fMB/%.1fMB", digit_count (tmp_total) + 1, tmp_now,
+		printf ("%*.1fMB/%.1fMB", digit_count (tmp_total) + 2, tmp_now,
 			tmp_total);
 		fflush (stdout);
 		return 0;
@@ -734,7 +734,7 @@ download_callback (void *clientp, double dltotal, double dlnow,
 
 	tmp_now /= 1024;
 	tmp_total /= 1024;
-	printf ("%*.1fGB/%.1fGB", digit_count(tmp_total) + 1, tmp_now,
+	printf ("%*.1fGB/%.1fGB", digit_count(tmp_total) + 2, tmp_now,
 		tmp_total);
 	fflush (stdout);
 	return 0;
