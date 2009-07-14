@@ -1234,7 +1234,11 @@ run_transaction (LowTransaction *trans, bool assume_yes)
 
 		rc = rpmtsRun (ts, NULL, RPMPROB_FILTER_NONE);
 		if (rc != 0) {
+			rpmps problems = rpmtsProblems (ts);
+
 			printf ("Error running transaction\n");
+			/* XXX probably should print the error stuff ourselves */
+			rpmpsPrint (stdout, problems);
 		}
 
 		rpmtsFree (ts);
