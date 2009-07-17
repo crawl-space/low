@@ -1,0 +1,20 @@
+test: A package update also obsoletes another installed pkg
+
+installed:
+    - package: { name: gstreamer-plugins-good, evr: 0:0.3.0-1, arch: i386 }
+    - package: { name: gstreamer-plugins-farsight, evr: 0:0.8.0-1, arch: i386 }
+
+available:
+    - package: { name: gstreamer-plugins-good, evr: 0:0.4.0-1, arch: i386 }
+      obsoletes: [ gstreamer-plugins-farsight <= 0.8.0-1 ]
+      provides: [ gstreamer-plugins-farsight = 0.8.1-1 ]
+
+transaction:
+    - update: { name: gstreamer-plugins-good }
+    - update: { name: gstreamer-plugins-farsight }
+
+results:
+    - update: { name: gstreamer-plugins-good, evr: 0:0.4.0-1, arch: i386 }
+    - updated: { name: gstreamer-plugins-good, evr: 0:0.3.0-1, arch: i386 }
+    - updated: { name: gstreamer-plugins-farsight, evr: 0:0.8.0-1, arch: i386 }
+

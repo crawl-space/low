@@ -243,43 +243,101 @@ low_transaction_add_install (LowTransaction *trans, LowPackage *pkg)
 	}
 }
 
-static LowPackage *
-low_transaction_search_iter_for_update (LowPackage *to_update,
-					LowPackageIter *iter)
+static LowPackageDependency *
+low_transaction_find_provides_in_deplist (const LowPackageDependency *needle,
+					  LowPackageDependency **haystack)
 {
-	LowPackage *best = to_update;
-	char *best_evr = low_package_evr_as_string (to_update);
+	int i;
+
+	for (i = 0; haystack[i] != NULL; i++) {
+		if (low_package_dependency_satisfies (needle, haystack[i])) {
+			return haystack[i];
+		}
+	}
+
+	return NULL;
+}
+
+static bool
+low_transaction_is_installing (LowTransaction *trans, LowPackage *pkg)
+{
+	return low_transaction_is_pkg_in_hash (trans->install, pkg) ||
+		low_transaction_is_pkg_in_hash (trans->update, pkg);
+}
+
+static bool
+low_transaction_is_removing (LowTransaction *trans, LowPackage *pkg)
+{
+	return low_transaction_is_pkg_in_hash (trans->updated, pkg) ||
+		low_transaction_is_pkg_in_hash (trans->remove, pkg);
+}
+
+static LowPackage *
+low_transaction_search_iter_for_update (LowTransaction *trans, LowPackage *pkg,
+					LowPackageIter *iter,
+					LowPackageDependency *requires)
+{
+	LowPackage *best = pkg;
+	LowPackageDependency *best_prov;
+	LowPackageDependency **best_provides;
+
+	best_provides = low_package_get_provides (pkg);
+	best_prov = low_transaction_find_provides_in_deplist (requires,
+							      best_provides);
 
 	while (iter = low_package_iter_next (iter), iter != NULL) {
-		char *new_evr = low_package_evr_as_string (iter->pkg);
-		int cmp = low_util_evr_cmp (new_evr, best_evr);
+		LowPackageDependency **provides;
+		LowPackageDependency *new_prov;
+		int cmp;
 
-		/* XXX arch cmp here has to be better */
-		if ((cmp > 0 && low_arch_is_compatible (to_update->arch,
-							iter->pkg->arch)) ||
-		    (cmp == 0 &&
-		     low_arch_choose_best (to_update->arch, best->arch,
-					   iter->pkg->arch) < 0)) {
-			low_package_unref (best);
+		if (low_transaction_is_removing (trans, iter->pkg)) {
+			low_package_unref (iter->pkg);
+			continue;
+		}
+
+		if (low_transaction_is_installing (trans, iter->pkg)) {
+			/* If its already picked, we can't get any better. */
 			best = iter->pkg;
+			low_package_iter_free (iter);
+			break;
+		}
 
-			free (best_evr);
-			best_evr = new_evr;
+		provides = low_package_get_provides (iter->pkg);
+		new_prov = low_transaction_find_provides_in_deplist (requires,
+								     provides);
+
+		if (new_prov == NULL) {
+			continue;
+		}
+
+		cmp = low_package_dependency_cmp (new_prov, best_prov);
+
+		if (((cmp > 0 &&
+		      low_arch_is_compatible (pkg->arch, iter->pkg->arch)) ||
+		    (cmp == 0 &&
+		     low_arch_choose_best (pkg->arch, best->arch,
+					   iter->pkg->arch) < 0) ||
+		    (cmp == 0 &&
+		     low_arch_is_compatible (best->arch, iter->pkg->arch) &&
+		     strcmp (best->name, iter->pkg->name) > 0))) {
+			if (best) {
+				low_package_unref (best);
+			}
+
+			best = iter->pkg;
+			best_prov = new_prov;
 		} else {
 			low_package_unref (iter->pkg);
-			free (new_evr);
 		}
 
 	}
-
-	free (best_evr);
 
 	return best;
 }
 
 static LowPackage *
-choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
-			LowPackage *to_update)
+choose_best_for_update (LowTransaction *trans, LowRepo *repo_rpmdb,
+						LowRepoSet *repos, LowPackage *to_update)
 {
 	LowPackage *best = to_update;
 	LowPackageIter *iter;
@@ -288,16 +346,18 @@ choose_best_for_update (LowRepo *repo_rpmdb, LowRepoSet *repos,
 
 	LowPackageDependency *obsoletes =
 		low_package_dependency_new (to_update->name,
-					    DEPENDENCY_SENSE_EQ,
+					    DEPENDENCY_SENSE_GE,
 					    best_evr);
 
 	free (best_evr);
 
 	iter = low_repo_set_list_by_name (repos, to_update->name);
-	best = low_transaction_search_iter_for_update (best, iter);
+	best = low_transaction_search_iter_for_update (trans, best, iter,
+												   obsoletes);
 
 	iter = low_repo_set_search_obsoletes (repos, obsoletes);
-	best = low_transaction_search_iter_for_update (best, iter);
+	best = low_transaction_search_iter_for_update (trans, best, iter,
+												   obsoletes);
 
 	low_package_dependency_free (obsoletes);
 
@@ -354,6 +414,10 @@ add_update_worker (LowTransaction *trans, LowPackage *to_update,
 	} else {
 		low_debug_pkg ("Not adding already added pkg for update",
 			       updating_to);
+		/* Still mark as being updated, for multiple obsoletes */
+		low_transaction_add_to_hash (trans->updated, to_update,
+					     updating_to);
+
 		return false;
 	}
 }
@@ -361,7 +425,7 @@ add_update_worker (LowTransaction *trans, LowPackage *to_update,
 bool
 low_transaction_add_update (LowTransaction *trans, LowPackage *pkg)
 {
-	LowPackage *updating_to = choose_best_for_update (trans->rpmdb,
+	LowPackage *updating_to = choose_best_for_update (trans, trans->rpmdb,
 							  trans->repos, pkg);
 
 	if (updating_to == NULL) {
@@ -483,35 +547,6 @@ low_transaction_dep_in_filelist (const char *needle, char **haystack)
 	}
 
 	return false;
-}
-
-static LowPackageDependency *
-low_transaction_find_provides_in_deplist (const LowPackageDependency *needle,
-					  LowPackageDependency **haystack)
-{
-	int i;
-
-	for (i = 0; haystack[i] != NULL; i++) {
-		if (low_package_dependency_satisfies (needle, haystack[i])) {
-			return haystack[i];
-		}
-	}
-
-	return NULL;
-}
-
-static bool
-low_transaction_is_installing (LowTransaction *trans, LowPackage *pkg)
-{
-	return low_transaction_is_pkg_in_hash (trans->install, pkg) ||
-		low_transaction_is_pkg_in_hash (trans->update, pkg);
-}
-
-static bool
-low_transaction_is_removing (LowTransaction *trans, LowPackage *pkg)
-{
-	return low_transaction_is_pkg_in_hash (trans->updated, pkg) ||
-		low_transaction_is_pkg_in_hash (trans->remove, pkg);
 }
 
 static LowTransactionStatus
