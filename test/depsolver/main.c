@@ -489,6 +489,7 @@ compare_results (LowTransactionResult trans_res, LowTransaction *trans,
 	int res;
 
 	unsigned int expected_updates = 0;
+	unsigned int expected_updated = 0;
 	unsigned int expected_installs = 0;
 	unsigned int expected_removals = 0;
 	unsigned int expected_unresolved = 0;
@@ -501,6 +502,10 @@ compare_results (LowTransactionResult trans_res, LowTransaction *trans,
 		if (!strcmp (op, "update")) {
 			expected_updates++;
 			res = assert_package (trans->update,
+					      g_hash_table_lookup (table, op));
+		} else if (!strcmp (op, "updated")) {
+			expected_updated++;
+			res = assert_package (trans->updated,
 					      g_hash_table_lookup (table, op));
 		} else if (!strcmp (op, "install")) {
 			expected_installs++;
@@ -536,13 +541,20 @@ compare_results (LowTransactionResult trans_res, LowTransaction *trans,
 		printf ("Unexpected number of packages marked for update\n");
 		return 1;
 	}
+	/* XXX updated is optional. this is ugly */
+	if (expected_updated > 0 &&
+	    expected_updated != g_hash_table_size (trans->updated)) {
+		printf ("Unexpected number of packages marked to be updated\n");
+		return 1;
+	}
 
 	if (trans_res == LOW_TRANSACTION_OK && expected_unresolved != 0) {
 		printf ("Expected transaction to fail but it succeeded\n");
 		return 1;
 	}
 	if (trans_res == LOW_TRANSACTION_UNRESOLVED && expected_installs != 0
-	    && expected_removals != 0 && expected_updates != 0) {
+	    && expected_removals != 0 && expected_updates != 0
+	    && expected_updated != 0) {
 		return 1;
 	}
 
