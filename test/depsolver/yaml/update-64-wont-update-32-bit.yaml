@@ -1,0 +1,20 @@
+test: A 64 bit package should not update a 32 bit package
+
+installed:
+    - package: { name: bash, evr: 0:0.3.0-1, arch: i586 }
+    - package: { name: bash, evr: 0:0.3.0-1, arch: x86_64 }
+
+available:
+    - package: { name: bash, evr: 0:0.4.0-1, arch: x86_64 }
+    - package: { name: bash, evr: 0:0.4.0-1, arch: i586 }
+
+transaction:
+    - update: { name: bash, arch: x86_64 }
+    - update: { name: bash, arch: i586 }
+
+results:
+    - update: { name: bash, evr: 0:0.4.0-1, arch: x86_64 }
+    - update: { name: bash, evr: 0:0.4.0-1, arch: i586 }
+    - updated: { name: bash, evr: 0:0.3.0-1, arch: i586 }
+    - updated: { name: bash, evr: 0:0.3.0-1, arch: x86_64 }
+

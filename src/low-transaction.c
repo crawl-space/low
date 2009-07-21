@@ -295,7 +295,8 @@ low_transaction_search_iter_for_update (LowTransaction *trans, LowPackage *pkg,
 			continue;
 		}
 
-		if (low_transaction_is_installing (trans, iter->pkg)) {
+		if (low_transaction_is_installing (trans, iter->pkg) &&
+		    low_arch_is_compatible (pkg->arch, iter->pkg->arch)) {
 			/* If its already picked, we can't get any better. */
 			best = iter->pkg;
 			low_package_iter_free (iter);
