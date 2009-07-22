@@ -32,7 +32,7 @@ function run_test {
     let TOTAL=$TOTAL+1
 
     printf "Testing '$1'... "
-    `./test_depsolver $DIRNAME/yaml/$1 > /dev/null`
+    `./test_depsolver $DIRNAME/yaml/$2/$1 > /dev/null`
     if (($?)); then
         printf "\E[31mFAIL\n"
         PASSED=0
@@ -43,10 +43,11 @@ function run_test {
     tput sgr0
 }
 
-for test_file in $( ls $DIRNAME/yaml ); do
-    run_test $test_file
+for test_suite in $( ls $DIRNAME/yaml ); do
+    for test_file in $( ls $DIRNAME/yaml/$test_suite ); do
+        run_test $test_file $test_suite
+    done
 done
-
 echo "$TOTAL tests run, $[ $TOTAL - $NUM_PASSED ] failures"
 
 if (($PASSED)); then
