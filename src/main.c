@@ -692,6 +692,18 @@ digit_count (int num)
 	return i;
 }
 
+#define TERM_WIDTH 80
+
+static void
+print_file (const char *file, uint size_chars)
+{
+	if (strlen (file) + size_chars + 12 > TERM_WIDTH) {
+		printf ("%.*s...", TERM_WIDTH - (size_chars + 12 + 3), file);
+	} else {
+		printf ("%-*s", TERM_WIDTH - (size_chars + 12), file);
+	}
+}
+
 static int
 download_callback (void *clientp, double dltotal, double dlnow,
 		   double ultotal G_GNUC_UNUSED, double ulnow G_GNUC_UNUSED)
@@ -701,15 +713,18 @@ download_callback (void *clientp, double dltotal, double dlnow,
 	float tmp_now = dlnow;
 	float tmp_total = dltotal;
 
+	uint digits;
+
 	if (dlnow > dltotal || dltotal == 0) {
 		return 0;
 	}
 
-	printf ("\rdownloading %s, ", file);
+	fputs ("\rdownloading ", stdout);
 
 	if (tmp_total < 1023) {
-		printf ("%*.0fB/%.0fB", digit_count (tmp_total), tmp_now,
-			tmp_total);
+		digits = digit_count (tmp_total);
+		print_file (file, 2 * digits + 4);
+		printf (" %*.0fB/%.0fB", digits, tmp_now, tmp_total);
 		fflush (stdout);
 		return 0;
 	}
@@ -717,8 +732,9 @@ download_callback (void *clientp, double dltotal, double dlnow,
 	tmp_now /= 1024;
 	tmp_total /= 1024;
 	if (tmp_total < 1023) {
-		printf ("%*.1fKB/%.1fKB", digit_count (tmp_total) + 2, tmp_now,
-			tmp_total);
+		digits = digit_count (tmp_total) + 2;
+		print_file (file, 2 * digits + 6);
+		printf (" %*.1fKB/%.1fKB", digits, tmp_now, tmp_total);
 		fflush (stdout);
 		return 0;
 	}
@@ -726,16 +742,18 @@ download_callback (void *clientp, double dltotal, double dlnow,
 	tmp_now /= 1024;
 	tmp_total /= 1024;
 	if (tmp_total < 1023) {
-		printf ("%*.1fMB/%.1fMB", digit_count (tmp_total) + 2, tmp_now,
-			tmp_total);
+		digits = digit_count (tmp_total) + 2;
+		print_file (file, 2 * digits + 6);
+		printf (" %*.1fMB/%.1fMB", digits, tmp_now, tmp_total);
 		fflush (stdout);
 		return 0;
 	}
 
 	tmp_now /= 1024;
 	tmp_total /= 1024;
-	printf ("%*.1fGB/%.1fGB", digit_count(tmp_total) + 2, tmp_now,
-		tmp_total);
+	digits = digit_count (tmp_total) + 2;
+	print_file (file, 2 * digits + 6);
+	printf (" %*.1fGB/%.1fGB", digits, tmp_now, tmp_total);
 	fflush (stdout);
 	return 0;
 }
