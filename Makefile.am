@@ -17,16 +17,16 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #  02110-1301  USA
 
-SUBDIRS = doxygen src test
+SUBDIRS = src test
 EXTRA_DIST = HACKING low.spec low-completion.bash
 
 .PHONY: doxygen
 
-doxygen:
-	$(MAKE) -C doxygen doxygen
+doxygen: doxygen/doxygen.conf
+	doxygen $<
 
-view-docs: doxygen
-	xdg-open doxygen/html/index.html
+clean-local:
+	-rm -rf doxygen/html
 
 # Automatically convert trailing spaces, as found in 'trailinglint'
 eolspace:
