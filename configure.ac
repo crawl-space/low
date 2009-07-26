@@ -240,7 +240,6 @@ AC_OUTPUT([
 low.spec
 Makefile
 doxygen/doxygen.conf
-test/Makefile
 shave/shave
 shave/shave-libtool
 ])

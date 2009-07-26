@@ -19,7 +19,6 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-SUBDIRS = test
 EXTRA_DIST = HACKING low.spec low-completion.bash
 
 .PHONY: doxygen
@@ -131,3 +130,71 @@ src_low_LDADD = \
 	$(Z_LIBS) \
 	$(NSS_LIBS) \
 	$(NULL)
+
+TESTS =
+noinst_PROGRAMS =
+
+if HAVE_CHECK
+
+TESTS += test/unit/check_low
+
+noinst_PROGRAMS += test/unit/check_low
+
+INCLUDES += \
+	@CHECK_CFLAGS@ \
+	-I${top_srcdir}/src/ \
+	$(NULL)
+
+test_unit_check_low_SOURCES = \
+		test/unit/check_low.c \
+		test/unit/low-fake-repo.c \
+		test/unit/low-fake-repo.h \
+		test/unit/low-repo-sqlite-fake.h \
+		test/unit/low-config-fake.c \
+		test/unit/low-config-fake.h \
+		$(NULL)
+
+test_unit_check_low_LDADD = \
+		@CHECK_LIBS@ \
+		$(GLIB_LIBS) \
+		$(RPM_LIBS) \
+		${top_builddir}/src/low-debug.o \
+		${top_builddir}/src/low-package.o \
+		${top_builddir}/src/low-repo-set.o \
+		${top_builddir}/src/low-util.o \
+		${top_builddir}/src/low-arch.o \
+		$(NULL)
+
+CLEANFILES = test/unit/check_low.log
+endif
+
+if HAVE_YAML
+EXTRA_DIST += test/depsolver/run-depsolver-tests.sh test/depsolver/yaml
+
+INCLUDES += \
+	-I${top_srcdir}/src/ \
+	-I${top_srcdir}/test/unit/ \
+	$(NULL)
+
+noinst_PROGRAMS += test/depsolver/test_depsolver
+
+test_depsolver_test_depsolver_SOURCES = test/depsolver/main.c
+
+test_depsolver_test_depsolver_LDADD = \
+		$(GLIB_LIBS) \
+		$(RPM_LIBS) \
+		$(SYCK_LIBS) \
+		${top_builddir}/src/low-debug.o \
+		${top_builddir}/src/low-package.o \
+		${top_builddir}/src/low-repo-set.o \
+		${top_builddir}/src/low-transaction.o \
+		${top_builddir}/src/low-util.o \
+		${top_builddir}/src/low-arch.o \
+		${top_builddir}/test/unit/low-config-fake.o \
+		${top_builddir}/test/unit/low-fake-repo.o \
+		$(NULL)
+
+test/depsolver/run-depsolver-tests.sh: test/depsolver/test_depsolver
+
+TESTS += test/depsolver/run-depsolver-tests.sh
+endif
