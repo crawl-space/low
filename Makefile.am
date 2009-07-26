@@ -165,7 +165,7 @@ test_unit_check_low_LDADD = \
 		${top_builddir}/src/low-arch.o \
 		$(NULL)
 
-CLEANFILES = test/unit/check_low.log
+CLEANFILES = check_low.log
 endif
 
 if HAVE_YAML
