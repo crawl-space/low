@@ -32,7 +32,7 @@ function run_test {
     let TOTAL=$TOTAL+1
 
     printf "Testing '$1'... "
-    `./test_depsolver $DIRNAME/yaml/$2/$1 > /dev/null`
+    `$DIRNAME/test_depsolver $DIRNAME/yaml/$2/$1 > /dev/null`
     if (($?)); then
         printf "\E[31mFAIL\n"
         PASSED=0

@@ -241,8 +241,6 @@ low.spec
 Makefile
 doxygen/doxygen.conf
 test/Makefile
-test/unit/Makefile
-test/depsolver/Makefile
 shave/shave
 shave/shave-libtool
 ])
