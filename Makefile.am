@@ -17,7 +17,9 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #  02110-1301  USA
 
-SUBDIRS = src test
+AUTOMAKE_OPTIONS = subdir-objects
+
+SUBDIRS = test
 EXTRA_DIST = HACKING low.spec low-completion.bash
 
 .PHONY: doxygen
@@ -75,3 +77,57 @@ rpm: dist
 
 srpm: dist
 	rpmbuild --clean -ts ${distdir}.tar.bz2
+
+INCLUDES = \
+	$(GLIB_CFLAGS) \
+	$(SQLITE_CFLAGS) \
+	$(NSS_CFLAGS) \
+	$(NULL)
+
+bin_PROGRAMS = src/low
+
+src_low_SOURCES = \
+	src/low-config.c \
+	src/low-config.h \
+	src/low-debug.c \
+	src/low-debug.h \
+	src/low-package.c \
+	src/low-package.h \
+	src/low-repo.h \
+	src/low-repo-rpmdb.c \
+	src/low-repo-rpmdb.h \
+	src/low-repo-set.c \
+	src/low-repo-set.h \
+	src/low-repo-sqlite.c \
+	src/low-repo-sqlite.h \
+	src/low-repomd-parser.c \
+	src/low-repomd-parser.h \
+	src/low-transaction.c \
+	src/low-transaction.h \
+	src/low-util.c \
+	src/low-util.h \
+	src/low-download.h \
+	src/low-download.c \
+	src/low-mirror-list.h \
+	src/low-mirror-list.c \
+	src/low-metalink-parser.h \
+	src/low-metalink-parser.c \
+	src/low-delta-parser.h \
+	src/low-delta-parser.c \
+	src/low-arch.h \
+	src/low-arch.c \
+	src/low-parse-options.h \
+	src/low-parse-options.c \
+	src/main.c \
+	$(NULL)
+
+src_low_LDADD = \
+	$(GLIB_LIBS) \
+	$(SQLITE_LIBS) \
+	$(RPM_LIBS) \
+	$(CURL_LIBS) \
+	$(EXPAT_LIBS) \
+	$(BZIP2_LIBS) \
+	$(Z_LIBS) \
+	$(NSS_LIBS) \
+	$(NULL)

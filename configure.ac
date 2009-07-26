@@ -240,7 +240,6 @@ AC_OUTPUT([
 low.spec
 Makefile
 doxygen/doxygen.conf
-src/Makefile
 test/Makefile
 test/unit/Makefile
 test/depsolver/Makefile
