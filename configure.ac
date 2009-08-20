@@ -25,6 +25,9 @@ AM_INIT_AUTOMAKE([dist-bzip2 no-dist-gzip tar-pax])
 AM_CONFIG_HEADER(config.h)
 AC_CONFIG_MACRO_DIR(m4)
 
+# default to less verbose build output
+AM_SILENT_RULES([yes])
+
 AC_PROG_LIBTOOL
 
 AC_PROG_CC
@@ -224,15 +227,6 @@ if test x$enable_gprof = xyes; then
 fi
 AM_CONDITIONAL(LOW_BUILD_GPROF, test x$enable_gprof = xyes)
 
-AC_ARG_ENABLE(shave, AS_HELP_STRING([--enable-shave],
-              [use the 'shave' automake output pretty printer]),
-              enable_shave=$enableval,enable_shave=yes)
-
-if test x$enable_shave = xyes; then
-    SHAVE_INIT(shave, enable)
-fi
-AM_CONDITIONAL(LOW_SHAVE, test x$enable_shave = xyes)
-
 dnl ---------------------------------------------------------------------------
 dnl - Makefiles, etc.
 dnl ---------------------------------------------------------------------------
@@ -245,8 +239,6 @@ src/Makefile
 test/Makefile
 test/unit/Makefile
 test/depsolver/Makefile
-shave/shave
-shave/shave-libtool
 ])
 
 dnl ---------------------------------------------------------------------------
@@ -260,7 +252,6 @@ echo "
         prefix:                         ${prefix}
         Building 'check' unit tests:    ${HAVE_CHECK}
         Building depsolver tests:       ${HAVE_YAML}
-        Using 'shave' automake output:  ${enable_shave}
         GCC coverage profiling:         ${enable_gcov}
         GCC time profiling:             ${enable_gprof}
 "

@@ -30,3 +30,5 @@ Makefile
 Makefile.in
 missing
 stamp-h1
+
+m4
