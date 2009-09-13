@@ -1,5 +1,5 @@
 .deps
+.dirstamp
 *.o
 
 check_low
-check_low.log

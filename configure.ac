@@ -233,12 +233,7 @@ dnl ---------------------------------------------------------------------------
 AC_OUTPUT([
 low.spec
 Makefile
-doxygen/Makefile
 doxygen/doxygen.conf
-src/Makefile
-test/Makefile
-test/unit/Makefile
-test/depsolver/Makefile
 ])
 
 dnl ---------------------------------------------------------------------------
