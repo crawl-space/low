@@ -254,7 +254,13 @@ compare_digest (const char *file, const char *expected,
 	int fd;
 	HASHContext *ctx;
 
-	NSS_NoDB_Init (NULL);
+	/*
+	 * XXX rpm initializes and destroys NSS in rpmFreeRc,
+	 * and there's no way to tell if NSS initialization is already done
+	 * (we need NSS initialized for the hash functions). For now,
+	 * low-download has an implicit dep on the rpmdb repo being 'live'
+	 * during use.
+	 */
 
 	switch (digest_type) {
 		case DIGEST_MD5:
@@ -290,8 +296,6 @@ compare_digest (const char *file, const char *expected,
 	close (fd);
 	HASH_End (ctx, result, &size, BUF_SIZE);
 	HASH_Destroy (ctx);
-
-	NSS_Shutdown ();
 
 	for (i = 0; i < strlen (expected); i += 2) {
 		unsigned char e = 16 * char_to_short (expected[i]) +
