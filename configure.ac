@@ -68,9 +68,14 @@ AC_SUBST(RPM_CFLAGS)
 AC_SUBST(RPM_LIBS)
 
 dnl Check for libcurl (required)
-LIBCURL_CHECK_CONFIG(yes,$CURL_REQUIRED,,AC_MSG_ERROR(*** curl was not found))
-CURL_LIBS=$LIBCURL
+PKG_CHECK_MODULES(CURL, libcurl)
+AC_SUBST(CURL_CFLAGS)
 AC_SUBST(CURL_LIBS)
+
+dnl Check for nss (required)
+PKG_CHECK_MODULES(NSS, nss >= $NSS_REQUIRED)
+AC_SUBST(NSS_CFLAGS)
+AC_SUBST(NSS_LIBS)
 
 dnl Check for expat xml parser (required)
 EXPAT_LIB=""
@@ -117,11 +122,6 @@ AC_CHECK_LIB(z, gzopen, [Z_LIBS="-lz"],
 	     [AC_MSG_ERROR([Can't find z library. Please install zlib.])])
 AC_SUBST(Z_LIBS)
 
-
-dnl Check for nss (required)
-PKG_CHECK_MODULES(NSS, nss >= $NSS_REQUIRED)
-AC_SUBST(NSS_CFLAGS)
-AC_SUBST(NSS_LIBS)
 
 dnl Check for check (unit testing library, optional)
 PKG_CHECK_MODULES(CHECK, check >= $CHECK_REQUIRED, HAVE_CHECK=yes,
