@@ -20,6 +20,8 @@
  *  02110-1301  USA
  */
 
+#include <stdbool.h>
+
 #include "low-mirror-list.h"
 #include "low-util.h"
 
@@ -40,6 +42,9 @@ int      low_download_from_mirror    (LowMirrorList *mirrors,
 				      const char *file,
 				      const char *basename,
 				      LowDownloadCallback callback);
+
+bool low_download_is_missing (const char *file, const char *digest,
+			      LowDigestType digest_type, off_t size);
 
 int      low_download_if_missing     (LowMirrorList *mirrors,
 				      const char *relative_path,

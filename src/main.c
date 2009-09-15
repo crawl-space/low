@@ -998,7 +998,12 @@ download_required_packages (LowTransaction *trans)
 	list = g_hash_table_get_values (trans->update);
 	while (list != NULL) {
 		LowTransactionMember *member = list->data;
-		if (!construct_delta (member->pkg, member->related_pkg)) {
+		LowPackage *pkg = member->pkg;
+
+		char *local_file = create_package_filepath (member->pkg);
+		if (low_download_is_missing (local_file, pkg->digest,
+					     pkg->digest_type, pkg->size) &&
+		    !construct_delta (member->pkg, member->related_pkg)) {
 			if (!download_package (member->pkg)) {
 				printf ("Unable to download %s\n",
 					member->pkg->name);
@@ -1006,6 +1011,8 @@ download_required_packages (LowTransaction *trans)
 			}
 		}
 		list = list->next;
+
+		free (local_file);
 	}
 
 	return successful;

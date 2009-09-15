@@ -310,16 +310,28 @@ compare_digest (const char *file, const char *expected,
 	return true;
 }
 
+bool
+low_download_is_missing (const char *file, const char *digest,
+			 LowDigestType digest_type, off_t size)
+{
+	struct stat buf;
+
+	if (stat (file, &buf) < 0 || buf.st_size != size) {
+		return true;
+	}
+
+	return !compare_digest (file, digest, digest_type);
+}
+
 int
 low_download_if_missing (LowMirrorList *mirrors, const char *relative_path,
 			 const char *file, const char *basename,
 			 const char *digest, LowDigestType digest_type,
 			 off_t size, LowDownloadCallback callback)
 {
-	struct stat buf;
 	int res;
 
-	if (stat (file, &buf) < 0 || buf.st_size != size) {
+	if (low_download_is_missing (file, digest, digest_type, size)) {
 		res = low_download_from_mirror (mirrors, relative_path, file,
 						basename, callback);
 		if (res != 0) {
