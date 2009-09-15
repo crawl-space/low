@@ -63,18 +63,8 @@ AC_SUBST(SQLITE_CFLAGS)
 AC_SUBST(SQLITE_LIBS)
 
 dnl Check for rpm (required)
-AC_CHECK_HEADER(rpm/rpmlib.h,
-            AC_CHECK_LIB(rpm, rpmdbOpen,
-                 [have_rpm=yes
-                  RPM_LIBS="$LIBS -lrpm"
-                  AC_DEFINE(HAVE_RPM, 1,
-                  [Defined if rpm is available])
-                 ]))
-
-if test "$have_rpm" != yes; then
-    AC_MSG_ERROR(
-    *** rpm was not found)
-fi
+PKG_CHECK_MODULES(RPM, rpm)
+AC_SUBST(RPM_CFLAGS)
 AC_SUBST(RPM_LIBS)
 
 dnl Check for libcurl (required)
