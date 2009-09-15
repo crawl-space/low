@@ -36,6 +36,8 @@ dnl ---------------------------------------------------------------------------
 dnl - Library dependencies
 dnl ---------------------------------------------------------------------------
 GLIB_REQUIRED=2.16.3
+RPM_REQUIRED=4.7.1
+SQLITE_REQUIRED=3.6.17
 CURL_REQUIRED=7.18.1
 NSS_REQUIRED=3.12.3
 CHECK_REQUIRED=0.9.5
@@ -44,6 +46,8 @@ dnl ---------------------------------------------------------------------------
 dnl - Make above strings available for packaging files (e.g. rpm spec files)
 dnl ---------------------------------------------------------------------------
 AC_SUBST(GLIB_REQUIRED)
+AC_SUBST(SQLITE_REQUIRED)
+AC_SUBST(RPM_REQUIRED)
 AC_SUBST(CURL_REQUIRED)
 AC_SUBST(NSS_REQUIRED)
 AC_SUBST(CHECK_REQUIRED)
@@ -58,17 +62,17 @@ AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
 dnl Check for sqlite3 (required)
-PKG_CHECK_MODULES(SQLITE, sqlite3)
+PKG_CHECK_MODULES(SQLITE, sqlite3 >= $SQLITE_REQUIRED)
 AC_SUBST(SQLITE_CFLAGS)
 AC_SUBST(SQLITE_LIBS)
 
 dnl Check for rpm (required)
-PKG_CHECK_MODULES(RPM, rpm)
+PKG_CHECK_MODULES(RPM, rpm >= $RPM_REQUIRED)
 AC_SUBST(RPM_CFLAGS)
 AC_SUBST(RPM_LIBS)
 
 dnl Check for libcurl (required)
-PKG_CHECK_MODULES(CURL, libcurl)
+PKG_CHECK_MODULES(CURL, libcurl >= $CURL_REQUIRED)
 AC_SUBST(CURL_CFLAGS)
 AC_SUBST(CURL_LIBS)
 
