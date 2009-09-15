@@ -23,12 +23,9 @@ AC_INIT(low, 0.0.1)
 AC_CONFIG_SRCDIR(src)
 AM_INIT_AUTOMAKE([dist-bzip2 no-dist-gzip tar-pax])
 AM_CONFIG_HEADER(config.h)
-AC_CONFIG_MACRO_DIR(m4)
 
 # default to less verbose build output
 AM_SILENT_RULES([yes])
-
-AC_PROG_LIBTOOL
 
 AC_PROG_INSTALL
 AC_ISC_POSIX

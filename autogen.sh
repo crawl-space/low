@@ -37,8 +37,7 @@ if ([ -z "$*" ] && [ "x$NOCONFIGURE" = "x" ]) ; then
   echo
 fi
 
-(cd $srcdir && libtoolize --force) || exit 1
-(cd $srcdir && aclocal -I m4) || exit 1
+(cd $srcdir && aclocal) || exit 1
 (cd $srcdir && autoheader) || exit 1
 (cd $srcdir && automake --foreign --add-missing) || exit 1
 (cd $srcdir && autoconf) || exit 1
