@@ -313,7 +313,7 @@ low_package_sqlite_new_from_row (sqlite3_stmt *pp_stmt, LowRepo *repo)
 	pkg->digest_type =
 		low_util_digest_type_from_string ((const char *)
 						  sqlite3_column_text
-						  (pp_stmt, i++));
+						  (pp_stmt, i));
 
 	pkg->get_details = low_sqlite_package_get_details;
 
@@ -853,7 +853,7 @@ low_sqlite_package_get_details (LowPackage *pkg)
 	details->url =
 		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
 	details->license =
-		strdup ((const char *) sqlite3_column_text (pp_stmt, i++));
+		strdup ((const char *) sqlite3_column_text (pp_stmt, i));
 
 	sqlite3_finalize (pp_stmt);
 

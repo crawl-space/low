@@ -1114,7 +1114,6 @@ low_show_rpm_progress (const void *arg, const rpmCallbackType what,
 	void *rc = NULL;
 	const char *filename = (const char *) key;
 	static FD_t fd = NULL;
-	int xx;
 
 	CallbackData *callback = (CallbackData *) data;
 	bool verbose = callback->verbose;
@@ -1127,7 +1126,7 @@ low_show_rpm_progress (const void *arg, const rpmCallbackType what,
 			/* FIX: still necessary? */
 			if (fd == NULL || Ferror (fd)) {
 				if (fd != NULL) {
-					xx = Fclose (fd);
+					Fclose (fd);
 					fd = NULL;
 				}
 			} else
@@ -1139,7 +1138,7 @@ low_show_rpm_progress (const void *arg, const rpmCallbackType what,
 			/* FIX: still necessary? */
 			fd = fdFree (fd, "persist (showProgress)");
 			if (fd != NULL) {
-				xx = Fclose (fd);
+				Fclose (fd);
 				fd = NULL;
 			}
 			break;

@@ -103,17 +103,6 @@ low_util_evr_cmp_worker (const char *e1, const char *v1, const char *r1,
 	int v_cmp;
 	int r_cmp;
 
-	const char *e1_fixed = e1;
-	const char *e2_fixed = e2;
-
-	if (e1 == NULL) {
-		e1_fixed = "0";
-	}
-
-	if (e2 == NULL) {
-		e2_fixed = "0";
-	}
-
 	e_cmp = rpmvercmp (e1, e2);
 	if (e_cmp != 0) {
 		return e_cmp;
