@@ -115,6 +115,29 @@ low_repo_sqlite_regexp (sqlite3_context *ctx, int argc G_GNUC_UNUSED,
 	sqlite3_result_int (ctx, matched);
 }
 
+static void
+low_repo_sqlite_filename_match (sqlite3_context *ctx, int argc G_GNUC_UNUSED,
+				sqlite3_value **args)
+{
+	const char *list = (const char *) sqlite3_value_text (args[0]);
+	const char *filename = (const char *) sqlite3_value_text (args[1]);
+	const char *location = strstr (list, filename);
+
+	while (location) {
+		low_debug ("%s", list);
+		if ((location == list || *(location - 1) == '/') &&
+		    (*(location + strlen (filename)) == '\0' ||
+		     *(location + strlen (filename)) == '/')) {
+			sqlite3_result_int (ctx, TRUE);
+			return;
+		}
+
+		location = strstr (location + strlen(filename), filename);
+	}
+
+	sqlite3_result_int (ctx, FALSE);
+}
+
 typedef void (*sqlFunc) (sqlite3_context *, int, sqlite3_value **);
 typedef void (*sqlFinal) (sqlite3_context *);
 
@@ -185,6 +208,12 @@ low_repo_sqlite_initialize (const char *id, const char *name,
 					 SQLITE_ANY, NULL,
 					 low_repo_sqlite_regexp,
 					 (sqlFunc) NULL, (sqlFinal) NULL);
+
+		sqlite3_create_function (repo->primary_db, "filename_match", 2,
+					 SQLITE_ANY, NULL,
+					 low_repo_sqlite_filename_match,
+					 (sqlFunc) NULL, (sqlFinal) NULL);
+
 
 		/* XXX do this lazily */
 		if (repomd->delta_xml != NULL) {
@@ -682,14 +711,14 @@ low_repo_sqlite_search_primary_files (LowRepo *repo, const char *file)
 static LowPackageIter *
 low_repo_sqlite_search_filelists_files (LowRepo *repo, const char *file)
 {
-	/* XXX try optimizing for caces where there's only one filename */
+	/* XXX try optimizing for cases where there's only one filename */
 	const char *stmt = SELECT_FIELDS_FROM "packages p, filelist f "
 			   "WHERE f.pkgKey = p.pkgKey "
 			   "AND f.dirname = :dir "
-			   "AND f.filenames REGEXP :file";
+			   "AND filename_match (f.filenames, :file)";
 
 	char *slash = rindex (file, '/');
-	char *filename = g_strdup_printf ("(^|/)%s(/|$)", (char *) (slash + 1));
+	char *filename = strdup ((char *) (slash + 1));
 	char *dirname = strndup (file, slash - file);
 
 	LowRepoSqlite *repo_sqlite = (LowRepoSqlite *) repo;

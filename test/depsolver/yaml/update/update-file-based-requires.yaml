@@ -1,0 +1,20 @@
+test: Update two packages, where one requires a file in the other.
+
+installed:
+    - package: { name: libstdc++, evr: 0:0.3.0-1, arch: i386 }
+      files: [ /usr/lib/libstdc++.so.6 ]
+    - package: { name: libstdc++-devel, evr: 0:0.3.0-1, arch: i386 }
+      requires: [ libstdc++ = 0:0.3.0-1, /usr/lib/libstdc++.so.6 ]
+
+available:
+    - package: { name: libstdc++, evr: 0:0.3.0-7, arch: i386 }
+      files: [ /usr/lib/libstdc++.so.6 ]
+    - package: { name: libstdc++-devel, evr: 0:0.3.0-7, arch: i386 }
+      requires: [ /usr/lib/libstdc++.so.6, libstdc++ = 0:0.3.0-7 ]
+
+transaction:
+    - update: { name: libstdc++ }
+
+results:
+    - update: { name: libstdc++, evr: 0:0.3.0-7, arch: i386 }
+    - update: { name: libstdc++-devel, evr: 0:0.3.0-7, arch: i386 }
