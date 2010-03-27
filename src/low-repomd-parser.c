@@ -32,9 +32,13 @@
 
 enum {
 	REPODATA_STATE_BEGIN,
+	REPODATA_STATE_PRIMARY_DB,
+	REPODATA_STATE_FILELISTS_DB,
 	REPODATA_STATE_PRIMARY,
 	REPODATA_STATE_FILELISTS,
 	REPODATA_STATE_DELTA,
+	REPODATA_STATE_PRIMARY_DB_TIMESTAMP,
+	REPODATA_STATE_FILELISTS_DB_TIMESTAMP,
 	REPODATA_STATE_PRIMARY_TIMESTAMP,
 	REPODATA_STATE_FILELISTS_TIMESTAMP,
 	REPODATA_STATE_DELTA_TIMESTAMP,
@@ -55,9 +59,13 @@ low_repomd_start_element (void *data, const char *name, const char **atts)
 		for (i = 0; atts[i]; i += 2) {
 			if (strcmp (atts[i], "type") == 0) {
 				if (strcmp (atts[i + 1], "primary_db") == 0)
-					ctx->state = REPODATA_STATE_PRIMARY;
+					ctx->state = REPODATA_STATE_PRIMARY_DB;
 				else if (strcmp (atts[i + 1], "filelists_db") ==
 					 0)
+					ctx->state = REPODATA_STATE_FILELISTS_DB;
+				else if (strcmp (atts[i + 1], "primary") == 0)
+					ctx->state = REPODATA_STATE_PRIMARY;
+				else if (strcmp (atts[i + 1], "filelists") == 0)
 					ctx->state = REPODATA_STATE_FILELISTS;
 				else if (strcmp (atts[i + 1], "prestodelta") ==
 					 0)
@@ -69,16 +77,24 @@ low_repomd_start_element (void *data, const char *name, const char **atts)
 		for (i = 0; atts[i]; i += 2) {
 			if (strcmp (atts[i], "href") == 0) {
 				switch (ctx->state) {
-					case REPODATA_STATE_PRIMARY:
+					case REPODATA_STATE_PRIMARY_DB:
 						ctx->repomd->primary_db =
 							strdup (atts[i + 1]);
 						break;
-					case REPODATA_STATE_FILELISTS:
+					case REPODATA_STATE_FILELISTS_DB:
 						ctx->repomd->filelists_db =
 							strdup (atts[i + 1]);
 						break;
 					case REPODATA_STATE_DELTA:
 						ctx->repomd->delta_xml =
+							strdup (atts[i + 1]);
+						break;
+					case REPODATA_STATE_PRIMARY:
+						ctx->repomd->primary_xml =
+							strdup (atts[i + 1]);
+						break;
+					case REPODATA_STATE_FILELISTS:
+						ctx->repomd->filelists_xml =
 							strdup (atts[i + 1]);
 						break;
 					default:
@@ -89,11 +105,17 @@ low_repomd_start_element (void *data, const char *name, const char **atts)
 		}
 	} else if (strcmp (name, "timestamp") == 0) {
 		switch (ctx->state) {
+			case REPODATA_STATE_PRIMARY_DB:
+				ctx->state = REPODATA_STATE_PRIMARY_DB_TIMESTAMP;
+				break;
+			case REPODATA_STATE_FILELISTS_DB:
+				ctx->state = REPODATA_STATE_FILELISTS_DB_TIMESTAMP;
 			case REPODATA_STATE_PRIMARY:
 				ctx->state = REPODATA_STATE_PRIMARY_TIMESTAMP;
 				break;
 			case REPODATA_STATE_FILELISTS:
 				ctx->state = REPODATA_STATE_FILELISTS_TIMESTAMP;
+
 			case REPODATA_STATE_DELTA:
 				ctx->state = REPODATA_STATE_DELTA_TIMESTAMP;
 			default:
@@ -119,13 +141,21 @@ low_repomd_character_data (void *data, const XML_Char *s, int len G_GNUC_UNUSED)
 	struct repodata_context *ctx = data;
 
 	switch (ctx->state) {
-		case REPODATA_STATE_PRIMARY_TIMESTAMP:
+		case REPODATA_STATE_PRIMARY_DB_TIMESTAMP:
 			ctx->repomd->primary_db_time = strtoul (s, NULL, 10);
+			ctx->state = REPODATA_STATE_PRIMARY_DB;
+			break;
+		case REPODATA_STATE_FILELISTS_DB_TIMESTAMP:
+			ctx->repomd->filelists_db_time = strtoul (s, NULL, 10);
+			ctx->state = REPODATA_STATE_FILELISTS_DB;
+		case REPODATA_STATE_PRIMARY_TIMESTAMP:
+			ctx->repomd->primary_xml_time = strtoul (s, NULL, 10);
 			ctx->state = REPODATA_STATE_PRIMARY;
 			break;
 		case REPODATA_STATE_FILELISTS_TIMESTAMP:
-			ctx->repomd->filelists_db_time = strtoul (s, NULL, 10);
+			ctx->repomd->filelists_xml_time = strtoul (s, NULL, 10);
 			ctx->state = REPODATA_STATE_FILELISTS;
+
 		case REPODATA_STATE_DELTA_TIMESTAMP:
 			ctx->repomd->delta_xml_time = strtoul (s, NULL, 10);
 			ctx->state = REPODATA_STATE_DELTA;

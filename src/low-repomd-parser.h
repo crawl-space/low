@@ -29,6 +29,12 @@ typedef struct _LowRepomd {
 	char *filelists_db;
 	time_t filelists_db_time;
 
+	char *primary_xml;
+	time_t primary_xml_time;
+
+	char *filelists_xml;
+	time_t filelists_xml_time;
+
 	char *delta_xml;
 	time_t delta_xml_time;
 

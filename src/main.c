@@ -1680,12 +1680,23 @@ refresh_repo (LowRepo *repo)
 	free (local_file);
 	free (tmp_file);
 
-	if (repodata_missing (repo, repomd->primary_db)) {
-		fetch_repodata_file (repo, repomd->primary_db, true);
-	}
+	if (repomd->primary_db) {
+		if (repodata_missing (repo, repomd->primary_db)) {
+			fetch_repodata_file (repo, repomd->primary_db, true);
+		}
 
-	if (repodata_missing (repo, repomd->filelists_db)) {
-		fetch_repodata_file (repo, repomd->filelists_db, true);
+		if (repodata_missing (repo, repomd->filelists_db)) {
+			fetch_repodata_file (repo, repomd->filelists_db, true);
+		}
+	} else {
+		if (repodata_missing (repo, repomd->primary_xml)) {
+			fetch_repodata_file (repo, repomd->primary_xml, false);
+		}
+
+		if (repodata_missing (repo, repomd->filelists_xml)) {
+			fetch_repodata_file (repo, repomd->filelists_xml,
+					     false);
+		}
 	}
 
 	if (repomd->delta_xml && repodata_missing (repo, repomd->delta_xml)) {
