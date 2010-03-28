@@ -3,6 +3,8 @@
  *
  *  Copyright (C) 2010 James Bowes <jbowes@repl.ca>
  *
+ *  adapted from yum-metadata-parser
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -18,6 +20,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  *  02110-1301  USA
  */
+
+#include <stdlib.h>
+#include <string.h>
 
 #include <glib.h>
 
@@ -68,6 +73,275 @@ void
 low_sqlite_importer_finish_package (LowSqliteImporter *importer G_GNUC_UNUSED)
 {
 
+}
+
+static void
+create_dbinfo_table (sqlite3 *db)
+{
+	const char *sql;
+
+	sql = "CREATE TABLE db_info (dbversion INTEGER, checksum TEXT)";
+	sqlite3_exec (db, sql, NULL, NULL, NULL);
+	/* XXX populate dbinfo */
+}
+
+#define DEP_TABLE \
+        "CREATE TABLE %s (" \
+        "  name TEXT," \
+        "  flags TEXT," \
+        "  epoch TEXT," \
+        "  version TEXT," \
+        "  release TEXT," \
+        "  pkgKey INTEGER %s)"
+
+
+static void
+create_primary_tables (sqlite3 *db)
+{
+    int rc;
+    const char *sql;
+
+    const char *deps[] = { "requires", "provides", "conflicts", "obsoletes",
+	    NULL };
+    int i;
+
+    sql =
+        "CREATE TABLE packages ("
+        "  pkgKey INTEGER PRIMARY KEY,"
+        "  pkgId TEXT,"
+        "  name TEXT,"
+        "  arch TEXT,"
+        "  version TEXT,"
+        "  epoch TEXT,"
+        "  release TEXT,"
+        "  summary TEXT,"
+        "  description TEXT,"
+        "  url TEXT,"
+        "  time_file INTEGER,"
+        "  time_build INTEGER,"
+        "  rpm_license TEXT,"
+        "  rpm_vendor TEXT,"
+        "  rpm_group TEXT,"
+        "  rpm_buildhost TEXT,"
+        "  rpm_sourcerpm TEXT,"
+        "  rpm_header_start INTEGER,"
+        "  rpm_header_end INTEGER,"
+        "  rpm_packager TEXT,"
+        "  size_package INTEGER,"
+        "  size_installed INTEGER,"
+        "  size_archive INTEGER,"
+        "  location_href TEXT,"
+        "  location_base TEXT,"
+        "  checksum_type TEXT)";
+
+    rc = sqlite3_exec (db, sql, NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        return;
+    }
+
+    sql =
+        "CREATE TABLE files ("
+        "  name TEXT,"
+        "  type TEXT,"
+        "  pkgKey INTEGER)";
+    rc = sqlite3_exec (db, sql, NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        return;
+    }
+
+
+    for (i = 0; deps[i]; i++) {
+        const char *prereq;
+        char *query;
+
+        if (!strcmp(deps[i], "requires")) {
+            prereq = ", pre BOOLEAN DEFAULT FALSE";
+        } else
+            prereq = "";
+
+        query = g_strdup_printf (DEP_TABLE, deps[i], prereq);
+        rc = sqlite3_exec (db, query, NULL, NULL, NULL);
+        free (query);
+
+        if (rc != SQLITE_OK) {
+            return;
+        }
+    }
+
+    sql =
+        "CREATE TRIGGER removals AFTER DELETE ON packages"
+        "  BEGIN"
+        "    DELETE FROM files WHERE pkgKey = old.pkgKey;"
+        "    DELETE FROM requires WHERE pkgKey = old.pkgKey;"
+        "    DELETE FROM provides WHERE pkgKey = old.pkgKey;"
+        "    DELETE FROM conflicts WHERE pkgKey = old.pkgKey;"
+        "    DELETE FROM obsoletes WHERE pkgKey = old.pkgKey;"
+        "  END;";
+
+    rc = sqlite3_exec (db, sql, NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        return;
+    }
+}
+
+#define PACKAGE_INDEX "CREATE INDEX IF NOT EXISTS pkg%s on %s (pkgKey)"
+#define NAME_INDEX "CREATE INDEX IF NOT EXISTS %sname ON %s (name)"
+
+static void
+index_primary_tables (sqlite3 *db)
+{
+    int rc;
+    const char *sql;
+
+    const char *deps[] = { "requires", "provides", "conflicts", "obsoletes",
+	    NULL };
+    int i;
+
+    sql = "CREATE INDEX IF NOT EXISTS packagename ON packages (name)";
+    rc = sqlite3_exec (db, sql, NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        return;
+    }
+
+    sql = "CREATE INDEX IF NOT EXISTS packageId ON packages (pkgId)";
+    rc = sqlite3_exec (db, sql, NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        return;
+    }
+
+    sql = "CREATE INDEX IF NOT EXISTS filenames ON files (name)";
+    rc = sqlite3_exec (db, sql, NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        return;
+    }
+
+
+    for (i = 0; deps[i]; i++) {
+        char *query;
+
+        query = g_strdup_printf(PACKAGE_INDEX, deps[i], deps[i]);
+        rc = sqlite3_exec (db, query, NULL, NULL, NULL);
+        free (query);
+
+        if (rc != SQLITE_OK) {
+            return;
+        }
+
+        query = g_strdup_printf(NAME_INDEX, deps[i], deps[i]);
+        rc = sqlite3_exec (db, query, NULL, NULL, NULL);
+        if (rc != SQLITE_OK) {
+            return;
+        }
+    }
+}
+
+static void
+build_primary_schema (sqlite3 *primary)
+{
+	create_dbinfo_table (primary);
+	create_primary_tables (primary);
+	index_primary_tables (primary);
+}
+
+static void
+create_filelist_tables (sqlite3 *db)
+{
+    int rc;
+    const char *sql;
+
+    sql =
+        "CREATE TABLE packages ("
+        "  pkgKey INTEGER PRIMARY KEY,"
+        "  pkgId TEXT)";
+    rc = sqlite3_exec (db, sql, NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        return;
+    }
+
+    sql =
+        "CREATE TABLE filelist ("
+        "  pkgKey INTEGER,"
+        "  dirname TEXT,"
+        "  filenames TEXT,"
+        "  filetypes TEXT)";
+    rc = sqlite3_exec (db, sql, NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        return;
+    }
+
+    sql =
+        "CREATE TRIGGER remove_filelist AFTER DELETE ON packages"
+        "  BEGIN"
+        "    DELETE FROM filelist WHERE pkgKey = old.pkgKey;"
+        "  END;";
+
+    rc = sqlite3_exec (db, sql, NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        return;
+    }
+}
+
+static void
+index_filelist_tables (sqlite3 *db)
+{
+    int rc;
+    const char *sql;
+
+    sql = "CREATE INDEX IF NOT EXISTS keyfile ON filelist (pkgKey)";
+    rc = sqlite3_exec (db, sql, NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        return;
+    }
+
+    sql = "CREATE INDEX IF NOT EXISTS pkgId ON packages (pkgId)";
+    rc = sqlite3_exec (db, sql, NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        return;
+    }
+
+    sql = "CREATE INDEX IF NOT EXISTS dirnames ON filelist (dirname)";
+    rc = sqlite3_exec (db, sql, NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        return;
+    }
+}
+
+static void
+build_filelists_schema (sqlite3 *filelists)
+{
+	create_dbinfo_table (filelists);
+	create_filelist_tables (filelists);
+	index_filelist_tables (filelists);
+}
+
+LowSqliteImporter *
+low_sqlite_importer_new (const char *directory)
+{
+	char *primary_file = g_strdup_printf ("%s/primary.sqlite", directory);
+	char *filelists_file = g_strdup_printf ("%s/filelists.sqlite",
+						directory);
+
+	LowSqliteImporter *importer = malloc (sizeof (LowSqliteImporter));
+
+	sqlite3_open (primary_file, &(importer->primary_db));
+	sqlite3_open (filelists_file, &(importer->filelists_db));
+
+	free (primary_file);
+	free (filelists_file);
+
+	build_primary_schema (importer->primary_db);
+	build_filelists_schema (importer->filelists_db);
+
+	return importer;
+}
+
+void
+low_sqlite_importer_free (LowSqliteImporter *importer)
+{
+	sqlite3_close (importer->primary_db);
+	sqlite3_close (importer->filelists_db);
+
+	free (importer);
 }
 
 /* vim: set ts=8 sw=8 noet: */

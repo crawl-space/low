@@ -24,6 +24,8 @@
 
 #include <stdbool.h>
 
+#include <sqlite3.h>
+
 typedef enum {
 	DEPENDENCY_TYPE_PROVIDES,
 	DEPENDENCY_TYPE_REQUIRES,
@@ -32,8 +34,11 @@ typedef enum {
 } LowSqliteImporterDepType;
 
 typedef struct _LowSqliteImporter {
+	sqlite3 *primary_db;
+	sqlite3 *filelists_db;
 } LowSqliteImporter;
 
+LowSqliteImporter *low_sqlite_importer_new (const char *directory);
 void low_sqlite_importer_begin_package (LowSqliteImporter *importer,
 					const char *name,
 					const char *arch,
@@ -56,6 +61,7 @@ void low_sqlite_importer_add_dependency (LowSqliteImporter *importer,
 void low_sqlite_importer_add_file (LowSqliteImporter *importer,
 				   const char *name);
 void low_sqlite_importer_finish_package (LowSqliteImporter *importer);
+void low_sqlite_importer_free (LowSqliteImporter *importer);
 
 #endif /* _LOW_SQLITE_IMPORTER_H_ */
 

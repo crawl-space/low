@@ -287,6 +287,8 @@ low_repoxml_parse (const char *primary, const char *filelists)
 	int len;
 	int primary_file;
 	int filelists_file;
+	char *directory;
+	char *last_slash;
 	XML_ParsingStatus status;
 
 	ctx.state = REPOXML_STATE_BEGIN;
@@ -325,6 +327,10 @@ low_repoxml_parse (const char *primary, const char *filelists)
 
 	ctx.current = 0;
 
+	last_slash = strrchr (primary, '/');
+	directory = strndup (primary, last_slash - primary);
+	ctx.importer = low_sqlite_importer_new (directory);
+
 	do {
 		XML_GetParsingStatus (ctx.current_parser, &status);
 		switch (status.parsing) {
@@ -357,8 +363,12 @@ low_repoxml_parse (const char *primary, const char *filelists)
 		}
 	} while (status.parsing != XML_FINISHED);
 
+	free (directory);
+
 	XML_ParserFree (ctx.primary_parser);
 	XML_ParserFree (ctx.filelists_parser);
+
+	low_sqlite_importer_free (ctx.importer);
 
 	close (primary_file);
 	close (filelists_file);
