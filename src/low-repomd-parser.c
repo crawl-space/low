@@ -62,7 +62,8 @@ low_repomd_start_element (void *data, const char *name, const char **atts)
 					ctx->state = REPODATA_STATE_PRIMARY_DB;
 				else if (strcmp (atts[i + 1], "filelists_db") ==
 					 0)
-					ctx->state = REPODATA_STATE_FILELISTS_DB;
+					ctx->state =
+						REPODATA_STATE_FILELISTS_DB;
 				else if (strcmp (atts[i + 1], "primary") == 0)
 					ctx->state = REPODATA_STATE_PRIMARY;
 				else if (strcmp (atts[i + 1], "filelists") == 0)
@@ -106,10 +107,12 @@ low_repomd_start_element (void *data, const char *name, const char **atts)
 	} else if (strcmp (name, "timestamp") == 0) {
 		switch (ctx->state) {
 			case REPODATA_STATE_PRIMARY_DB:
-				ctx->state = REPODATA_STATE_PRIMARY_DB_TIMESTAMP;
+				ctx->state =
+					REPODATA_STATE_PRIMARY_DB_TIMESTAMP;
 				break;
 			case REPODATA_STATE_FILELISTS_DB:
-				ctx->state = REPODATA_STATE_FILELISTS_DB_TIMESTAMP;
+				ctx->state =
+					REPODATA_STATE_FILELISTS_DB_TIMESTAMP;
 			case REPODATA_STATE_PRIMARY:
 				ctx->state = REPODATA_STATE_PRIMARY_TIMESTAMP;
 				break;

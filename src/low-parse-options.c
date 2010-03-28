@@ -32,7 +32,7 @@ low_store_option (const LowOption *option)
 {
 	switch (option->type) {
 		case OPTION_BOOL:
-			*(bool *)option->value = true;
+			*(bool *) option->value = true;
 		case OPTION_END:
 		default:
 			break;
@@ -87,11 +87,9 @@ low_parse_options (int argc, const char **argv, const LowOption *options)
 		}
 
 		if (arg[1] == '-') {
-			consumed = low_parse_long_opt (argv + i,
-						       options);
+			consumed = low_parse_long_opt (argv + i, options);
 		} else {
-			consumed = low_parse_short_opt (argv + i,
-							options);
+			consumed = low_parse_short_opt (argv + i, options);
 		}
 
 		if (consumed < 0) {
@@ -103,6 +101,5 @@ low_parse_options (int argc, const char **argv, const LowOption *options)
 
 	return i;
 }
-
 
 /* vim: set ts=8 sw=8 noet: */

@@ -48,8 +48,7 @@ void low_sqlite_importer_begin_package (LowSqliteImporter *importer,
 void low_sqlite_importer_add_details (LowSqliteImporter *importer,
 				      const char *summary,
 				      const char *description,
-				      const char *url,
-				      const char *license);
+				      const char *url, const char *license);
 void low_sqlite_importer_add_dependency (LowSqliteImporter *importer,
 					 const char *name,
 					 const char *sense,
