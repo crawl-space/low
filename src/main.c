@@ -40,6 +40,7 @@
 #include "low-repo-set.h"
 #include "low-repo-sqlite.h"
 #include "low-repomd-parser.h"
+#include "low-repoxml-parser.h"
 #include "low-transaction.h"
 #include "low-util.h"
 #include "low-download.h"
@@ -1689,6 +1690,9 @@ refresh_repo (LowRepo *repo)
 			fetch_repodata_file (repo, repomd->filelists_db, true);
 		}
 	} else {
+		char *primary_file;
+		char *filelists_file;
+
 		if (repodata_missing (repo, repomd->primary_xml)) {
 			fetch_repodata_file (repo, repomd->primary_xml, false);
 		}
@@ -1697,6 +1701,20 @@ refresh_repo (LowRepo *repo)
 			fetch_repodata_file (repo, repomd->filelists_xml,
 					     false);
 		}
+
+		primary_file = create_repodata_filename (repo,
+							 repomd->primary_xml);
+		filelists_file =
+			create_repodata_filename (repo, repomd->filelists_xml);
+
+		/* XXX Do something better here */
+		primary_file[strlen (primary_file) - 3] = '\0';
+		filelists_file[strlen (filelists_file) - 3] = '\0';
+
+		low_repoxml_parse (primary_file, filelists_file);
+
+		free (primary_file);
+		free (filelists_file);
 	}
 
 	if (repomd->delta_xml && repodata_missing (repo, repomd->delta_xml)) {

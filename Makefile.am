@@ -101,6 +101,10 @@ src_low_SOURCES = \
 	src/low-repo-sqlite.h \
 	src/low-repomd-parser.c \
 	src/low-repomd-parser.h \
+	src/low-repoxml-parser.c \
+	src/low-repoxml-parser.h \
+	src/low-sqlite-importer.c \
+	src/low-sqlite-importer.h \
 	src/low-transaction.c \
 	src/low-transaction.h \
 	src/low-util.c \
