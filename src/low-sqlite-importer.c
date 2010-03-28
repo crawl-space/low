@@ -23,6 +23,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <glib.h>
 
@@ -30,13 +31,58 @@
 
 #include "low-sqlite-importer.h"
 
+static sqlite3_stmt *
+primary_package_prepare (sqlite3 *db)
+{
+    int rc;
+    sqlite3_stmt *handle = NULL;
+    const char *query;
+
+    query =
+        "INSERT INTO packages ("
+        "  name, arch, epoch, version, release"
+	")"
+        "VALUES (?, ?, ?, ?, ?)";
+
+    rc = sqlite3_prepare (db, query, -1, &handle, NULL);
+    if (rc != SQLITE_OK) {
+        sqlite3_finalize (handle);
+        handle = NULL;
+    }
+
+    return handle;
+}
+
+static int
+primary_package_write (sqlite3 *db, sqlite3_stmt *handle, const char *name,
+		       const char *arch, const char *epoch, const char *version,
+		       const char *release)
+{
+    int rc;
+
+    sqlite3_bind_text (handle, 1,  name, -1, SQLITE_STATIC);
+    sqlite3_bind_text (handle, 2,  arch, -1, SQLITE_STATIC);
+    sqlite3_bind_text (handle, 3,  version, -1, SQLITE_STATIC);
+    sqlite3_bind_text (handle, 4,  epoch, -1, SQLITE_STATIC);
+    sqlite3_bind_text (handle, 5,  release, -1, SQLITE_STATIC);
+
+    rc = sqlite3_step (handle);
+    sqlite3_reset (handle);
+
+    return sqlite3_last_insert_rowid (db);
+}
+
 void
-low_sqlite_importer_begin_package (LowSqliteImporter *importer G_GNUC_UNUSED,
+low_sqlite_importer_begin_package (LowSqliteImporter *importer,
 				   const char *name, const char *arch,
-				   const char *epoch G_GNUC_UNUSED,
+				   const char *epoch,
 				   const char *version, const char *release)
 {
 	low_debug ("begin package: %s-%s-%s.%s", name, version, release, arch);
+	importer->row_id = primary_package_write (importer->primary_db,
+						  importer->pkg_stmt, name,
+						  arch, epoch, version,
+						  release);
 }
 
 void
@@ -299,6 +345,7 @@ build_filelists_schema (sqlite3 *filelists)
 	index_filelist_tables (filelists);
 }
 
+
 LowSqliteImporter *
 low_sqlite_importer_new (const char *directory)
 {
@@ -307,6 +354,9 @@ low_sqlite_importer_new (const char *directory)
 						directory);
 
 	LowSqliteImporter *importer = malloc (sizeof (LowSqliteImporter));
+
+	unlink (primary_file);
+	unlink (filelists_file);
 
 	sqlite3_open (primary_file, &(importer->primary_db));
 	sqlite3_open (filelists_file, &(importer->filelists_db));
@@ -317,12 +367,17 @@ low_sqlite_importer_new (const char *directory)
 	build_primary_schema (importer->primary_db);
 	build_filelists_schema (importer->filelists_db);
 
+	importer->pkg_stmt = primary_package_prepare (importer->primary_db);
+
 	return importer;
 }
 
 void
 low_sqlite_importer_free (LowSqliteImporter *importer)
 {
+	sqlite3_exec (importer->primary_db, "COMMIT", NULL, NULL, NULL);
+	sqlite3_exec (importer->filelists_db, "COMMIT", NULL, NULL, NULL);
+
 	sqlite3_close (importer->primary_db);
 	sqlite3_close (importer->filelists_db);
 

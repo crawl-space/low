@@ -36,6 +36,10 @@ typedef enum {
 typedef struct _LowSqliteImporter {
 	sqlite3 *primary_db;
 	sqlite3 *filelists_db;
+
+	sqlite3_stmt *pkg_stmt;
+
+	int row_id;
 } LowSqliteImporter;
 
 LowSqliteImporter *low_sqlite_importer_new (const char *directory);
