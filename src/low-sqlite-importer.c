@@ -34,23 +34,21 @@
 static sqlite3_stmt *
 primary_package_prepare (sqlite3 *db)
 {
-    int rc;
-    sqlite3_stmt *handle = NULL;
-    const char *query;
+	int rc;
+	sqlite3_stmt *handle = NULL;
+	const char *query;
 
-    query =
-        "INSERT INTO packages ("
-        "  name, arch, epoch, version, release"
-	")"
-        "VALUES (?, ?, ?, ?, ?)";
+	query = "INSERT INTO packages ("
+		"  name, arch, epoch, version, release"
+		")" "VALUES (?, ?, ?, ?, ?)";
 
-    rc = sqlite3_prepare (db, query, -1, &handle, NULL);
-    if (rc != SQLITE_OK) {
-        sqlite3_finalize (handle);
-        handle = NULL;
-    }
+	rc = sqlite3_prepare (db, query, -1, &handle, NULL);
+	if (rc != SQLITE_OK) {
+		sqlite3_finalize (handle);
+		handle = NULL;
+	}
 
-    return handle;
+	return handle;
 }
 
 static int
@@ -58,18 +56,18 @@ primary_package_write (sqlite3 *db, sqlite3_stmt *handle, const char *name,
 		       const char *arch, const char *epoch, const char *version,
 		       const char *release)
 {
-    int rc;
+	int rc;
 
-    sqlite3_bind_text (handle, 1,  name, -1, SQLITE_STATIC);
-    sqlite3_bind_text (handle, 2,  arch, -1, SQLITE_STATIC);
-    sqlite3_bind_text (handle, 3,  version, -1, SQLITE_STATIC);
-    sqlite3_bind_text (handle, 4,  epoch, -1, SQLITE_STATIC);
-    sqlite3_bind_text (handle, 5,  release, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 1, name, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 2, arch, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 3, version, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 4, epoch, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 5, release, -1, SQLITE_STATIC);
 
-    rc = sqlite3_step (handle);
-    sqlite3_reset (handle);
+	rc = sqlite3_step (handle);
+	sqlite3_reset (handle);
 
-    return sqlite3_last_insert_rowid (db);
+	return sqlite3_last_insert_rowid (db);
 }
 
 void
@@ -344,7 +342,6 @@ build_filelists_schema (sqlite3 *filelists)
 	create_filelist_tables (filelists);
 	index_filelist_tables (filelists);
 }
-
 
 LowSqliteImporter *
 low_sqlite_importer_new (const char *directory)
