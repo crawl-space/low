@@ -2,7 +2,7 @@
 #
 #  Low: a yum-like package manager
 #
-#  Copyright (C) 2008, 2009 James Bowes <jbowes@repl.ca>
+#  Copyright (C) 2008 - 2010 James Bowes <jbowes@repl.ca>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ HEADER = \
 """/*
  *  Low: a yum-like package manager
  *
- *  Copyright (C) 2009 James Bowes <jbowes@repl.ca>
+ *  Copyright (C) 2010 James Bowes <jbowes@repl.ca>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
