@@ -38,6 +38,7 @@ typedef struct _LowSqliteImporter {
 	sqlite3 *filelists_db;
 
 	sqlite3_stmt *pkg_stmt;
+	sqlite3_stmt *pkg_details_stmt;
 
 	int row_id;
 } LowSqliteImporter;
@@ -51,14 +52,24 @@ void low_sqlite_importer_begin_package (LowSqliteImporter *importer,
 					const char *release);
 void low_sqlite_importer_add_details (LowSqliteImporter *importer,
 				      const char *summary,
-				      const char *description,
-				      const char *url, const char *license);
+				      const char *description, const char *url,
+				      int time_file, int time_build,
+				      const char *license,
+				      const char *rpm_vendor,
+				      const char *rpm_group,
+				      const char *rpm_buildhost,
+				      const char *rpm_sourcerpm,
+				      int rpm_header_start, int rpm_header_end,
+				      const char *rpm_packager,
+				      int size_package, int size_installed,
+				      int size_archive,
+				      const char *location_href,
+				      const char *location_base,
+				      const char *checksum_type);
 void low_sqlite_importer_add_dependency (LowSqliteImporter *importer,
-					 const char *name,
-					 const char *sense,
+					 const char *name, const char *sense,
 					 LowSqliteImporterDepType type,
-					 bool is_pre,
-					 const char *epoch,
+					 bool is_pre, const char *epoch,
 					 const char *version,
 					 const char *release);
 void low_sqlite_importer_add_file (LowSqliteImporter *importer,

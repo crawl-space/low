@@ -31,19 +31,28 @@
 
 #include "low-sqlite-importer.h"
 
+#define PKG_ADD \
+	"INSERT INTO packages (name, arch, epoch, version, release)" \
+	"VALUES (?, ?, ?, ?, ?)"
+
+#define PKG_DETAILS_ADD \
+	"UPDATE packages SET " \
+	"summary=?, description=?, url=?, time_file=?, time_build=?, " \
+	"rpm_license=?, rpm_vendor=?, rpm_group=?, rpm_buildhost=?, " \
+	"rpm_sourcerpm=?, rpm_header_start=?, rpm_header_end=?, " \
+	"rpm_packager=?, size_package=?, size_installed=?, size_archive=?, " \
+	"location_href=?, location_base=?, checksum_type=? " \
+	"WHERE pkgKey=?"
+
 static sqlite3_stmt *
-primary_package_prepare (sqlite3 *db)
+prepare_statement (sqlite3 *db, const char *query)
 {
 	int rc;
 	sqlite3_stmt *handle = NULL;
-	const char *query;
-
-	query = "INSERT INTO packages ("
-		"  name, arch, epoch, version, release"
-		")" "VALUES (?, ?, ?, ?, ?)";
 
 	rc = sqlite3_prepare (db, query, -1, &handle, NULL);
 	if (rc != SQLITE_OK) {
+		low_debug ("Error preparing statement %s", query);
 		sqlite3_finalize (handle);
 		handle = NULL;
 	}
@@ -83,14 +92,74 @@ low_sqlite_importer_begin_package (LowSqliteImporter *importer,
 						  release);
 }
 
+static void
+primary_package_details_write (sqlite3_stmt *handle, int row_id,
+			       const char *summary, const char *description,
+			       const char *url, int time_file, int time_build,
+			       const char *license, const char *rpm_vendor,
+			       const char *rpm_group, const char *rpm_buildhost,
+			       const char *rpm_sourcerpm,
+			       int rpm_header_start, int rpm_header_end,
+			       const char *rpm_packager,
+			       int size_package, int size_installed,
+			       int size_archive, const char *location_href,
+			       const char *location_base,
+			       const char *checksum_type)
+{
+	int rc;
+
+	sqlite3_bind_text (handle, 1, summary, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 2, description, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 3, url, -1, SQLITE_STATIC);
+	sqlite3_bind_int (handle, 4, time_file);
+	sqlite3_bind_int (handle, 5, time_build);
+	sqlite3_bind_text (handle, 6, license, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 7, rpm_vendor, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 8, rpm_group, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 9, rpm_buildhost, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 10, rpm_sourcerpm, -1, SQLITE_STATIC);
+	sqlite3_bind_int (handle, 11, rpm_header_start);
+	sqlite3_bind_int (handle, 12, rpm_header_end);
+	sqlite3_bind_text (handle, 13, rpm_packager, -1, SQLITE_STATIC);
+	sqlite3_bind_int (handle, 14, size_package);
+	sqlite3_bind_int (handle, 15, size_installed);
+	sqlite3_bind_int (handle, 16, size_archive);
+	sqlite3_bind_text (handle, 17, location_href, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 18, location_base, -1, SQLITE_STATIC);
+	sqlite3_bind_text (handle, 19, checksum_type, -1, SQLITE_STATIC);
+	sqlite3_bind_int (handle, 20, row_id);
+
+	rc = sqlite3_step (handle);
+	sqlite3_reset (handle);
+
+	return;
+}
+
 void
-low_sqlite_importer_add_details (LowSqliteImporter *importer G_GNUC_UNUSED,
-				 const char *summary G_GNUC_UNUSED,
-				 const char *description G_GNUC_UNUSED,
-				 const char *url G_GNUC_UNUSED,
-				 const char *license G_GNUC_UNUSED)
+low_sqlite_importer_add_details (LowSqliteImporter *importer,
+				 const char *summary, const char *description,
+				 const char *url, int time_file, int time_build,
+				 const char *license, const char *rpm_vendor,
+				 const char *rpm_group,
+				 const char *rpm_buildhost,
+				 const char *rpm_sourcerpm,
+				 int rpm_header_start, int rpm_header_end,
+				 const char *rpm_packager, int size_package,
+				 int size_installed, int size_archive,
+				 const char *location_href,
+				 const char *location_base,
+				 const char *checksum_type)
 {
 	low_debug ("add details");
+	primary_package_details_write (importer->pkg_details_stmt,
+				       importer->row_id, summary, description,
+				       url, time_file, time_build, license,
+				       rpm_vendor, rpm_group, rpm_buildhost,
+				       rpm_sourcerpm, rpm_header_start,
+				       rpm_header_end, rpm_packager,
+				       size_package, size_installed,
+				       size_archive, location_href,
+				       location_base, checksum_type);
 }
 
 void
@@ -364,7 +433,9 @@ low_sqlite_importer_new (const char *directory)
 	build_primary_schema (importer->primary_db);
 	build_filelists_schema (importer->filelists_db);
 
-	importer->pkg_stmt = primary_package_prepare (importer->primary_db);
+	importer->pkg_stmt = prepare_statement (importer->primary_db, PKG_ADD);
+	importer->pkg_details_stmt = prepare_statement (importer->primary_db,
+							PKG_DETAILS_ADD);
 
 	return importer;
 }

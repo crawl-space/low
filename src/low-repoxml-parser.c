@@ -42,6 +42,7 @@ enum {
 	REPOXML_STATE_DESCRIPTION,
 	REPOXML_STATE_URL,
 	REPOXML_STATE_LICENSE,
+	REPOXML_STATE_GROUP,
 	REPOXML_STATE_CHECKSUM,
 	REPOXML_STATE_REQUIRES,
 	REPOXML_STATE_PROVIDES,
@@ -68,6 +69,7 @@ struct repoxml_context {
 	char description[4096];
 	char url[256];
 	char license[64];
+	char group[256];
 	char buffer[512];
 	char *p;
 
@@ -131,6 +133,9 @@ repoxml_primary_start_element (void *data, const char *name, const char **atts)
 	} else if (strcmp (name, "rpm:license") == 0) {
 		ctx->p = ctx->license;
 		ctx->state = REPOXML_STATE_LICENSE;
+	} else if (strcmp (name, "rpm:group") == 0) {
+		ctx->p = ctx->group;
+		ctx->state = REPOXML_STATE_GROUP;
 	} else if (strcmp (name, "rpm:requires") == 0) {
 		ctx->state = REPOXML_STATE_REQUIRES;
 		ctx->dependency_type = DEPENDENCY_TYPE_REQUIRES;
@@ -190,6 +195,7 @@ repoxml_primary_end_element (void *data, const char *name)
 		case REPOXML_STATE_DESCRIPTION:
 		case REPOXML_STATE_URL:
 		case REPOXML_STATE_LICENSE:
+		case REPOXML_STATE_GROUP:
 		case REPOXML_STATE_CHECKSUM:
 		case REPOXML_STATE_FILE:
 			ctx->state = REPOXML_STATE_BEGIN;
@@ -201,7 +207,9 @@ repoxml_primary_end_element (void *data, const char *name)
 	if (strcmp (name, "package") == 0) {
 		low_sqlite_importer_add_details (ctx->importer, ctx->summary,
 						 ctx->description, ctx->url,
-						 ctx->license);
+						 0, 0, ctx->license,
+						 "", ctx->group, "", "",
+						 0, 0, "", 0, 0, 0, "", "", "");
 
 		XML_StopParser (ctx->current_parser, XML_TRUE);
 		ctx->current_parser = ctx->filelists_parser;
@@ -223,6 +231,7 @@ repoxml_character_data (void *data, const XML_Char *s, int len)
 		case REPOXML_STATE_DESCRIPTION:
 		case REPOXML_STATE_URL:
 		case REPOXML_STATE_LICENSE:
+		case REPOXML_STATE_GROUP:
 		case REPOXML_STATE_CHECKSUM:
 		case REPOXML_STATE_FILE:
 			memcpy (ctx->p, s, len);
